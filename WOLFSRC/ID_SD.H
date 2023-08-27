@@ -8,7 +8,7 @@
 #ifndef	__ID_SD__
 #define	__ID_SD__
 
-void	alOut(byte n,byte b);
+void	alOut(byte n, byte b);
 
 #ifdef	__DEBUG__
 #define	__DEBUG_SoundMgr__
@@ -16,21 +16,21 @@ void	alOut(byte n,byte b);
 
 #define	TickBase	70		// 70Hz per tick - used as a base for timer 0
 
-typedef	enum	{
-					sdm_Off,
-					sdm_PC,sdm_AdLib,
-				}	SDMode;
-typedef	enum	{
-					smm_Off,smm_AdLib
-				}	SMMode;
-typedef	enum	{
-					sds_Off,sds_PC,sds_SoundSource,sds_SoundBlaster
-				}	SDSMode;
+typedef	enum {
+    sdm_Off,
+    sdm_PC, sdm_AdLib,
+}	SDMode;
+typedef	enum {
+    smm_Off, smm_AdLib
+}	SMMode;
+typedef	enum {
+    sds_Off, sds_PC, sds_SoundSource, sds_SoundBlaster
+}	SDSMode;
 typedef	struct
-		{
-			longword	length;
-			word		priority;
-		} SoundCommon;
+{
+    longword	length;
+    word		priority;
+} SoundCommon;
 
 //	PC Sound stuff
 #define	pcTimer		0x42
@@ -40,10 +40,10 @@ typedef	struct
 #define	pcSpkBits	3
 
 typedef	struct
-		{
-			SoundCommon	common;
-			byte		data[1];
-		} PCSound;
+{
+    SoundCommon	common;
+    byte		data[1];
+} PCSound;
 
 // 	Registers for the Sound Blaster card - needs to be offset by n0 (0x10,0x20,0x30,0x40,0x50,0x60)
 #define	sbReset		0x206	// W
@@ -82,13 +82,13 @@ typedef	struct
 #define	sbpmLineVol		0x2e
 
 typedef	struct
-		{
-			SoundCommon	common;
-			word		hertz;
-			byte		bits,
-						reference,
-						data[1];
-		} SampledSound;
+{
+    SoundCommon	common;
+    word		hertz;
+    byte		bits,
+        reference,
+        data[1];
+} SampledSound;
 
 // 	Registers for the AdLib card
 #define	alFMStatus	0x388	// R
@@ -110,27 +110,27 @@ typedef	struct
 #define	alEffects	0xbd
 
 typedef	struct
-		{
-			byte	mChar,cChar,
-					mScale,cScale,
-					mAttack,cAttack,
-					mSus,cSus,
-					mWave,cWave,
-					nConn,
+{
+    byte	mChar, cChar,
+        mScale, cScale,
+        mAttack, cAttack,
+        mSus, cSus,
+        mWave, cWave,
+        nConn,
 
-					// These are only for Muse - these bytes are really unused
-					voice,
-					mode,
-					unused[3];
-		} Instrument;
+        // These are only for Muse - these bytes are really unused
+        voice,
+        mode,
+        unused[3];
+} Instrument;
 
 typedef	struct
-		{
-			SoundCommon	common;
-			Instrument	inst;
-			byte		block,
-						data[1];
-		} AdLibSound;
+{
+    SoundCommon	common;
+    Instrument	inst;
+    byte		block,
+        data[1];
+} AdLibSound;
 
 //
 //	Sequencing stuff
@@ -154,30 +154,30 @@ typedef	struct
 
 #if 1
 typedef	struct
-		{
-			word	length,
-					values[1];
-		} MusicGroup;
+{
+    word	length,
+        values[1];
+} MusicGroup;
 #else
 typedef	struct
-		{
-			word	flags,
-					count,
-					offsets[1];
-		} MusicGroup;
+{
+    word	flags,
+        count,
+        offsets[1];
+} MusicGroup;
 #endif
 
 typedef	struct
-		{
-			/* This part needs to be set up by the user */
-			word        mood,far *moods[sqMaxMoods];
+{
+    /* This part needs to be set up by the user */
+    word        mood, * moods[sqMaxMoods];
 
-			/* The rest is set up by the code */
-			Instrument	inst;
-			boolean		percussive;
-			word		far *seq;
-			longword	nextevent;
-		} ActiveTrack;
+    /* The rest is set up by the code */
+    Instrument	inst;
+    boolean		percussive;
+    word* seq;
+    longword	nextevent;
+} ActiveTrack;
 
 #define	sqmode_Normal		0
 #define	sqmode_FadeIn		1
@@ -188,10 +188,10 @@ typedef	struct
 
 // Global variables
 extern	boolean		AdLibPresent,
-					SoundSourcePresent,
-					SoundBlasterPresent,
-					NeedsMusic,					// For Caching Mgr
-					SoundPositioned;
+SoundSourcePresent,
+SoundBlasterPresent,
+NeedsMusic,					// For Caching Mgr
+SoundPositioned;
 extern	SDMode		SoundMode;
 extern	SDSMode		DigiMode;
 extern	SMMode		MusicMode;
@@ -201,36 +201,36 @@ extern	longword	TimeCount;					// Global time in ticks
 
 // Function prototypes
 extern	void	SD_Startup(void),
-				SD_Shutdown(void),
-				SD_Default(boolean gotit,SDMode sd,SMMode sm),
+SD_Shutdown(void),
+SD_Default(boolean gotit, SDMode sd, SMMode sm),
 
-				SD_PositionSound(int leftvol,int rightvol);
+SD_PositionSound(int leftvol, int rightvol);
 extern	boolean	SD_PlaySound(soundnames sound);
-extern	void	SD_SetPosition(int leftvol,int rightvol),
-				SD_StopSound(void),
-				SD_WaitSoundDone(void),
+extern	void	SD_SetPosition(int leftvol, int rightvol),
+SD_StopSound(void),
+SD_WaitSoundDone(void),
 
-				SD_StartMusic(MusicGroup far *music),
-				SD_MusicOn(void),
-				SD_MusicOff(void),
-				SD_FadeOutMusic(void),
+SD_StartMusic(MusicGroup* music),
+SD_MusicOn(void),
+SD_MusicOff(void),
+SD_FadeOutMusic(void),
 
-				SD_SetUserHook(void (*hook)(void));
+SD_SetUserHook(void (*hook)(void));
 extern	boolean	SD_MusicPlaying(void),
-				SD_SetSoundMode(SDMode mode),
-				SD_SetMusicMode(SMMode mode);
+SD_SetSoundMode(SDMode mode),
+SD_SetMusicMode(SMMode mode);
 extern	word	SD_SoundPlaying(void);
 
 extern	void	SD_SetDigiDevice(SDSMode),
-				SD_PlayDigitized(word which,int leftpos,int rightpos),
-				SD_StopDigitized(void),
-				SD_Poll(void);
+SD_PlayDigitized(word which, int leftpos, int rightpos),
+SD_StopDigitized(void),
+SD_Poll(void);
 
 #ifdef	_MUSE_	// MUSE Goes directly to the lower level routines
-extern	void	SDL_PCPlaySound(PCSound far *sound),
-				SDL_PCStopSound(void),
-				SDL_ALPlaySound(AdLibSound far *sound),
-				SDL_ALStopSound(void);
+extern	void	SDL_PCPlaySound(PCSound far* sound),
+SDL_PCStopSound(void),
+SDL_ALPlaySound(AdLibSound far* sound),
+SDL_ALStopSound(void);
 #endif
 
 #endif

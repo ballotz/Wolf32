@@ -91,20 +91,20 @@
 // TYPEDEFS
 //
 typedef struct {
-		int x,y,amount,curpos,indent;
-		} CP_iteminfo;
+    int x, y, amount, curpos, indent;
+} CP_iteminfo;
 
 typedef struct {
-		int active;
-		char string[36];
-		void (* routine)(int temp1);
-		} CP_itemtype;
+    int active;
+    char string[36];
+    void (*routine)(int temp1);
+} CP_itemtype;
 
 typedef struct {
-		int allowed[4];
-		} CustomCtrls;
+    int allowed[4];
+} CustomCtrls;
 
-extern CP_itemtype far MainMenu[],far NewEMenu[];
+extern CP_itemtype MainMenu[], NewEMenu[];
 extern CP_iteminfo MainItems;
 
 //
@@ -113,38 +113,38 @@ extern CP_iteminfo MainItems;
 void SetupControlPanel(void);
 void CleanupControlPanel(void);
 
-void DrawMenu(CP_iteminfo *item_i,CP_itemtype far *items);
-int  HandleMenu(CP_iteminfo *item_i,
-		CP_itemtype far *items,
-		void (*routine)(int w));
+void DrawMenu(CP_iteminfo* item_i, CP_itemtype* items);
+int  HandleMenu(CP_iteminfo* item_i,
+    CP_itemtype* items,
+    void (*routine)(int w));
 void ClearMScreen(void);
-void DrawWindow(int x,int y,int w,int h,int wcolor);
-void DrawOutline(int x,int y,int w,int h,int color1,int color2);
+void DrawWindow(int x, int y, int w, int h, int wcolor);
+void DrawOutline(int x, int y, int w, int h, int color1, int color2);
 void WaitKeyUp(void);
-void ReadAnyControl(ControlInfo *ci);
+void ReadAnyControl(ControlInfo* ci);
 void TicDelay(int count);
-void CacheLump(int lumpstart,int lumpend);
-void UnCacheLump(int lumpstart,int lumpend);
+void CacheLump(int lumpstart, int lumpend);
+void UnCacheLump(int lumpstart, int lumpend);
 void StartCPMusic(int song);
-int  Confirm(char far *string);
-void Message(char far *string);
+int  Confirm(char* string);
+void Message(char* string);
 void CheckPause(void);
 void ShootSnd(void);
 void CheckSecretMissions(void);
 void BossKey(void);
 
-void DrawGun(CP_iteminfo *item_i,CP_itemtype far *items,int x,int *y,int which,int basey,void (*routine)(int w));
-void DrawHalfStep(int x,int y);
-void EraseGun(CP_iteminfo *item_i,CP_itemtype far *items,int x,int y,int which);
-void SetTextColor(CP_itemtype far *items,int hlight);
-void DrawMenuGun(CP_iteminfo *iteminfo);
+void DrawGun(CP_iteminfo* item_i, CP_itemtype* items, int x, int* y, int which, int basey, void (*routine)(int w));
+void DrawHalfStep(int x, int y);
+void EraseGun(CP_iteminfo* item_i, CP_itemtype* items, int x, int y, int which);
+void SetTextColor(CP_itemtype* items, int hlight);
+void DrawMenuGun(CP_iteminfo* iteminfo);
 void DrawStripes(int y);
 
 void DefineMouseBtns(void);
 void DefineJoyBtns(void);
 void DefineKeyBtns(void);
 void DefineKeyMove(void);
-void EnterCtrlData(int index,CustomCtrls *cust,void (*DrawRtn)(int),void (*PrintRtn)(int),int type);
+void EnterCtrlData(int index, CustomCtrls* cust, void (*DrawRtn)(int), void (*PrintRtn)(int), int type);
 
 void DrawMainMenu(void);
 void DrawSoundMenu(void);
@@ -165,7 +165,7 @@ void PrintCustJoy(int i);
 void PrintCustKeybd(int i);
 void PrintCustKeys(int i);
 
-void PrintLSEntry(int w,int color);
+void PrintLSEntry(int w, int color);
 void TrackWhichGame(int w);
 void DrawNewGameDiff(int w);
 void FixupCustom(int w);
@@ -189,43 +189,43 @@ void CheckForEpisodes(void);
 //
 // VARIABLES
 //
-extern int SaveGamesAvail[10],StartGame,SoundStatus;
-extern char SaveGameNames[10][32],SaveName[13];
+extern int SaveGamesAvail[10], StartGame, SoundStatus;
+extern char SaveGameNames[10][32], SaveName[13];
 
-enum {MOUSE,JOYSTICK,KEYBOARDBTNS,KEYBOARDMOVE};	// FOR INPUT TYPES
+enum { MOUSE, JOYSTICK, KEYBOARDBTNS, KEYBOARDMOVE };	// FOR INPUT TYPES
 
 enum
 {
-	newgame,
-	soundmenu,
-	control,
-	loadgame,
-	savegame,
-	changeview,
+    newgame,
+    soundmenu,
+    control,
+    loadgame,
+    savegame,
+    changeview,
 
 #ifndef GOODTIMES
 #ifndef SPEAR
-	readthis,
+    readthis,
 #endif
 #endif
 
-	viewscores,
-	backtodemo,
-	quit
+    viewscores,
+    backtodemo,
+    quit
 } menuitems;
 
 //
 // WL_INTER
 //
 typedef struct {
-		int kill,secret,treasure;
-		long time;
-		} LRstruct;
+    int kill, secret, treasure;
+    long time;
+} LRstruct;
 
 extern LRstruct LevelRatios[];
 
-void Write (int x,int y,char *string);
+void Write(int x, int y, char* string);
 void NonShareware(void);
-int GetYorN(int x,int y,int pic);
+int GetYorN(int x, int y, int pic);
 
 

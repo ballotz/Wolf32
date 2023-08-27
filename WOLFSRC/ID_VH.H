@@ -16,53 +16,53 @@
 
 typedef struct
 {
-  int	width,
-	height,
-	orgx,orgy,
-	xl,yl,xh,yh,
-	shifts;
+    int	width,
+        height,
+        orgx, orgy,
+        xl, yl, xh, yh,
+        shifts;
 } spritetabletype;
 
 typedef	struct
 {
-	unsigned	sourceoffset[MAXSHIFTS];
-	unsigned	planesize[MAXSHIFTS];
-	unsigned	width[MAXSHIFTS];
-	byte		data[];
+    unsigned	sourceoffset[MAXSHIFTS];
+    unsigned	planesize[MAXSHIFTS];
+    unsigned	width[MAXSHIFTS];
+    byte		data[];
 } spritetype;		// the memptr for each sprite points to this
 
 typedef struct
 {
-	int width,height;
+    int width, height;
 } pictabletype;
 
 
 typedef struct
 {
-	int height;
-	int location[256];
-	char width[256];
+    int height;
+    int location[256];
+    char width[256];
 } fontstruct;
 
 
 //===========================================================================
 
 
-extern	pictabletype	_seg *pictable;
-extern	pictabletype	_seg *picmtable;
-extern	spritetabletype _seg *spritetable;
+extern	pictabletype* pictable;
+extern	pictabletype* picmtable;
+extern	spritetabletype* spritetable;
 
 extern	byte	fontcolor;
 extern	int	fontnumber;
-extern	int	px,py;
+extern	int	px, py;
 
 //
 // Double buffer management routines
 //
 
-void VW_InitDoubleBuffer (void);
-int	 VW_MarkUpdateBlock (int x1, int y1, int x2, int y2);
-void VW_UpdateScreen (void);
+void VW_InitDoubleBuffer(void);
+int	 VW_MarkUpdateBlock(int x1, int y1, int x2, int y2);
+void VW_UpdateScreen(void);
 
 //
 // mode independant routines
@@ -70,28 +70,28 @@ void VW_UpdateScreen (void);
 // regions marked in double buffer
 //
 
-void VWB_DrawTile8 (int x, int y, int tile);
-void VWB_DrawTile8M (int x, int y, int tile);
-void VWB_DrawTile16 (int x, int y, int tile);
-void VWB_DrawTile16M (int x, int y, int tile);
-void VWB_DrawPic (int x, int y, int chunknum);
+void VWB_DrawTile8(int x, int y, int tile);
+void VWB_DrawTile8M(int x, int y, int tile);
+void VWB_DrawTile16(int x, int y, int tile);
+void VWB_DrawTile16M(int x, int y, int tile);
+void VWB_DrawPic(int x, int y, int chunknum);
 void VWB_DrawMPic(int x, int y, int chunknum);
-void VWB_Bar (int x, int y, int width, int height, int color);
+void VWB_Bar(int x, int y, int width, int height, int color);
 
-void VWB_DrawPropString	 (char far *string);
-void VWB_DrawMPropString (char far *string);
-void VWB_DrawSprite (int x, int y, int chunknum);
-void VWB_Plot (int x, int y, int color);
-void VWB_Hlin (int x1, int x2, int y, int color);
-void VWB_Vlin (int y1, int y2, int x, int color);
+void VWB_DrawPropString(char* string);
+void VWB_DrawMPropString(char* string);
+void VWB_DrawSprite(int x, int y, int chunknum);
+void VWB_Plot(int x, int y, int color);
+void VWB_Hlin(int x1, int x2, int y, int color);
+void VWB_Vlin(int y1, int y2, int x, int color);
 
 
 //
 // wolfenstein EGA compatability stuff
 //
-extern byte far gamepal;
+extern byte gamepal;
 
-void VH_SetDefaultColors (void);
+void VH_SetDefaultColors(void);
 
 #define VW_Startup		VL_Startup
 #define VW_Shutdown		VL_Shutdown
@@ -110,7 +110,7 @@ void VH_SetDefaultColors (void);
 #define VW_FadeOut()	VL_FadeOut(0,255,0,0,0,30);
 #define VW_ScreenToScreen	VL_ScreenToScreen
 #define VW_SetDefaultColors	VH_SetDefaultColors
-void	VW_MeasurePropString (char far *string, word *width, word *height);
+void	VW_MeasurePropString(char* string, word* width, word* height);
 #define EGAMAPMASK(x)	VGAMAPMASK(x)
 #define EGAWRITEMODE(x)	VGAWRITEMODE(x)
 
@@ -122,10 +122,10 @@ void	VW_MeasurePropString (char far *string, word *width, word *height);
 #define LatchDrawChar(x,y,p) VL_LatchToScreen(latchpics[0]+(p)*16,2,8,x,y)
 #define LatchDrawTile(x,y,p) VL_LatchToScreen(latchpics[1]+(p)*64,4,16,x,y)
 
-void LatchDrawPic (unsigned x, unsigned y, unsigned picnum);
-void 	LoadLatchMem (void);
-boolean 	FizzleFade (unsigned source, unsigned dest,
-	unsigned width,unsigned height, unsigned frames,boolean abortable);
+void LatchDrawPic(unsigned x, unsigned y, unsigned picnum);
+void 	LoadLatchMem(void);
+boolean 	FizzleFade(unsigned source, unsigned dest,
+    unsigned width, unsigned height, unsigned frames, boolean abortable);
 
 
 #define NUMLATCHPICS	100

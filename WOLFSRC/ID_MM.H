@@ -55,11 +55,11 @@
 
 //==========================================================================
 
-typedef void _seg * memptr;
+typedef void* memptr;
 
 typedef struct
 {
-	long	nearheap,farheap,EMSmem,XMSmem,mainmem;
+    long	nearheap, farheap, EMSmem, XMSmem, mainmem;
 } mminfotype;
 
 //==========================================================================
@@ -68,29 +68,29 @@ extern	mminfotype	mminfo;
 extern	memptr		bufferseg;
 extern	boolean		mmerror;
 
-extern	void		(* beforesort) (void);
-extern	void		(* aftersort) (void);
+extern	void		(*beforesort) (void);
+extern	void		(*aftersort) (void);
 
 //==========================================================================
 
-void MM_Startup (void);
-void MM_Shutdown (void);
-void MM_MapEMS (void);
+void MM_Startup(void);
+void MM_Shutdown(void);
+void MM_MapEMS(void);
 
-void MM_GetPtr (memptr *baseptr,unsigned long size);
-void MM_FreePtr (memptr *baseptr);
+void MM_GetPtr(memptr* baseptr, unsigned long size);
+void MM_FreePtr(memptr* baseptr);
 
-void MM_SetPurge (memptr *baseptr, int purge);
-void MM_SetLock (memptr *baseptr, boolean locked);
-void MM_SortMem (void);
+void MM_SetPurge(memptr* baseptr, int purge);
+void MM_SetLock(memptr* baseptr, boolean locked);
+void MM_SortMem(void);
 
-void MM_ShowMemory (void);
+void MM_ShowMemory(void);
 
-long MM_UnusedMemory (void);
-long MM_TotalFree (void);
+long MM_UnusedMemory(void);
+long MM_TotalFree(void);
 
-void MM_BombOnError (boolean bomb);
+void MM_BombOnError(boolean bomb);
 
-void MML_UseSpace (unsigned segstart, unsigned seglength);
+void MML_UseSpace(unsigned segstart, unsigned seglength);
 
 #endif

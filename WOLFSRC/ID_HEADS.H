@@ -1,26 +1,26 @@
 // ID_GLOB.H
 
 
-#include <ALLOC.H>
+//#include <ALLOC.H>
 #include <CTYPE.H>
 #include <DOS.H>
 #include <ERRNO.H>
 #include <FCNTL.H>
 #include <IO.H>
-#include <MEM.H>
+//#include <MEM.H>
 #include <PROCESS.H>
 #include <STDIO.H>
 #include <STDLIB.H>
 #include <STRING.H>
 #include <SYS\STAT.H>
-#include <VALUES.H>
-#include <DIR.H>
+//#include <VALUES.H>
+//#include <DIR.H>
 #define __ID_GLOB__
 #include "VERSION.H"
 
 //--------------------------------------------------------------------------
 
-extern	char		far signon;
+extern	char		signon;
 
 #define	introscn	signon
 
@@ -65,20 +65,20 @@ extern	char		far signon;
 //	v1.0d1
 //
 
-typedef	enum	{false,true}	boolean;
+typedef	enum { false, true }	boolean;
 typedef	unsigned	char		byte;
 typedef	unsigned	int			word;
 typedef	unsigned	long		longword;
-typedef	byte *					Ptr;
+typedef	byte* Ptr;
 
 typedef	struct
-		{
-			int	x,y;
-		} Point;
+{
+    int	x, y;
+} Point;
 typedef	struct
-		{
-			Point	ul,lr;
-		} Rect;
+{
+    Point	ul, lr;
+} Rect;
 
 #define	nil	((void *)0)
 
@@ -93,7 +93,7 @@ typedef	struct
 #include "ID_US.H"
 
 
-void	Quit (char *error);		// defined in user program
+void	Quit(char* error);		// defined in user program
 
 //
 // replacing refresh manager with custom routines
@@ -110,14 +110,14 @@ void	Quit (char *error);		// defined in user program
 
 #define	UPDATETERMINATE	0x0301
 
-extern	unsigned	mapwidth,mapheight,tics;
+extern	unsigned	mapwidth, mapheight, tics;
 extern	boolean		compatability;
 
-extern	byte		*updateptr;
+extern	byte* updateptr;
 extern	unsigned	uwidthtable[UPDATEHIGH];
-extern	unsigned	blockstarts[UPDATEWIDE*UPDATEHIGH];
+extern	unsigned	blockstarts[UPDATEWIDE * UPDATEHIGH];
 
-extern	byte		fontcolor,backcolor;
+extern	byte		fontcolor, backcolor;
 
 #define SETFONTCOLOR(f,b) fontcolor=f;backcolor=b;
 
