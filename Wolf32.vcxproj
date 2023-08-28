@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="WOLFSRC\ID_MM.C" />
     <ClCompile Include="WOLFSRC\WL_MAIN.C" />
   </ItemGroup>
   <ItemGroup>
