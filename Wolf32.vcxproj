@@ -86,7 +86,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
@@ -100,7 +100,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_CRT_NONSTDC_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Link>
@@ -140,6 +140,19 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="WOLFSRC\WL_MAIN.C" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="WOLFSRC\ID_CA.H" />
+    <ClInclude Include="WOLFSRC\ID_HEADS.H" />
+    <ClInclude Include="WOLFSRC\ID_IN.H" />
+    <ClInclude Include="WOLFSRC\ID_MM.H" />
+    <ClInclude Include="WOLFSRC\ID_PM.H" />
+    <ClInclude Include="WOLFSRC\ID_SD.H" />
+    <ClInclude Include="WOLFSRC\ID_US.H" />
+    <ClInclude Include="WOLFSRC\ID_VH.H" />
+    <ClInclude Include="WOLFSRC\ID_VL.H" />
+    <ClInclude Include="WOLFSRC\WL_DEF.H" />
+    <ClInclude Include="WOLFSRC\WL_MENU.H" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

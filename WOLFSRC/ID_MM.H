@@ -59,7 +59,7 @@ typedef void* memptr;
 
 typedef struct
 {
-    long	nearheap, farheap, EMSmem, XMSmem, mainmem;
+    int32_t	nearheap, farheap, EMSmem, XMSmem, mainmem;
 } mminfotype;
 
 //==========================================================================
@@ -77,20 +77,20 @@ void MM_Startup(void);
 void MM_Shutdown(void);
 void MM_MapEMS(void);
 
-void MM_GetPtr(memptr* baseptr, unsigned long size);
+void MM_GetPtr(memptr* baseptr, uint32_t size);
 void MM_FreePtr(memptr* baseptr);
 
-void MM_SetPurge(memptr* baseptr, int purge);
+void MM_SetPurge(memptr* baseptr, int16_t purge);
 void MM_SetLock(memptr* baseptr, boolean locked);
 void MM_SortMem(void);
 
 void MM_ShowMemory(void);
 
-long MM_UnusedMemory(void);
-long MM_TotalFree(void);
+int32_t MM_UnusedMemory(void);
+int32_t MM_TotalFree(void);
 
 void MM_BombOnError(boolean bomb);
 
-void MML_UseSpace(unsigned segstart, unsigned seglength);
+void MML_UseSpace(uint16_t segstart, uint16_t seglength);
 
 #endif

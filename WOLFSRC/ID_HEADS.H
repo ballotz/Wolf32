@@ -1,6 +1,6 @@
 // ID_GLOB.H
 
-
+#include <stdint.h>
 //#include <ALLOC.H>
 #include <CTYPE.H>
 #include <DOS.H>
@@ -65,15 +65,15 @@ extern	char		signon;
 //	v1.0d1
 //
 
-typedef	enum { false, true }	boolean;
-typedef	unsigned	char		byte;
-typedef	unsigned	int			word;
-typedef	unsigned	long		longword;
+typedef	enum { false, true } boolean;
+typedef	uint8_t byte;
+typedef	uint16_t word;
+typedef	uint32_t longword;
 typedef	byte* Ptr;
 
 typedef	struct
 {
-    int	x, y;
+    int16_t	x, y;
 } Point;
 typedef	struct
 {
@@ -110,12 +110,12 @@ void	Quit(char* error);		// defined in user program
 
 #define	UPDATETERMINATE	0x0301
 
-extern	unsigned	mapwidth, mapheight, tics;
+extern	uint16_t	mapwidth, mapheight, tics;
 extern	boolean		compatability;
 
 extern	byte* updateptr;
-extern	unsigned	uwidthtable[UPDATEHIGH];
-extern	unsigned	blockstarts[UPDATEWIDE * UPDATEHIGH];
+extern	uint16_t	uwidthtable[UPDATEHIGH];
+extern	uint16_t	blockstarts[UPDATEWIDE * UPDATEHIGH];
 
 extern	byte		fontcolor, backcolor;
 

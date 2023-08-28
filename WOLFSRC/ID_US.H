@@ -24,7 +24,7 @@
 typedef	struct
 {
     char	name[MaxHighName + 1];
-    long	score;
+    int32_t	score;
     word	completed, episode;
 } HighScore;
 
@@ -42,7 +42,7 @@ typedef	struct
 
 typedef	struct
 {
-    int	x, y,
+    int16_t	x, y,
         w, h,
         px, py;
 } WindowRec;	// Record used to save & restore screen windows
@@ -57,7 +57,7 @@ typedef	enum
 
 //	Hack import for TED launch support
 extern	boolean		tedlevel;
-extern	int			tedlevelnum;
+extern	int16_t			tedlevelnum;
 extern	void		TEDDeath(void);
 
 extern	boolean		ingame,		// Set by game code if a game is in progress
@@ -73,12 +73,12 @@ WindowW, WindowH;// Current size of window
 
 extern	boolean		Button0, Button1,
 CursorBad;
-extern	int			CursorX, CursorY;
+extern	int16_t			CursorX, CursorY;
 
 extern	void		(*USL_MeasureString)(char*, word*, word*),
 (*USL_DrawString)(char*);
 
-extern	boolean(*USL_SaveGame)(int), (*USL_LoadGame)(int);
+extern	boolean(*USL_SaveGame)(int16_t), (*USL_LoadGame)(int16_t);
 extern	void		(*USL_ResetGame)(void);
 extern	SaveGame	Games[MaxSaveGames];
 extern	HighScore	Scores[];
@@ -89,8 +89,8 @@ extern	void	US_Startup(void),
 US_Setup(void),
 US_Shutdown(void),
 US_InitRndT(boolean randomize),
-US_SetLoadSaveHooks(boolean(*load)(int),
-    boolean(*save)(int),
+US_SetLoadSaveHooks(boolean(*load)(int16_t),
+    boolean(*save)(int16_t),
     void (*reset)(void)),
     US_TextScreen(void),
     US_UpdateTextScreen(void),
@@ -107,15 +107,15 @@ US_SetLoadSaveHooks(boolean(*load)(int),
     US_CPrintLine(char* s),
     US_Print(char* s),
     US_PrintUnsigned(longword n),
-    US_PrintSigned(long n),
+    US_PrintSigned(int32_t n),
     US_StartCursor(void),
     US_ShutCursor(void),
-    US_CheckHighScore(long score, word other),
-    US_DisplayHighScores(int which);
+    US_CheckHighScore(int32_t score, word other),
+    US_DisplayHighScores(int16_t which);
 extern	boolean	US_UpdateCursor(void),
-US_LineInput(int x, int y, char* buf, char* def, boolean escok,
-    int maxchars, int maxwidth);
-extern	int		US_CheckParm(char* parm, char** strings),
+US_LineInput(int16_t x, int16_t y, char* buf, char* def, boolean escok,
+    int16_t maxchars, int16_t maxwidth);
+extern	int16_t		US_CheckParm(char* parm, char** strings),
 US_RndT(void);
 
 void	USL_PrintInCenter(char* s, Rect r);

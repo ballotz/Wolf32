@@ -37,18 +37,18 @@ typedef	struct
     longword	offset;		// Offset of chunk into file
     word		length;		// Length of the chunk
 
-    int			xmsPage;	// If in XMS, (xmsPage * PMPageSize) gives offset into XMS handle
+    int16_t			xmsPage;	// If in XMS, (xmsPage * PMPageSize) gives offset into XMS handle
 
     PMLockType	locked;		// If set, this page can't be purged
-    int			emsPage;	// If in EMS, logical page/offset into page
-    int			mainPage;	// If in Main, index into handle array
+    int16_t			emsPage;	// If in EMS, logical page/offset into page
+    int16_t			mainPage;	// If in Main, index into handle array
 
     longword	lastHit;	// Last frame number of hit
 } PageListStruct;
 
 typedef	struct
 {
-    int			baseEMSPage;	// Base EMS page for this phys frame
+    int16_t			baseEMSPage;	// Base EMS page for this phys frame
     longword	lastHit;		// Last frame number of hit
 } EMSListStruct;
 
@@ -74,10 +74,10 @@ PM_Shutdown(void),
 PM_Reset(void),
 PM_Preload(boolean(*update)(word current, word total)),
 PM_NextFrame(void),
-PM_SetPageLock(int pagenum, PMLockType lock),
-PM_SetMainPurge(int level),
+PM_SetPageLock(int16_t pagenum, PMLockType lock),
+PM_SetMainPurge(int16_t level),
 PM_CheckMainMem(void);
-extern	memptr	PM_GetPageAddress(int pagenum),
-PM_GetPage(int pagenum);		// Use this one to cache page
+extern	memptr	PM_GetPageAddress(int16_t pagenum),
+PM_GetPage(int16_t pagenum);		// Use this one to cache page
 
-void PM_SetMainMemPurge(int level);
+void PM_SetMainMemPurge(int16_t level);

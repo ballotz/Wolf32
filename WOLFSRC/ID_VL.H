@@ -81,16 +81,16 @@ void Quit(char* error);
 
 //===========================================================================
 
-extern	unsigned	bufferofs;			// all drawing is reletive to this
-extern	unsigned	displayofs, pelpan;	// last setscreen coordinates
+extern	uint16_t	bufferofs;			// all drawing is reletive to this
+extern	uint16_t	displayofs, pelpan;	// last setscreen coordinates
 
-extern	unsigned	screenseg;			// set to 0xa000 for asm convenience
+extern	uint16_t	screenseg;			// set to 0xa000 for asm convenience
 
-extern	unsigned	linewidth;
-extern	unsigned	ylookup[MAXSCANLINES];
+extern	uint16_t	linewidth;
+extern	uint16_t	ylookup[MAXSCANLINES];
 
 extern	boolean		screenfaded;
-extern	unsigned	bordercolor;
+extern	uint16_t	bordercolor;
 
 //===========================================================================
 
@@ -123,39 +123,39 @@ void VL_DePlaneVGA(void);
 void VL_SetVGAPlaneMode(void);
 void VL_ClearVideo(byte color);
 
-void VL_SetLineWidth(unsigned width);
-void VL_SetSplitScreen(int linenum);
+void VL_SetLineWidth(uint16_t width);
+void VL_SetSplitScreen(int16_t linenum);
 
-void VL_WaitVBL(int vbls);
-void VL_CrtcStart(int crtc);
-void VL_SetScreen(int crtc, int pelpan);
+void VL_WaitVBL(int16_t vbls);
+void VL_CrtcStart(int16_t crtc);
+void VL_SetScreen(int16_t crtc, int16_t pelpan);
 
-void VL_FillPalette(int red, int green, int blue);
-void VL_SetColor(int color, int red, int green, int blue);
-void VL_GetColor(int color, int* red, int* green, int* blue);
+void VL_FillPalette(int16_t red, int16_t green, int16_t blue);
+void VL_SetColor(int16_t color, int16_t red, int16_t green, int16_t blue);
+void VL_GetColor(int16_t color, int16_t* red, int16_t* green, int16_t* blue);
 void VL_SetPalette(byte* palette);
 void VL_GetPalette(byte* palette);
-void VL_FadeOut(int start, int end, int red, int green, int blue, int steps);
-void VL_FadeIn(int start, int end, byte* palette, int steps);
-void VL_ColorBorder(int color);
+void VL_FadeOut(int16_t start, int16_t end, int16_t red, int16_t green, int16_t blue, int16_t steps);
+void VL_FadeIn(int16_t start, int16_t end, byte* palette, int16_t steps);
+void VL_ColorBorder(int16_t color);
 
-void VL_Plot(int x, int y, int color);
-void VL_Hlin(unsigned x, unsigned y, unsigned width, unsigned color);
-void VL_Vlin(int x, int y, int height, int color);
-void VL_Bar(int x, int y, int width, int height, int color);
+void VL_Plot(int16_t x, int16_t y, int16_t color);
+void VL_Hlin(uint16_t x, uint16_t y, uint16_t width, uint16_t color);
+void VL_Vlin(int16_t x, int16_t y, int16_t height, int16_t color);
+void VL_Bar(int16_t x, int16_t y, int16_t width, int16_t height, int16_t color);
 
-void VL_MungePic(byte* source, unsigned width, unsigned height);
-void VL_DrawPicBare(int x, int y, byte* pic, int width, int height);
-void VL_MemToLatch(byte* source, int width, int height, unsigned dest);
-void VL_ScreenToScreen(unsigned source, unsigned dest, int width, int height);
-void VL_MemToScreen(byte* source, int width, int height, int x, int y);
-void VL_MaskedToScreen(byte* source, int width, int height, int x, int y);
+void VL_MungePic(byte* source, uint16_t width, uint16_t height);
+void VL_DrawPicBare(int16_t x, int16_t y, byte* pic, int16_t width, int16_t height);
+void VL_MemToLatch(byte* source, int16_t width, int16_t height, uint16_t dest);
+void VL_ScreenToScreen(uint16_t source, uint16_t dest, int16_t width, int16_t height);
+void VL_MemToScreen(byte* source, int16_t width, int16_t height, int16_t x, int16_t y);
+void VL_MaskedToScreen(byte* source, int16_t width, int16_t height, int16_t x, int16_t y);
 
-void VL_DrawTile8String(char* str, char* tile8ptr, int printx, int printy);
-void VL_DrawLatch8String(char* str, unsigned tile8ptr, int printx, int printy);
-void VL_SizeTile8String(char* str, int* width, int* height);
-void VL_DrawPropString(char* str, unsigned tile8ptr, int printx, int printy);
-void VL_SizePropString(char* str, int* width, int* height, char* font);
+void VL_DrawTile8String(char* str, char* tile8ptr, int16_t printx, int16_t printy);
+void VL_DrawLatch8String(char* str, uint16_t tile8ptr, int16_t printx, int16_t printy);
+void VL_SizeTile8String(char* str, int16_t* width, int16_t* height);
+void VL_DrawPropString(char* str, uint16_t tile8ptr, int16_t printx, int16_t printy);
+void VL_SizePropString(char* str, int16_t* width, int16_t* height, char* font);
 
 void VL_TestPaletteSet(void);
 

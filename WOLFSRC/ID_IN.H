@@ -133,7 +133,7 @@ typedef	enum {
 } Direction;
 typedef	struct {
     boolean		button0, button1, button2, button3;
-    int			x, y;
+    int16_t			x, y;
     Motion		xaxis, yaxis;
     Direction	dir;
 } CursorInfo;
@@ -178,8 +178,8 @@ IN_Default(boolean gotit, ControlType in),
 IN_SetKeyHook(void (*)()),
 IN_ClearKeysDown(void),
 IN_ReadCursor(CursorInfo*),
-IN_ReadControl(int, ControlInfo*),
-IN_SetControlType(int, ControlType),
+IN_ReadControl(int16_t, ControlInfo*),
+IN_SetControlType(int16_t, ControlType),
 IN_GetJoyAbs(word joy, word* xp, word* yp),
 IN_SetupJoy(word joy, word minx, word maxx,
     word miny, word maxy),
@@ -195,7 +195,7 @@ extern	byte* IN_GetScanName(ScanCode);
 byte	IN_MouseButtons(void);
 byte	IN_JoyButtons(void);
 
-void INL_GetJoyDelta(word joy, int* dx, int* dy);
+void INL_GetJoyDelta(word joy, int16_t* dx, int16_t* dy);
 void IN_StartAck(void);
 boolean IN_CheckAck(void);
 
