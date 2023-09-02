@@ -667,8 +667,6 @@ void SetupWalls(void)
 
 void SignonScreen(void)                        // VGA version
 {
-    uint16_t        segstart, seglength;
-
     VL_SetVGAPlaneMode();
     VL_TestPaletteSet();
     VL_SetPalette(&gamepal);
@@ -680,18 +678,6 @@ void SignonScreen(void)                        // VGA version
         VL_MemToScreen(&introscn, 320, 200, 0, 0);
         VW_SetScreen(0, 0);
     }
-
-    //
-    // reclaim the memory from the linked in signon screen
-    //
-    segstart = FP_SEG(&introscn);
-    seglength = 64000 / 16;
-    if (FP_OFF(&introscn))
-    {
-        segstart++;
-        seglength--;
-    }
-    MML_UseSpace(segstart, seglength);
 }
 
 
@@ -1107,23 +1093,6 @@ void InitGame()
     SD_Startup();
     CA_Startup();
     US_Startup();
-
-
-#ifndef SPEAR
-    if (mminfo.mainmem < 235000L)
-#else
-    if (mminfo.mainmem < 257000L && !MS_CheckParm("debugmode"))
-#endif
-    {
-        memptr screen;
-
-        CA_CacheGrChunk(ERRORSCREEN);
-        screen = grsegs[ERRORSCREEN];
-        ShutdownId();
-        movedata((uint16_t)screen, 7 + 7 * 160, 0xb800, 0, 17 * 160);
-        gotoxy(1, 23);
-        exit(1);
-    }
 
 
     //

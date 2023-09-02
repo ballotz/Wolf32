@@ -27,9 +27,6 @@ EMS / XMS unmanaged routines
 #include "ID_HEADS.H"
 #pragma hdrstop
 
-#pragma warn -pro
-#pragma warn -use
-
 /*
 =============================================================================
 
@@ -38,19 +35,25 @@ EMS / XMS unmanaged routines
 =============================================================================
 */
 
-#define LOCKBIT		0x80	// if set in attributes, block cannot be moved
-#define PURGEBITS	3		// 0-3 level, 0= unpurgable, 3= purge first
-#define PURGEMASK	0xfffc
-#define BASEATTRIBUTES	0	// unlocked, non purgable
+#ifndef SPEAR
+#define MAXMEM          235000L
+#else
+#define MAXMEM          257000L
+#endif
 
-#define MAXUMBS		10
+#define USEHEAP         0
+
+#define LOCKBIT         0x80        // if set in attributes, block cannot be moved
+#define PURGEBITS       3           // 0-3 level, 0= unpurgable, 3= purge first
+#define PURGEMASK       0xfffffffc
+#define BASEATTRIBUTES  0           // unlocked, non purgable
 
 typedef struct mmblockstruct
 {
-    uint16_t	start, length;
-    uint16_t	attributes;
-    memptr* useptr;	// pointer to the segment start
+    uintptr_t start, length;
+    memptr* useptr; // pointer to the segment start
     struct mmblockstruct* next;
+    uint32_t attributes;
 } mmblocktype;
 
 
@@ -69,9 +72,7 @@ typedef struct mmblockstruct
 =============================================================================
 */
 
-mminfotype	mminfo;
 memptr		bufferseg;
-boolean		mmerror;
 
 void		(*beforesort) (void);
 void		(*aftersort) (void);
@@ -84,20 +85,15 @@ void		(*aftersort) (void);
 =============================================================================
 */
 
-boolean		mmstarted;
+boolean     mmstarted;
 
-void* farheap;
-void* nearheap;
+#if USEHEAP==1
+void* heap;
+#else
+uint32_t mmbuffer[(MAXMEM + sizeof(uint32_t) - 1) / sizeof(uint32_t)];
+#endif
 
-mmblocktype	mmblocks[MAXBLOCKS], * mmhead, * mmfree, * mmrover, * mmnew;
-
-boolean		bombonerror;
-
-//uint16_t	totalEMSpages,freeEMSpages,EMSpageframe,EMSpagesmapped,EMShandle;
-
-void		(*XMSaddr) (void);		// far pointer to XMS driver
-
-uint16_t	numUMBs, UMBbase[MAXUMBS];
+mmblocktype mmblocks[MAXBLOCKS], * mmhead, * mmfree, * mmrover, * mmnew;
 
 //==========================================================================
 
@@ -105,147 +101,35 @@ uint16_t	numUMBs, UMBbase[MAXUMBS];
 // local prototypes
 //
 
-boolean		MML_CheckForEMS(void);
-void 		MML_ShutdownEMS(void);
-void 		MM_MapEMS(void);
-boolean 	MML_CheckForXMS(void);
-void 		MML_ShutdownXMS(void);
-void		MML_UseSpace(uint16_t segstart, uint16_t seglength);
-void 		MML_ClearBlock(void);
+void MML_UseSpace(uintptr_t start, uintptr_t length);
+void MML_ClearBlock(void);
 
 //==========================================================================
 
-/*
-======================
-=
-= MML_CheckForXMS
-=
-= Check for XMM driver
-=
-=======================
-*/
-
-boolean MML_CheckForXMS(void)
-{
-    numUMBs = 0;
-
-    asm{
-        mov	ax,0x4300
-        int	0x2f				// query status of installed diver
-        cmp	al,0x80
-        je	good
-    }
-
-    return false;
-good:
-    return true;
-}
-
-
-/*
-======================
-=
-= MML_SetupXMS
-=
-= Try to allocate all upper memory block
-=
-=======================
-*/
-
-void MML_SetupXMS(void)
-{
-    uint16_t	base, size;
-
-    asm{
-        mov	ax,0x4310
-        int	0x2f
-        mov[WORD PTR XMSaddr],bx
-        mov[WORD PTR XMSaddr + 2],es		// function pointer to XMS driver
-    }
-
-    getmemory:
-    asm{
-        mov	ah,XMS_ALLOCUMB
-        mov	dx,0xffff					// try for largest block possible
-        call[DWORD PTR XMSaddr]
-        or ax,ax
-        jnz	gotone
-
-        cmp	bl,0xb0						// error: smaller UMB is available
-        jne	done;
-
-        mov	ah,XMS_ALLOCUMB
-        call[DWORD PTR XMSaddr]		// DX holds largest available UMB
-        or ax,ax
-        jz	done						// another error...
-    }
-
-    gotone:
-    asm{
-        mov[base],bx
-        mov[size],dx
-    }
-    MML_UseSpace(base, size);
-    mminfo.XMSmem += size * 16;
-    UMBbase[numUMBs] = base;
-    numUMBs++;
-    if (numUMBs < MAXUMBS)
-        goto getmemory;
-
-done:;
-}
-
-
-/*
-======================
-=
-= MML_ShutdownXMS
-=
-======================
-*/
-
-void MML_ShutdownXMS(void)
-{
-    int16_t	i;
-    uint16_t	base;
-
-    for (i = 0; i < numUMBs; i++)
-    {
-        base = UMBbase[i];
-
-        asm	mov	ah, XMS_FREEUMB
-            asm	mov	dx, [base]
-            asm	call[DWORD PTR XMSaddr]
-    }
-}
-
-//==========================================================================
 
 /*
 ======================
 =
 = MML_UseSpace
 =
-= Marks a range of paragraphs as usable by the memory manager
-= This is used to mark space for the near heap, far heap, ems page frame,
-= and upper memory blocks
+= Marks a range of address as usable by the memory manager
 =
 ======================
 */
 
-void MML_UseSpace(uint16_t segstart, uint16_t seglength)
+void MML_UseSpace(uintptr_t start, uintptr_t length)
 {
     mmblocktype* scan, * last;
-    uint16_t	oldend;
-    int32_t		extra;
+    uintptr_t oldend;
+    uintptr_t extra;
 
     scan = last = mmhead;
     mmrover = mmhead;		// reset rover to start of memory
 
-//
-// search for the block that contains the range of segments
-//
-    while (scan->start + scan->length < segstart)
+    //
+    // search for the block that contains the range of segments
+    //
+    while (scan->start + scan->length < start)
     {
         last = scan;
         scan = scan->next;
@@ -255,18 +139,18 @@ void MML_UseSpace(uint16_t segstart, uint16_t seglength)
     // take the given range out of the block
     //
     oldend = scan->start + scan->length;
-    extra = oldend - (segstart + seglength);
+    extra = oldend - (start + length);
     if (extra < 0)
         Quit("MML_UseSpace: Segment spans two blocks!");
 
-    if (segstart == scan->start)
+    if (start == scan->start)
     {
-        last->next = scan->next;			// unlink block
+        last->next = scan->next; // unlink block
         FREEBLOCK(scan);
         scan = last;
     }
     else
-        scan->length = segstart - scan->start;	// shorten block
+        scan->length = start - scan->start; // shorten block
 
     if (extra > 0)
     {
@@ -275,11 +159,10 @@ void MML_UseSpace(uint16_t segstart, uint16_t seglength)
 
         mmnew->next = scan->next;
         scan->next = mmnew;
-        mmnew->start = segstart + seglength;
+        mmnew->start = start + length;
         mmnew->length = extra;
         mmnew->attributes = LOCKBIT;
     }
-
 }
 
 //==========================================================================
@@ -296,7 +179,7 @@ void MML_UseSpace(uint16_t segstart, uint16_t seglength)
 
 void MML_ClearBlock(void)
 {
-    mmblocktype* scan, * last;
+    mmblocktype* scan;
 
     scan = mmhead->next;
 
@@ -321,27 +204,22 @@ void MML_ClearBlock(void)
 =
 = MM_Startup
 =
-= Grabs all space from turbo with malloc/farmalloc
+= Grabs MAXMEM space
 = Allocates bufferseg misc buffer
 =
 ===================
 */
 
-static	char* ParmStrings[] = { "noems","noxms","" };
-
 void MM_Startup(void)
 {
     int16_t i;
-    uint32_t length;
-    void* start;
-    uint16_t 	segstart, seglength, endfree;
+    uintptr_t start, length;
 
     if (mmstarted)
         MM_Shutdown();
 
-
     mmstarted = true;
-    bombonerror = true;
+
     //
     // set up the linked list (everything in the free list;
     //
@@ -355,44 +233,28 @@ void MM_Startup(void)
     // locked block of all memory until we punch out free space
     //
     GETNEWBLOCK;
-    mmhead = mmnew;				// this will allways be the first node
+    mmhead = mmnew; // this will allways be the first node
     mmnew->start = 0;
-    mmnew->length = 0xffff;
+    mmnew->length = UINTPTR_MAX;
     mmnew->attributes = LOCKBIT;
     mmnew->next = NULL;
     mmrover = mmhead;
 
-
     //
-    // get all available near conventional memory segments
+    // get MAXMEM memory
     //
-    length = coreleft();
-    start = (void*)(nearheap = malloc(length));
-
-    length -= 16 - (FP_OFF(start) & 15);
-    length -= SAVENEARHEAP;
-    seglength = length / 16;			// now in paragraphs
-    segstart = FP_SEG(start) + (FP_OFF(start) + 15) / 16;
-    MML_UseSpace(segstart, seglength);
-    mminfo.nearheap = length;
-
-    //
-    // get all available far conventional memory segments
-    //
-    length = farcoreleft();
-    start = farheap = farmalloc(length);
-    length -= 16 - (FP_OFF(start) & 15);
-    length -= SAVEFARHEAP;
-    seglength = length / 16;			// now in paragraphs
-    segstart = FP_SEG(start) + (FP_OFF(start) + 15) / 16;
-    MML_UseSpace(segstart, seglength);
-    mminfo.farheap = length;
-    mminfo.mainmem = mminfo.nearheap + mminfo.farheap;
+    length = MAXMEM;
+#if USEHEAP==1
+    start = (uintptr_t)(heap = malloc(length));
+#else
+    start = (uintptr_t)mmbuffer;
+#endif
+    MML_UseSpace(start, length);
 
     //
     // allocate the misc buffer
     //
-    mmrover = mmhead;		// start looking for space after low block
+    mmrover = mmhead; // start looking for space after low block
 
     MM_GetPtr(&bufferseg, BUFFERSIZE);
 }
@@ -414,9 +276,9 @@ void MM_Shutdown(void)
     if (!mmstarted)
         return;
 
-    farfree(farheap);
-    free(nearheap);
-    //  MML_ShutdownXMS ();
+#if USEHEAP==1
+    free(heap);
+#endif
 }
 
 //==========================================================================
@@ -431,20 +293,21 @@ void MM_Shutdown(void)
 ====================
 */
 
-void MM_GetPtr(memptr* baseptr, uint32_t size)
+void MM_GetPtr(memptr* baseptr, size_t size)
 {
     mmblocktype* scan, * lastscan, * endscan, * purge, * next;
-    int16_t			search;
-    uint16_t	needed, startseg;
+    int16_t search;
+    uintptr_t start;
 
-    needed = (size + 15) / 16;		// convert size from bytes to paragraphs
-
-    GETNEWBLOCK;				// fill in start and next after a spot is found
-    mmnew->length = needed;
+    GETNEWBLOCK; // fill in start and next after a spot is found
+    mmnew->length = size;
     mmnew->useptr = baseptr;
     mmnew->attributes = BASEATTRIBUTES;
 
-tryagain:
+    scan = NULL;
+    lastscan = NULL;
+    endscan = NULL;
+
     for (search = 0; search < 3; search++)
     {
         //
@@ -474,11 +337,11 @@ tryagain:
             break;
         }
 
-        startseg = lastscan->start + lastscan->length;
+        start = lastscan->start + lastscan->length;
 
         while (scan != endscan)
         {
-            if (scan->start - startseg >= needed)
+            if (scan->start - start >= size)
             {
                 //
                 // got enough space between the end of lastscan and
@@ -487,7 +350,7 @@ tryagain:
                 //
                 purge = lastscan->next;
                 lastscan->next = mmnew;
-                mmnew->start = *(uint16_t*)baseptr = startseg;
+                mmnew->start = *(uintptr_t*)baseptr = start;
                 mmnew->next = scan;
                 while (purge != scan)
                 {	// free the purgable block
@@ -506,7 +369,7 @@ tryagain:
                 || !(scan->attributes & PURGEBITS))
             {
                 lastscan = scan;
-                startseg = lastscan->start + lastscan->length;
+                start = lastscan->start + lastscan->length;
             }
 
 
@@ -514,32 +377,7 @@ tryagain:
         }
     }
 
-    if (bombonerror)
-    {
-
-        extern char configname[];
-        extern	boolean	insetupscaling;
-        extern	int16_t	viewsize;
-        boolean SetViewSize(uint16_t width, uint16_t height);
-#define HEIGHTRATIO		0.50
-        //
-        // wolf hack -- size the view down
-        //
-        if (!insetupscaling && viewsize > 10)
-        {
-            mmblocktype* savedmmnew;
-            savedmmnew = mmnew;
-            viewsize -= 2;
-            SetViewSize(viewsize * 16, viewsize * 16 * HEIGHTRATIO);
-            mmnew = savedmmnew;
-            goto tryagain;
-        }
-
-        //		unlink(configname);
-        Quit("MM_GetPtr: Out of memory!");
-    }
-    else
-        mmerror = true;
+    Quit("MM_GetPtr: Out of memory!");
 }
 
 //==========================================================================
@@ -589,7 +427,7 @@ void MM_FreePtr(memptr* baseptr)
 =====================
 */
 
-void MM_SetPurge(memptr* baseptr, int16_t purge)
+void MM_SetPurge(memptr* baseptr, int32_t purge)
 {
     mmblocktype* start;
 
@@ -664,8 +502,8 @@ void MM_SetLock(memptr* baseptr, boolean locked)
 void MM_SortMem(void)
 {
     mmblocktype* scan, * last, * next;
-    uint16_t	start, length, source, dest;
-    int16_t			playing;
+    uintptr_t start;// , length, source, dest;
+    int16_t playing;
 
     //
     // lock down a currently playing sound
@@ -724,20 +562,10 @@ void MM_SortMem(void)
                 //
                 if (scan->start != start)
                 {
-                    length = scan->length;
-                    source = scan->start;
-                    dest = start;
-                    while (length > 0xf00)
-                    {
-                        movedata(source, 0, dest, 0, 0xf00 * 16);
-                        length -= 0xf00;
-                        source += 0xf00;
-                        dest += 0xf00;
-                    }
-                    movedata(source, 0, dest, 0, length * 16);
+                    memmove((void*)start, (void*)scan->start, scan->length);
 
                     scan->start = start;
-                    *(uint16_t*)scan->useptr = start;
+                    *(uintptr_t*)scan->useptr = start;
                 }
                 start = scan->start + scan->length;
             }
@@ -771,14 +599,13 @@ void MM_ShowMemory(void)
 {
     mmblocktype* scan;
     uint16_t color, temp, x, y;
-    int32_t	end, owner;
-    char    scratch[80], str[10];
+    uintptr_t end;
 
     temp = bufferofs;
     bufferofs = displayofs;
     scan = mmhead;
 
-    end = -1;
+    end = UINTPTR_MAX;
 
     while (scan)
     {
@@ -820,29 +647,29 @@ void MM_ShowMemory(void)
 void MM_DumpData(void)
 {
     mmblocktype* scan, * best;
-    int32_t	lowest, oldlowest;
-    uint16_t	owner;
-    char	lock, purge;
+    uintptr_t lowest, oldlowest;
+    uintptr_t owner;
+    char lock, purge;
     FILE* dumpfile;
 
 
-    free(nearheap);
     dumpfile = fopen("MMDUMP.TXT", "w");
     if (!dumpfile)
         Quit("MM_DumpData: Couldn't open MMDUMP.TXT!");
 
-    lowest = -1;
+    lowest = UINTPTR_MAX;
     do
     {
         oldlowest = lowest;
-        lowest = 0xffff;
+        lowest = UINTPTR_MAX;
 
         scan = mmhead;
+        best = NULL;
         while (scan)
         {
-            owner = (uint16_t)scan->useptr;
+            owner = (uintptr_t)scan->useptr;
 
-            if (owner && owner<lowest && owner > oldlowest)
+            if (owner && owner < lowest && owner > oldlowest)
             {
                 best = scan;
                 lowest = owner;
@@ -851,7 +678,7 @@ void MM_DumpData(void)
             scan = scan->next;
         }
 
-        if (lowest != 0xffff)
+        if (lowest != UINTPTR_MAX)
         {
             if (best->attributes & PURGEBITS)
                 purge = 'P';
@@ -862,10 +689,10 @@ void MM_DumpData(void)
             else
                 lock = '-';
             fprintf(dumpfile, "0x%p (%c%c) = %u\n"
-                , (uint16_t)lowest, lock, purge, best->length);
+                , (void*)lowest, lock, purge, best->length);
         }
 
-    } while (lowest != 0xffff);
+    } while (lowest != UINTPTR_MAX);
 
     fclose(dumpfile);
     Quit("MMDUMP.TXT created.");
@@ -886,7 +713,7 @@ void MM_DumpData(void)
 
 int32_t MM_UnusedMemory(void)
 {
-    uint16_t free;
+    uintptr_t free;
     mmblocktype* scan;
 
     free = 0;
@@ -898,7 +725,7 @@ int32_t MM_UnusedMemory(void)
         scan = scan->next;
     }
 
-    return free * 16l;
+    return free;
 }
 
 //==========================================================================
@@ -916,7 +743,7 @@ int32_t MM_UnusedMemory(void)
 
 int32_t MM_TotalFree(void)
 {
-    uint16_t free;
+    uintptr_t free;
     mmblocktype* scan;
 
     free = 0;
@@ -930,22 +757,7 @@ int32_t MM_TotalFree(void)
         scan = scan->next;
     }
 
-    return free * 16l;
+    return free;
 }
 
 //==========================================================================
-
-/*
-=====================
-=
-= MM_BombOnError
-=
-=====================
-*/
-
-void MM_BombOnError(boolean bomb)
-{
-    bombonerror = bomb;
-}
-
-
