@@ -73,6 +73,7 @@ typedef struct mmblockstruct
 */
 
 memptr		bufferseg;
+boolean		mmerror;
 
 void		(*beforesort) (void);
 void		(*aftersort) (void);
@@ -94,6 +95,8 @@ uint32_t mmbuffer[(MAXMEM + sizeof(uint32_t) - 1) / sizeof(uint32_t)];
 #endif
 
 mmblocktype mmblocks[MAXBLOCKS], * mmhead, * mmfree, * mmrover, * mmnew;
+
+boolean		bombonerror;
 
 //==========================================================================
 
@@ -219,6 +222,7 @@ void MM_Startup(void)
         MM_Shutdown();
 
     mmstarted = true;
+    bombonerror = true;
 
     //
     // set up the linked list (everything in the free list;
@@ -377,7 +381,10 @@ void MM_GetPtr(memptr* baseptr, size_t size)
         }
     }
 
-    Quit("MM_GetPtr: Out of memory!");
+    if (bombonerror)
+        Quit("MM_GetPtr: Out of memory!");
+    else
+        mmerror = true;
 }
 
 //==========================================================================
@@ -761,3 +768,16 @@ int32_t MM_TotalFree(void)
 }
 
 //==========================================================================
+
+/*
+=====================
+=
+= MM_BombOnError
+=
+=====================
+*/
+
+void MM_BombOnError(boolean bomb)
+{
+    bombonerror = bomb;
+}

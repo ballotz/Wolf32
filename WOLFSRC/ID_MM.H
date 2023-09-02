@@ -58,6 +58,7 @@ typedef void* memptr;
 //==========================================================================
 
 extern	memptr		bufferseg;
+extern	boolean		mmerror;
 
 extern	void		(*beforesort) (void);
 extern	void		(*aftersort) (void);
@@ -76,5 +77,7 @@ void MM_SortMem(void);
 
 int32_t MM_UnusedMemory(void);
 int32_t MM_TotalFree(void);
+
+void MM_BombOnError(boolean bomb);
 
 #endif
