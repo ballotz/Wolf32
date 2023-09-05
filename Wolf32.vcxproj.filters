@@ -4,6 +4,7 @@
     <ClCompile Include="WOLFSRC\WL_MAIN.C" />
     <ClCompile Include="WOLFSRC\ID_MM.C" />
     <ClCompile Include="WOLFSRC\ID_PM.C" />
+    <ClCompile Include="WOLFSRC\ID_CA.C" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WOLFSRC\WL_DEF.H" />
