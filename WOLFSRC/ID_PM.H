@@ -3,21 +3,16 @@
 //	Header file for Id Engine's Page Manager
 //
 
-//	NOTE! PMPageSize must be an even divisor of EMSPageSize, and >= 1024
-#define	EMSPageSize		16384
-#define	EMSPageSizeSeg	(EMSPageSize >> 4)
-#define	EMSPageSizeKB	(EMSPageSize >> 10)
-#define	EMSFrameCount	4
-#define	PMPageSize		4096
-#define	PMPageSizeSeg	(PMPageSize >> 4)
-#define	PMPageSizeKB	(PMPageSize >> 10)
-#define	PMEMSSubPage	(EMSPageSize / PMPageSize)
+//	NOTE! PMPageSize must be >= 1024
+#define	PMPageSize      4096
+#define	PMPageSizeSeg   (PMPageSize >> 4)
+#define	PMPageSizeKB    (PMPageSize >> 10)
 
-#define	PMMinMainMem	10			// Min acceptable # of pages from main
-#define	PMMaxMainMem	100			// Max number of pages in main memory
+#define	PMMinMainMem    10      // Min acceptable # of pages from main
+#define	PMMaxMainMem    100     // Max number of pages in main memory
 
-#define	PMThrashThreshold	1	// Number of page thrashes before panic mode
-#define	PMUnThrashThreshold	5	// Number of non-thrashing frames before leaving panic mode
+#define	PMThrashThreshold   1   // Number of page thrashes before panic mode
+#define	PMUnThrashThreshold 5   // Number of non-thrashing frames before leaving panic mode
 
 typedef	enum
 {
@@ -34,30 +29,17 @@ typedef	enum
 
 typedef	struct
 {
-    longword	offset;		// Offset of chunk into file
-    word		length;		// Length of the chunk
+    longword    offset;     // Offset of chunk into file
+    word        length;     // Length of the chunk
 
-    int16_t			xmsPage;	// If in XMS, (xmsPage * PMPageSize) gives offset into XMS handle
+    PMLockType  locked;     // If set, this page can't be purged
+    int16_t     mainPage;   // If in Main, index into handle array
 
-    PMLockType	locked;		// If set, this page can't be purged
-    int16_t			emsPage;	// If in EMS, logical page/offset into page
-    int16_t			mainPage;	// If in Main, index into handle array
-
-    longword	lastHit;	// Last frame number of hit
+    longword    lastHit;    // Last frame number of hit
 } PageListStruct;
 
-typedef	struct
-{
-    int16_t			baseEMSPage;	// Base EMS page for this phys frame
-    longword	lastHit;		// Last frame number of hit
-} EMSListStruct;
-
-extern	boolean			XMSPresent, EMSPresent;
-extern	word			XMSPagesAvail, EMSPagesAvail;
-
-extern	word			ChunksInFile,
-PMSpriteStart, PMSoundStart;
-extern	PageListStruct* PMPages;
+extern  word            ChunksInFile, PMSpriteStart, PMSoundStart;
+extern  PageListStruct* PMPages;
 
 #define	PM_GetSoundPage(v)	PM_GetPage(PMSoundStart + (v))
 #define	PM_GetSpritePage(v)	PM_GetPage(PMSpriteStart + (v))
