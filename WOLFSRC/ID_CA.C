@@ -335,36 +335,6 @@ boolean CA_LoadFile(char* filename, memptr* ptr)
 
 
 /*
-===============
-=
-= CAL_OptimizeNodes
-=
-= Goes through a huffman table and changes the 256-511 node numbers to the
-= actular address of the node.  Must be called before CAL_HuffExpand
-=
-===============
-*/
-
-void CAL_OptimizeNodes(huffnode* table)
-{
-    huffnode* node;
-    int16_t i;
-
-    node = table;
-
-    for (i = 0; i < 255; i++)
-    {
-        if (node->bit0 >= 256)
-            node->bit0 = (uint16_t)(table + (node->bit0 - 256));
-        if (node->bit1 >= 256)
-            node->bit1 = (uint16_t)(table + (node->bit1 - 256));
-        node++;
-    }
-}
-
-
-
-/*
 ======================
 =
 = CAL_HuffExpand
@@ -379,38 +349,43 @@ void CAL_OptimizeNodes(huffnode* table)
 void CAL_HuffExpand(byte* source, byte* dest,
     int32_t length, huffnode* hufftable)
 {
-    huffnode* headptr;
-    uint8_t bit, byte;
-    huffnode* node;
+    uint8_t bit, byte, * end;
     uint16_t code;
+    huffnode* nodeon, * headptr;
 
     headptr = hufftable + 254;  // head node is always node 254
 
-    node = headptr;
-    bit = 1;
-    byte = *source++;           // load first byte
+    end = dest + length;
 
-    while (length > 0)          // when length = ffff ffff, done
+    nodeon = headptr;
+
+    byte = *source++;           // load first byte
+    bit = 1;
+
+    for (;;)
     {
-        if ((byte & bit) == 0)  // bit set?
-            code = node->bit0;  // take bit0 path from node
+        if (byte & bit)             // bit set?
+            code = nodeon->bit1;    // take bit1 path
         else
-            code = node->bit1;  // take bit1 path
-        bit <<= 1;              // advance to next bit position
-        if (bit == 0)
+            code = nodeon->bit0;    // take bit0 path from node
+
+        bit <<= 1;                  // advance to next bit position
+
+        if (!bit)
         {
-            byte = *source++;
-            bit = 1;            // back to first bit
+            byte = *source++;       // load next byte
+            bit = 1;                // back to first bit
         }
-        if (code < 0x100)       // if node<256 its a byte, else move node
+
+        if (code < 256)             // if code<256 its a byte, else move node
         {
-            *dest++ = (uint8_t)(code & 0xFF);   // write a decompressed byte out
-            node = headptr;                     // back to the head node for next bit
-            length--;
+            *dest++ = (uint8_t)code;    // write a decompressed byte out
+            nodeon = headptr;           // back to the head node for next bit
+            if (dest == end)            // done?
+                break;
         }
         else
-            node = hufftable + (code - 256);    // next node = (huffnode *)code
-                                                // TODO: where is -256 in asm??? 
+            nodeon = hufftable + (code - 256);
     }
 }
 
@@ -615,8 +590,6 @@ void CAL_SetupGrFile(void)
     grhuffman = (huffnode*)&EGAdict;
     grstarts = (int32_t _seg*)FP_SEG(&EGAhead);
 
-    CAL_OptimizeNodes(grhuffman);
-
 #else
 
     //
@@ -632,7 +605,6 @@ void CAL_SetupGrFile(void)
 
     read(handle, &grhuffman, sizeof(grhuffman));
     close(handle);
-    CAL_OptimizeNodes(grhuffman);
     //
     // load the data offsets from ???head.ext
     //
@@ -792,7 +764,6 @@ void CAL_SetupAudioFile(void)
     close(handle);
 #else
     audiohuffman = (huffnode*)&audiodict;
-    CAL_OptimizeNodes(audiohuffman);
     audiostarts = (int32_t*)FP_SEG(&audiohead);
 #endif
 
