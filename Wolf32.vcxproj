@@ -142,6 +142,7 @@
     <ClCompile Include="WOLFSRC\ID_CA.C" />
     <ClCompile Include="WOLFSRC\ID_MM.C" />
     <ClCompile Include="WOLFSRC\ID_PM.C" />
+    <ClCompile Include="WOLFSRC\ID_VL.C" />
     <ClCompile Include="WOLFSRC\WL_MAIN.C" />
   </ItemGroup>
   <ItemGroup>

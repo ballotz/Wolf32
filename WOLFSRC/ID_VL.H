@@ -1,5 +1,7 @@
 // ID_VL.H
 
+#include <stdint.h>
+
 // wolf compatability
 
 #define MS_Quit	Quit
