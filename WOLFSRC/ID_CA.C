@@ -36,8 +36,8 @@ typedef struct
 typedef struct
 {
     uint16_t RLEWtag;
-    int32_t  headeroffsets[100];
-    byte  tileinfo[];
+    int32_t headeroffsets[100];
+    byte tileinfo[];
 } mapfiletype;
 
 
@@ -377,180 +377,41 @@ void CAL_OptimizeNodes(huffnode* table)
 */
 
 void CAL_HuffExpand(byte* source, byte* dest,
-    int32_t length, huffnode* hufftable, boolean screenhack)
+    int32_t length, huffnode* hufftable)
 {
-    //  uint16_t bit,byte,node,code;
-    uint16_t    sourceseg, sourceoff, destseg, destoff, endoff;
     huffnode* headptr;
-    byte        mapmask;
-    //  huffnode *nodeon;
+    uint8_t bit, byte;
+    huffnode* node;
+    uint16_t code;
 
-    headptr = hufftable + 254; // head node is allways node 254
+    headptr = hufftable + 254;  // head node is always node 254
 
-    source++; // normalize
-    source--;
-    dest++;
-    dest--;
+    node = headptr;
+    bit = 1;
+    byte = *source++;           // load first byte
 
-    if (screenhack)
+    while (length > 0)          // when length = ffff ffff, done
     {
-        mapmask = 1;
-        asm mov dx, SC_INDEX
-        asm mov ax, SC_MAPMASK + 256
-        asm out dx, ax
-        length >>= 2;
+        if ((byte & bit) == 0)  // bit set?
+            code = node->bit0;  // take bit0 path from node
+        else
+            code = node->bit1;  // take bit1 path
+        bit <<= 1;              // advance to next bit position
+        if (bit == 0)
+        {
+            byte = *source++;
+            bit = 1;            // back to first bit
+        }
+        if (code < 0x100)       // if node<256 its a byte, else move node
+        {
+            *dest++ = (uint8_t)(code & 0xFF);   // write a decompressed byte out
+            node = headptr;                     // back to the head node for next bit
+            length--;
+        }
+        else
+            node = hufftable + (code - 256);    // next node = (huffnode *)code
+                                                // TODO: where is -256 in asm??? 
     }
-
-    sourceseg = FP_SEG(source);
-    sourceoff = FP_OFF(source);
-    destseg = FP_SEG(dest);
-    destoff = FP_OFF(dest);
-    endoff = destoff + length;
-
-    //
-    // ds:si source
-    // es:di dest
-    // ss:bx node pointer
-    //
-
-    if (length < 0xfff0)
-    {
-
-        //--------------------------
-        // expand less than 64k of data
-        //--------------------------
-
-        asm mov bx, [headptr]
-
-        asm mov si, [sourceoff]
-        asm mov di, [destoff]
-        asm mov es, [destseg]
-        asm mov ds, [sourceseg]
-        asm mov ax, [endoff]
-
-        asm mov ch, [si]            // load first byte
-        asm inc si
-        asm mov cl, 1
-
-        expandshort:
-        asm test    ch, cl          // bit set?
-        asm jnz bit1short
-        asm mov dx, [ss:bx]         // take bit0 path from node
-        asm shl cl, 1               // advance to next bit position
-        asm jc  newbyteshort
-        asm jnc sourceupshort
-
-        bit1short :
-        asm mov dx, [ss:bx + 2]     // take bit1 path
-        asm shl cl, 1               // advance to next bit position
-        asm jnc sourceupshort
-
-        newbyteshort :
-        asm mov ch, [si]            // load next byte
-        asm inc si
-        asm mov cl, 1               // back to first bit
-
-        sourceupshort :
-        asm or dh, dh               // if dx<256 its a byte, else move node
-        asm jz storebyteshort
-        asm mov bx, dx              // next node = (huffnode *)code
-        asm jmp expandshort
-
-        storebyteshort :
-        asm mov[es:di], dl
-        asm inc di                  // write a decopmpressed byte out
-        asm mov bx, [headptr]       // back to the head node for next bit
-
-        asm cmp di, ax              // done?
-        asm jne expandshort
-
-        //
-        // perform screenhack if needed
-        //
-        asm test[screenhack], 1
-        asm jz notscreen
-        asm shl[mapmask], 1
-        asm mov ah, [mapmask]
-        asm cmp ah, 16
-        asm je notscreen            // all four planes done
-        asm mov dx, SC_INDEX
-        asm mov al, SC_MAPMASK
-        asm out dx, ax
-        asm mov di, [destoff]
-        asm mov ax, [endoff]
-        asm jmp expandshort
-
-        notscreen : ;
-    }
-    else
-    {
-
-        //--------------------------
-        // expand more than 64k of data
-        //--------------------------
-
-        length--;
-
-        asm mov bx, [headptr]
-        asm mov cl, 1
-
-        asm mov si, [sourceoff]
-        asm mov di, [destoff]
-        asm mov es, [destseg]
-        asm mov ds, [sourceseg]
-
-        asm lodsb                   // load first byte
-
-        expand :
-        asm test al, cl             // bit set?
-        asm jnz bit1
-        asm mov dx, [ss:bx]         // take bit0 path from node
-        asm jmp gotcode
-        bit1 :
-        asm mov dx, [ss:bx + 2]     // take bit1 path
-
-        gotcode :
-        asm shl cl, 1               // advance to next bit position
-        asm jnc sourceup
-        asm lodsb
-        asm cmp si, 0x10            // normalize ds:si
-        asm   jb sinorm
-        asm mov cx, ds
-        asm inc cx
-        asm mov ds, cx
-        asmxor si, si
-        sinorm :
-        asm mov cl, 1               // back to first bit
-
-        sourceup :
-        asm or dh, dh               // if dx<256 its a byte, else move node
-        asm jz storebyte
-        asm mov bx, dx              // next node = (huffnode *)code
-        asm jmp expand
-
-        storebyte :
-        asm mov[es:di], dl
-        asm inc di                  // write a decopmpressed byte out
-        asm mov bx, [headptr]       // back to the head node for next bit
-
-        asm cmp di, 0x10            // normalize es:di
-        asm   jb dinorm
-        asm mov dx, es
-        asm inc dx
-        asm mov es, dx
-        asmxor di, di
-        dinorm :
-
-        asm sub[WORD PTR ss : length], 1
-        asm jnc expand
-        asm   dec[WORD PTR ss : length + 2]
-        asm jns expand              // when length = ffff ffff, done
-
-    }
-
-    asm mov ax, ss
-    asm mov ds, ax
-
 }
 
 
@@ -695,15 +556,14 @@ int32_t CA_RLEWCompress(uint16_t* source, int32_t length, uint16_t* dest,
 void CA_RLEWexpand(uint16_t* source, uint16_t* dest, int32_t length,
     uint16_t rlewtag)
 {
-    //  uint16_t value,count,i;
+    uint16_t value,count,i;
     uint16_t* end;
-    uint16_t sourceseg, sourceoff, destseg, destoff, endseg, endoff;
 
+    end = dest + (length) / 2;
 
     //
     // expand it
     //
-#if 0
     do
     {
         value = *source++;
@@ -723,81 +583,6 @@ void CA_RLEWexpand(uint16_t* source, uint16_t* dest, int32_t length,
                 *dest++ = value;
         }
     } while (dest < end);
-#endif
-
-    end = dest + (length) / 2;
-    sourceseg = FP_SEG(source);
-    sourceoff = FP_OFF(source);
-    destseg = FP_SEG(dest);
-    destoff = FP_OFF(dest);
-    endseg = FP_SEG(end);
-    endoff = FP_OFF(end);
-
-
-    //
-    // ax = source value
-    // bx = tag value
-    // cx = repeat counts
-    // dx = scratch
-    //
-    // NOTE: A repeat count that produces 0xfff0 bytes can blow this!
-    //
-
-    asm mov bx, rlewtag
-    asm mov si, sourceoff
-    asm mov di, destoff
-    asm mov es, destseg
-    asm mov ds, sourceseg
-
-    expand :
-    asm lodsw
-    asm cmp ax, bx
-    asm je repeat
-    asm stosw
-    asm jmp next
-
-    repeat :
-    asm lodsw
-    asm mov cx, ax  // repeat count
-    asm lodsw   // repeat value
-    asm rep stosw
-
-    next :
-
-    asm cmp si, 0x10  // normalize ds:si
-    asm   jb sinorm
-    asm mov ax, si
-    asm shr ax, 1
-    asm shr ax, 1
-    asm shr ax, 1
-    asm shr ax, 1
-    asm mov dx, ds
-    asm add dx, ax
-    asm mov ds, dx
-    asmand si, 0xf
-    sinorm:
-    asm cmp di, 0x10  // normalize es:di
-    asm   jb dinorm
-    asm mov ax, di
-    asm shr ax, 1
-    asm shr ax, 1
-    asm shr ax, 1
-    asm shr ax, 1
-    asm mov dx, es
-    asm add dx, ax
-    asm mov es, dx
-    asmand di, 0xf
-    dinorm:
-
-    asm cmp     di, ss : endoff
-    asm jne expand
-    asm mov ax, es
-    asm cmp ax, ss : endseg
-    asm jb expand
-
-    asm mov ax, ss
-    asm mov ds, ax
-
 }
 
 
@@ -885,7 +670,7 @@ void CAL_SetupGrFile(void)
     CAL_GetGrChunkLength(STRUCTPIC);  // position file pointer
     MM_GetPtr(&compseg, chunkcomplen);
     CA_FarRead(grhandle, compseg, chunkcomplen);
-    CAL_HuffExpand(compseg, (byte*)pictable, NUMPICS * sizeof(pictabletype), grhuffman, false);
+    CAL_HuffExpand(compseg, (byte*)pictable, NUMPICS * sizeof(pictabletype), grhuffman);
     MM_FreePtr(&compseg);
 }
 
@@ -1262,7 +1047,7 @@ void CAL_ExpandGrChunk(int16_t chunk, byte* source)
     MM_GetPtr(&grsegs[chunk], expanded);
     if (mmerror)
         return;
-    CAL_HuffExpand(source, grsegs[chunk], expanded, grhuffman, false);
+    CAL_HuffExpand(source, grsegs[chunk], expanded, grhuffman);
 }
 
 
@@ -1329,50 +1114,50 @@ void CA_CacheGrChunk(int16_t chunk)
 
 //==========================================================================
 
-/*
-======================
-=
-= CA_CacheScreen
-=
-= Decompresses a chunk from disk straight onto the screen
-=
-======================
-*/
-
-void CA_CacheScreen(int16_t chunk)
-{
-    int32_t pos, compressed, expanded;
-    memptr bigbufferseg;
-    byte* source;
-    int16_t  next;
-
-    //
-    // load the chunk into a buffer
-    //
-    pos = GRFILEPOS(chunk);
-    next = chunk + 1;
-    while (GRFILEPOS(next) == -1)  // skip past any sparse tiles
-        next++;
-    compressed = GRFILEPOS(next) - pos;
-
-    lseek(grhandle, pos, SEEK_SET);
-
-    MM_GetPtr(&bigbufferseg, compressed);
-    MM_SetLock(&bigbufferseg, true);
-    CA_FarRead(grhandle, bigbufferseg, compressed);
-    source = bigbufferseg;
-
-    expanded = *(int32_t*)source;
-    source += 4;   // skip over length
-
+///*
+//======================
+//=
+//= CA_CacheScreen
+//=
+//= Decompresses a chunk from disk straight onto the screen
+//=
+//======================
+//*/
 //
-// allocate final space, decompress it, and free bigbuffer
-// Sprites need to have shifts made and various other junk
+//void CA_CacheScreen(int16_t chunk)
+//{
+//    int32_t pos, compressed, expanded;
+//    memptr bigbufferseg;
+//    byte* source;
+//    int16_t  next;
 //
-    CAL_HuffExpand(source, MK_FP(SCREENSEG, bufferofs), expanded, grhuffman, true);
-    VW_MarkUpdateBlock(0, 0, 319, 199);
-    MM_FreePtr(&bigbufferseg);
-}
+//    //
+//    // load the chunk into a buffer
+//    //
+//    pos = GRFILEPOS(chunk);
+//    next = chunk + 1;
+//    while (GRFILEPOS(next) == -1)  // skip past any sparse tiles
+//        next++;
+//    compressed = GRFILEPOS(next) - pos;
+//
+//    lseek(grhandle, pos, SEEK_SET);
+//
+//    MM_GetPtr(&bigbufferseg, compressed);
+//    MM_SetLock(&bigbufferseg, true);
+//    CA_FarRead(grhandle, bigbufferseg, compressed);
+//    source = bigbufferseg;
+//
+//    expanded = *(int32_t*)source;
+//    source += 4;   // skip over length
+//
+////
+//// allocate final space, decompress it, and free bigbuffer
+//// Sprites need to have shifts made and various other junk
+////
+//    CAL_HuffExpand(source, MK_FP(SCREENSEG, bufferofs), expanded, grhuffman, true);
+//    VW_MarkUpdateBlock(0, 0, 319, 199);
+//    MM_FreePtr(&bigbufferseg);
+//}
 
 //==========================================================================
 
@@ -1535,7 +1320,7 @@ void CA_ClearMarks(void)
 
 void CA_ClearAllMarks(void)
 {
-    _fmemset(grneeded, 0, sizeof(grneeded));
+    memset(grneeded, 0, sizeof(grneeded));
     ca_levelbit = 1;
     ca_levelnum = 0;
 }
