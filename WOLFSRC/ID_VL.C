@@ -574,6 +574,34 @@ void VL_LatchToScreen(uint16_t source, int16_t width, int16_t height, int16_t x,
     }
 }
 
+//===========================================================================
+
+/*
+=================
+=
+= VL_ScreenToScreen
+=
+= Basic block copy routine.  Copies one block of screen memory to another
+=
+=================
+*/
+
+void VL_ScreenToScreen(uint16_t source, uint16_t dest, int16_t width, int16_t height)
+{
+    int16_t i;
+
+    for (i = 0; i < height; i++)
+    {
+        memcpy(&vgadata[0][dest], &vgadata[0][source], width);
+        memcpy(&vgadata[1][dest], &vgadata[1][source], width);
+        memcpy(&vgadata[2][dest], &vgadata[2][source], width);
+        memcpy(&vgadata[3][dest], &vgadata[3][source], width);
+
+        source += linewidth;
+        dest += linewidth;
+    }
+}
+
 
 //===========================================================================
 

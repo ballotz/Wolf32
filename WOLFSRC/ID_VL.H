@@ -131,4 +131,6 @@ void VL_Bar(int16_t x, int16_t y, int16_t width, int16_t height, int16_t color);
 
 void VL_MemToLatch(byte* source, int16_t width, int16_t height, uint16_t dest);
 void VL_MemToScreen(byte* source, int16_t width, int16_t height, int16_t x, int16_t y);
+void VL_LatchToScreen(uint16_t source, int16_t width, int16_t height, int16_t x, int16_t y);
+void VL_ScreenToScreen(uint16_t source, uint16_t dest, int16_t width, int16_t height);
 
