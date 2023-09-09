@@ -98,4 +98,4 @@ void CA_CacheMap(int16_t mapnum);
 
 void CA_CacheMarks(void);
 
-//void CA_CacheScreen(int16_t chunk);
+void CA_CacheScreen(int16_t chunk);

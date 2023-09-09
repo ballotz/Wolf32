@@ -347,13 +347,17 @@ boolean CA_LoadFile(char* filename, memptr* ptr)
 */
 
 void CAL_HuffExpand(byte* source, byte* dest,
-    int32_t length, huffnode* hufftable)
+    int32_t length, huffnode* hufftable, boolean screenhack)
 {
     uint8_t bit, byte, * end;
     uint16_t code;
     huffnode* nodeon, * headptr;
+    uint16_t vgaplane;
 
     headptr = hufftable + 254;  // head node is always node 254
+
+    if (screenhack)
+        vgaplane = 0;
 
     end = dest + length;
 
@@ -382,7 +386,15 @@ void CAL_HuffExpand(byte* source, byte* dest,
             *dest++ = (uint8_t)code;    // write a decompressed byte out
             nodeon = headptr;           // back to the head node for next bit
             if (dest == end)            // done?
-                break;
+            {
+                if (screenhack && vgaplane < VGA_PLANES)
+                {
+                    dest += VGA_PLANE_SIZE - length;    // next vga plane
+                    vgaplane++;
+                }
+                else
+                    break;
+            }
         }
         else
             nodeon = hufftable + (code - 256);
@@ -642,7 +654,7 @@ void CAL_SetupGrFile(void)
     CAL_GetGrChunkLength(STRUCTPIC);  // position file pointer
     MM_GetPtr(&compseg, chunkcomplen);
     CA_FarRead(grhandle, compseg, chunkcomplen);
-    CAL_HuffExpand(compseg, (byte*)pictable, NUMPICS * sizeof(pictabletype), grhuffman);
+    CAL_HuffExpand(compseg, (byte*)pictable, NUMPICS * sizeof(pictabletype), grhuffman, false);
     MM_FreePtr(&compseg);
 }
 
@@ -1018,7 +1030,7 @@ void CAL_ExpandGrChunk(int16_t chunk, byte* source)
     MM_GetPtr(&grsegs[chunk], expanded);
     if (mmerror)
         return;
-    CAL_HuffExpand(source, grsegs[chunk], expanded, grhuffman);
+    CAL_HuffExpand(source, grsegs[chunk], expanded, grhuffman, false);
 }
 
 
@@ -1085,50 +1097,50 @@ void CA_CacheGrChunk(int16_t chunk)
 
 //==========================================================================
 
-///*
-//======================
-//=
-//= CA_CacheScreen
-//=
-//= Decompresses a chunk from disk straight onto the screen
-//=
-//======================
-//*/
+/*
+======================
+=
+= CA_CacheScreen
+=
+= Decompresses a chunk from disk straight onto the screen
+=
+======================
+*/
+
+void CA_CacheScreen(int16_t chunk)
+{
+    int32_t pos, compressed, expanded;
+    memptr bigbufferseg;
+    byte* source;
+    int16_t  next;
+
+    //
+    // load the chunk into a buffer
+    //
+    pos = GRFILEPOS(chunk);
+    next = chunk + 1;
+    while (GRFILEPOS(next) == -1)  // skip past any sparse tiles
+        next++;
+    compressed = GRFILEPOS(next) - pos;
+
+    lseek(grhandle, pos, SEEK_SET);
+
+    MM_GetPtr(&bigbufferseg, compressed);
+    MM_SetLock(&bigbufferseg, true);
+    CA_FarRead(grhandle, bigbufferseg, compressed);
+    source = bigbufferseg;
+
+    expanded = *(int32_t*)source;
+    source += 4;   // skip over length
+
 //
-//void CA_CacheScreen(int16_t chunk)
-//{
-//    int32_t pos, compressed, expanded;
-//    memptr bigbufferseg;
-//    byte* source;
-//    int16_t  next;
+// allocate final space, decompress it, and free bigbuffer
+// Sprites need to have shifts made and various other junk
 //
-//    //
-//    // load the chunk into a buffer
-//    //
-//    pos = GRFILEPOS(chunk);
-//    next = chunk + 1;
-//    while (GRFILEPOS(next) == -1)  // skip past any sparse tiles
-//        next++;
-//    compressed = GRFILEPOS(next) - pos;
-//
-//    lseek(grhandle, pos, SEEK_SET);
-//
-//    MM_GetPtr(&bigbufferseg, compressed);
-//    MM_SetLock(&bigbufferseg, true);
-//    CA_FarRead(grhandle, bigbufferseg, compressed);
-//    source = bigbufferseg;
-//
-//    expanded = *(int32_t*)source;
-//    source += 4;   // skip over length
-//
-////
-//// allocate final space, decompress it, and free bigbuffer
-//// Sprites need to have shifts made and various other junk
-////
-//    CAL_HuffExpand(source, MK_FP(SCREENSEG, bufferofs), expanded, grhuffman, true);
-//    VW_MarkUpdateBlock(0, 0, 319, 199);
-//    MM_FreePtr(&bigbufferseg);
-//}
+    CAL_HuffExpand(source, &screenseg[bufferofs], expanded, grhuffman, true);
+    VW_MarkUpdateBlock(0, 0, 319, 199);
+    MM_FreePtr(&bigbufferseg);
+}
 
 //==========================================================================
 
