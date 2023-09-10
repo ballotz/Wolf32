@@ -390,6 +390,7 @@ void CAL_HuffExpand(byte* source, byte* dest,
                 if (screenhack && vgaplane < VGA_PLANES)
                 {
                     dest += VGA_PLANE_SIZE - length;    // next vga plane
+                    end = dest + length;
                     vgaplane++;
                 }
                 else

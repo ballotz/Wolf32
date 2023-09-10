@@ -55,13 +55,6 @@ extern void (*finishcachebox) (void);
 
 //===========================================================================
 
-// just for the score box reshifting
-
-void CAL_ShiftSprite(uint16_t segment, uint16_t source, uint16_t dest,
-    uint16_t width, uint16_t height, uint16_t pixshift);
-
-//===========================================================================
-
 void CA_OpenDebug(void);
 void CA_CloseDebug(void);
 boolean CA_FarRead(int16_t handle, byte* dest, int32_t length);
