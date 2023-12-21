@@ -30,10 +30,31 @@ byte    palette1[256][3], palette2[256][3];
 
 //===========================================================================
 
-// asm
+/*
+;==============
+;
+; VL_WaitVBL   ******** NEW *********
+;
+; Wait for the vertical retrace (returns before the actual vertical sync)
+;
+;==============
+*/
+void VL_WaitVBL(int16_t vbls)
+{
 
-void VL_SetScreen(int16_t crtc, int16_t pelpan);
-void VL_WaitVBL(int16_t vbls);
+}
+
+/*
+;==============
+;
+; VL_SetScreen
+;
+;==============
+*/
+void VL_SetScreen(int16_t crtc, int16_t pelpan)
+{
+
+}
 
 //===========================================================================
 

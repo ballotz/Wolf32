@@ -3,8 +3,8 @@
 #include "ID_HEADS.H"
 
 #define SCREENWIDTH     80
-#define CHARWIDTH       2
-#define TILEWIDTH       4
+//#define CHARWIDTH       2
+//#define TILEWIDTH       4
 #define GRPLANES        4
 #define BYTEPIXELS      4
 
@@ -33,7 +33,30 @@ int16_t bufferwidth, bufferheight;
 
 //==========================================================================
 
-void VWL_UpdateScreenBlocks(void);
+/*
+;=================
+;
+; VH_UpdateScreen
+;
+;=================
+*/
+void VH_UpdateScreen(void)
+{
+    int16_t i;
+    byte* updateptr = &update[0][0];
+
+    // Check each tile and copy if needed
+    for (i = 0; i < UPDATEWIDE * UPDATEHIGH; ++i)
+    {
+        if (updateptr[i] & 1)
+        {
+            updateptr[i] = 0;
+            int16_t source = blockstarts[i];
+            int16_t dest = source + displayofs - bufferofs;
+            VL_ScreenToScreen(source, dest, 16 / 4, 16);
+        }
+    }
+}
 
 //==========================================================================
 

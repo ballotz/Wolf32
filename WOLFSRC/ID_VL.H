@@ -80,8 +80,8 @@ void Quit(char* error);
 #define SCREENWIDTH     80          // default screen width in bytes
 #define MAXSCANLINES    200         // size of ylookup table
 
-//#define CHARWIDTH       2
-//#define TILEWIDTH       4
+#define CHARWIDTH       2
+#define TILEWIDTH       4
 
 //===========================================================================
 
