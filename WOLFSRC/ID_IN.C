@@ -20,17 +20,8 @@
 #include "ID_HEADS.H"
 #pragma	hdrstop
 
-#define	KeyInt		9	// The keyboard ISR number
-
-//
-// mouse constants
-//
-#define	MReset		0
-#define	MButtons	3
-#define	MDelta		11
-
-#define	MouseInt	0x33
-#define	Mouse(x)	_AX = x,geninterrupt(MouseInt)
+extern int _argc;
+extern char** _argv;
 
 //
 // joystick constants
@@ -42,7 +33,7 @@
 /*
 =============================================================================
 
-					GLOBAL VARIABLES
+                    GLOBAL VARIABLES
 
 =============================================================================
 */
@@ -50,269 +41,146 @@
 //
 // configuration variables
 //
-boolean			MousePresent;
-boolean			JoysPresent[MaxJoys];
-boolean			JoyPadPresent;
+boolean		MousePresent;
+boolean		JoysPresent[MaxJoys];
+boolean		JoyPadPresent;
 
 
 // 	Global variables
-		boolean		Keyboard[NumCodes];
-		boolean		Paused;
-		char		LastASCII;
-		ScanCode	LastScan;
+boolean		Keyboard[NumCodes];
+boolean		Paused;
+char		LastASCII;
+ScanCode	LastScan;
 
-		KeyboardDef	KbdDefs = {0x1d,0x38,0x47,0x48,0x49,0x4b,0x4d,0x4f,0x50,0x51};
-		JoystickDef	JoyDefs[MaxJoys];
-		ControlType	Controls[MaxPlayers];
+KeyboardDef	KbdDefs = { 0x1d,0x38,0x47,0x48,0x49,0x4b,0x4d,0x4f,0x50,0x51 };
+JoystickDef	JoyDefs[MaxJoys];
+ControlType	Controls[MaxPlayers];
 
-		longword	MouseDownCount;
+longword	MouseDownCount;
 
-		Demo		DemoMode = demo_Off;
-		byte _seg	*DemoBuffer;
-		word		DemoOffset,DemoSize;
+Demo        DemoMode = demo_Off;
+byte*       DemoBuffer;
+word        DemoOffset, DemoSize;
 
 /*
 =============================================================================
 
-					LOCAL VARIABLES
+                    LOCAL VARIABLES
 
 =============================================================================
 */
-static	byte        far ASCIINames[] =		// Unshifted ASCII for scan codes
-					{
+static byte ASCIINames[] =		// Unshifted ASCII for scan codes
+{
 //	 0   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
-	0  ,27 ,'1','2','3','4','5','6','7','8','9','0','-','=',8  ,9  ,	// 0
-	'q','w','e','r','t','y','u','i','o','p','[',']',13 ,0  ,'a','s',	// 1
-	'd','f','g','h','j','k','l',';',39 ,'`',0  ,92 ,'z','x','c','v',	// 2
-	'b','n','m',',','.','/',0  ,'*',0  ,' ',0  ,0  ,0  ,0  ,0  ,0  ,	// 3
-	0  ,0  ,0  ,0  ,0  ,0  ,0  ,'7','8','9','-','4','5','6','+','1',	// 4
-	'2','3','0',127,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,	// 5
-	0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,	// 6
-	0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0		// 7
-					},
-					far ShiftNames[] =		// Shifted ASCII for scan codes
-					{
+    0  ,27 ,'1','2','3','4','5','6','7','8','9','0','-','=',8  ,9  ,	// 0
+    'q','w','e','r','t','y','u','i','o','p','[',']',13 ,0  ,'a','s',	// 1
+    'd','f','g','h','j','k','l',';',39 ,'`',0  ,92 ,'z','x','c','v',	// 2
+    'b','n','m',',','.','/',0  ,'*',0  ,' ',0  ,0  ,0  ,0  ,0  ,0  ,	// 3
+    0  ,0  ,0  ,0  ,0  ,0  ,0  ,'7','8','9','-','4','5','6','+','1',	// 4
+    '2','3','0',127,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,	// 5
+    0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,	// 6
+    0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0		// 7
+},
+ShiftNames[] =		// Shifted ASCII for scan codes
+{
 //	 0   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
-	0  ,27 ,'!','@','#','$','%','^','&','*','(',')','_','+',8  ,9  ,	// 0
-	'Q','W','E','R','T','Y','U','I','O','P','{','}',13 ,0  ,'A','S',	// 1
-	'D','F','G','H','J','K','L',':',34 ,'~',0  ,'|','Z','X','C','V',	// 2
-	'B','N','M','<','>','?',0  ,'*',0  ,' ',0  ,0  ,0  ,0  ,0  ,0  ,	// 3
-	0  ,0  ,0  ,0  ,0  ,0  ,0  ,'7','8','9','-','4','5','6','+','1',	// 4
-	'2','3','0',127,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,	// 5
-	0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,	// 6
-	0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0   	// 7
-					},
-					far SpecialNames[] =	// ASCII for 0xe0 prefixed codes
-					{
+    0  ,27 ,'!','@','#','$','%','^','&','*','(',')','_','+',8  ,9  ,	// 0
+    'Q','W','E','R','T','Y','U','I','O','P','{','}',13 ,0  ,'A','S',	// 1
+    'D','F','G','H','J','K','L',':',34 ,'~',0  ,'|','Z','X','C','V',	// 2
+    'B','N','M','<','>','?',0  ,'*',0  ,' ',0  ,0  ,0  ,0  ,0  ,0  ,	// 3
+    0  ,0  ,0  ,0  ,0  ,0  ,0  ,'7','8','9','-','4','5','6','+','1',	// 4
+    '2','3','0',127,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,	// 5
+    0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,	// 6
+    0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0   	// 7
+},
+SpecialNames[] =	// ASCII for 0xe0 prefixed codes
+{
 //	 0   1   2   3   4   5   6   7   8   9   A   B   C   D   E   F
-	0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,	// 0
-	0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,13 ,0  ,0  ,0  ,	// 1
-	0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,	// 2
-	0  ,0  ,0  ,0  ,0  ,'/',0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,	// 3
-	0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,	// 4
-	0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,	// 5
-	0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,	// 6
-	0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0   	// 7
-					};
+    0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,	// 0
+    0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,13 ,0  ,0  ,0  ,	// 1
+    0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,	// 2
+    0  ,0  ,0  ,0  ,0  ,'/',0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,	// 3
+    0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,	// 4
+    0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,	// 5
+    0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,	// 6
+    0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0  ,0   	// 7
+};
 
 
 static	boolean		IN_Started;
 static	boolean		CapsLock;
-static	ScanCode	CurCode,LastCode;
+static	ScanCode	CurCode, LastCode;
 
 static	Direction	DirTable[] =		// Quick lookup for total direction
-					{
-						dir_NorthWest,	dir_North,	dir_NorthEast,
-						dir_West,		dir_None,	dir_East,
-						dir_SouthWest,	dir_South,	dir_SouthEast
-					};
+{
+    dir_NorthWest,	dir_North,	dir_NorthEast,
+    dir_West,		dir_None,	dir_East,
+    dir_SouthWest,	dir_South,	dir_SouthEast
+};
 
-static	void			(*INL_KeyHook)(void);
-static	void interrupt	(*OldKeyVect)(void);
-
-static	char			*ParmStrings[] = {"nojoys","nomouse",nil};
+static	char* ParmStrings[] = { "nojoys","nomouse",nil };
 
 //	Internal routines
 
 ///////////////////////////////////////////////////////////////////////////
 //
-//	INL_KeyService() - Handles a keyboard interrupt (key up/down)
+//	INL_KeyService_ISR() - Handles a keyboard interrupt (key up/down)
 //
 ///////////////////////////////////////////////////////////////////////////
-static void interrupt
-INL_KeyService(void)
+void INL_KeyService_ISR(byte key)
 {
-static	boolean	special;
-		byte	k,c,
-				temp;
-		int		i;
+    static	boolean	special;
+    byte	c;
 
-	k = inportb(0x60);	// Get the scan code
+    if (key == 0xe0)		// Special key prefix
+        special = true;
+    else if (key == 0xe1)	// Handle Pause key
+        Paused = true;
+    else
+    {
+        if (key & 0x80)	// Break code
+        {
+            key &= 0x7f;
 
-	// Tell the XT keyboard controller to clear the key
-	outportb(0x61,(temp = inportb(0x61)) | 0x80);
-	outportb(0x61,temp);
+            // DEBUG - handle special keys: ctl-alt-delete, print scrn
 
-	if (k == 0xe0)		// Special key prefix
-		special = true;
-	else if (k == 0xe1)	// Handle Pause key
-		Paused = true;
-	else
-	{
-		if (k & 0x80)	// Break code
-		{
-			k &= 0x7f;
+            Keyboard[key] = false;
+        }
+        else			// Make code
+        {
+            LastCode = CurCode;
+            CurCode = LastScan = key;
+            Keyboard[key] = true;
 
-// DEBUG - handle special keys: ctl-alt-delete, print scrn
+            if (special)
+                c = SpecialNames[key];
+            else
+            {
+                if (key == sc_CapsLock)
+                {
+                    CapsLock ^= true;
+                    // DEBUG - make caps lock light work
+                }
 
-			Keyboard[k] = false;
-		}
-		else			// Make code
-		{
-			LastCode = CurCode;
-			CurCode = LastScan = k;
-			Keyboard[k] = true;
+                if (Keyboard[sc_LShift] || Keyboard[sc_RShift])	// If shifted
+                {
+                    c = ShiftNames[key];
+                    if ((c >= 'A') && (c <= 'Z') && CapsLock)
+                        c += 'a' - 'A';
+                }
+                else
+                {
+                    c = ASCIINames[key];
+                    if ((c >= 'a') && (c <= 'z') && CapsLock)
+                        c -= 'a' - 'A';
+                }
+            }
+            if (c)
+                LastASCII = c;
+        }
 
-			if (special)
-				c = SpecialNames[k];
-			else
-			{
-				if (k == sc_CapsLock)
-				{
-					CapsLock ^= true;
-					// DEBUG - make caps lock light work
-				}
-
-				if (Keyboard[sc_LShift] || Keyboard[sc_RShift])	// If shifted
-				{
-					c = ShiftNames[k];
-					if ((c >= 'A') && (c <= 'Z') && CapsLock)
-						c += 'a' - 'A';
-				}
-				else
-				{
-					c = ASCIINames[k];
-					if ((c >= 'a') && (c <= 'z') && CapsLock)
-						c -= 'a' - 'A';
-				}
-			}
-			if (c)
-				LastASCII = c;
-		}
-
-		special = false;
-	}
-
-	if (INL_KeyHook && !special)
-		INL_KeyHook();
-	outportb(0x20,0x20);
-}
-
-///////////////////////////////////////////////////////////////////////////
-//
-//	INL_GetMouseDelta() - Gets the amount that the mouse has moved from the
-//		mouse driver
-//
-///////////////////////////////////////////////////////////////////////////
-static void
-INL_GetMouseDelta(int *x,int *y)
-{
-	Mouse(MDelta);
-	*x = _CX;
-	*y = _DX;
-}
-
-///////////////////////////////////////////////////////////////////////////
-//
-//	INL_GetMouseButtons() - Gets the status of the mouse buttons from the
-//		mouse driver
-//
-///////////////////////////////////////////////////////////////////////////
-static word
-INL_GetMouseButtons(void)
-{
-	word	buttons;
-
-	Mouse(MButtons);
-	buttons = _BX;
-	return(buttons);
-}
-
-///////////////////////////////////////////////////////////////////////////
-//
-//	IN_GetJoyAbs() - Reads the absolute position of the specified joystick
-//
-///////////////////////////////////////////////////////////////////////////
-void
-IN_GetJoyAbs(word joy,word *xp,word *yp)
-{
-	byte	xb,yb,
-			xs,ys;
-	word	x,y;
-
-	x = y = 0;
-	xs = joy? 2 : 0;		// Find shift value for x axis
-	xb = 1 << xs;			// Use shift value to get x bit mask
-	ys = joy? 3 : 1;		// Do the same for y axis
-	yb = 1 << ys;
-
-// Read the absolute joystick values
-asm		pushf				// Save some registers
-asm		push	si
-asm		push	di
-asm		cli					// Make sure an interrupt doesn't screw the timings
-
-
-asm		mov		dx,0x201
-asm		in		al,dx
-asm		out		dx,al		// Clear the resistors
-
-asm		mov		ah,[xb]		// Get masks into registers
-asm		mov		ch,[yb]
-
-asm		xor		si,si		// Clear count registers
-asm		xor		di,di
-asm		xor		bh,bh		// Clear high byte of bx for later
-
-asm		push	bp			// Don't mess up stack frame
-asm		mov		bp,MaxJoyValue
-
-loop:
-asm		in		al,dx		// Get bits indicating whether all are finished
-
-asm		dec		bp			// Check bounding register
-asm		jz		done		// We have a silly value - abort
-
-asm		mov		bl,al		// Duplicate the bits
-asm		and		bl,ah		// Mask off useless bits (in [xb])
-asm		add		si,bx		// Possibly increment count register
-asm		mov		cl,bl		// Save for testing later
-
-asm		mov		bl,al
-asm		and		bl,ch		// [yb]
-asm		add		di,bx
-
-asm		add		cl,bl
-asm		jnz		loop 		// If both bits were 0, drop out
-
-done:
-asm     pop		bp
-
-asm		mov		cl,[xs]		// Get the number of bits to shift
-asm		shr		si,cl		//  and shift the count that many times
-
-asm		mov		cl,[ys]
-asm		shr		di,cl
-
-asm		mov		[x],si		// Store the values into the variables
-asm		mov		[y],di
-
-asm		pop		di
-asm		pop		si
-asm		popf				// Restore the registers
-
-	*xp = x;
-	*yp = y;
+        special = false;
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -321,81 +189,62 @@ asm		popf				// Restore the registers
 //		joystick (from +/-127)
 //
 ///////////////////////////////////////////////////////////////////////////
-void INL_GetJoyDelta(word joy,int *dx,int *dy)
+void INL_GetJoyDelta(word joy, int16_t* dx, int16_t* dy)
 {
-	word		x,y;
-	longword	time;
-	JoystickDef	*def;
-static	longword	lasttime;
+    word x, y;
+    JoystickDef* def;
+    static longword lasttime;
 
-	IN_GetJoyAbs(joy,&x,&y);
-	def = JoyDefs + joy;
+    IN_GetJoyAbs(joy, &x, &y);
+    def = JoyDefs + joy;
 
-	if (x < def->threshMinX)
-	{
-		if (x < def->joyMinX)
-			x = def->joyMinX;
+    if (x < def->threshMinX)
+    {
+        if (x < def->joyMinX)
+            x = def->joyMinX;
 
-		x = -(x - def->threshMinX);
-		x *= def->joyMultXL;
-		x >>= JoyScaleShift;
-		*dx = (x > 127)? -127 : -x;
-	}
-	else if (x > def->threshMaxX)
-	{
-		if (x > def->joyMaxX)
-			x = def->joyMaxX;
+        x = -(x - def->threshMinX);
+        x *= def->joyMultXL;
+        x >>= JoyScaleShift;
+        *dx = (x > 127) ? -127 : -x;
+    }
+    else if (x > def->threshMaxX)
+    {
+        if (x > def->joyMaxX)
+            x = def->joyMaxX;
 
-		x = x - def->threshMaxX;
-		x *= def->joyMultXH;
-		x >>= JoyScaleShift;
-		*dx = (x > 127)? 127 : x;
-	}
-	else
-		*dx = 0;
+        x = x - def->threshMaxX;
+        x *= def->joyMultXH;
+        x >>= JoyScaleShift;
+        *dx = (x > 127) ? 127 : x;
+    }
+    else
+        *dx = 0;
 
-	if (y < def->threshMinY)
-	{
-		if (y < def->joyMinY)
-			y = def->joyMinY;
+    if (y < def->threshMinY)
+    {
+        if (y < def->joyMinY)
+            y = def->joyMinY;
 
-		y = -(y - def->threshMinY);
-		y *= def->joyMultYL;
-		y >>= JoyScaleShift;
-		*dy = (y > 127)? -127 : -y;
-	}
-	else if (y > def->threshMaxY)
-	{
-		if (y > def->joyMaxY)
-			y = def->joyMaxY;
+        y = -(y - def->threshMinY);
+        y *= def->joyMultYL;
+        y >>= JoyScaleShift;
+        *dy = (y > 127) ? -127 : -y;
+    }
+    else if (y > def->threshMaxY)
+    {
+        if (y > def->joyMaxY)
+            y = def->joyMaxY;
 
-		y = y - def->threshMaxY;
-		y *= def->joyMultYH;
-		y >>= JoyScaleShift;
-		*dy = (y > 127)? 127 : y;
-	}
-	else
-		*dy = 0;
+        y = y - def->threshMaxY;
+        y *= def->joyMultYH;
+        y >>= JoyScaleShift;
+        *dy = (y > 127) ? 127 : y;
+    }
+    else
+        *dy = 0;
 
-	lasttime = TimeCount;
-}
-
-///////////////////////////////////////////////////////////////////////////
-//
-//	INL_GetJoyButtons() - Returns the button status of the specified
-//		joystick
-//
-///////////////////////////////////////////////////////////////////////////
-static word
-INL_GetJoyButtons(word joy)
-{
-register	word	result;
-
-	result = inportb(0x201);	// Get all the joystick buttons
-	result >>= joy? 6 : 4;	// Shift into bits 0-1
-	result &= 3;				// Mask off the useless bits
-	result ^= 3;
-	return(result);
+    lasttime = TimeCount;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -407,18 +256,18 @@ register	word	result;
 word
 IN_GetJoyButtonsDB(word joy)
 {
-	longword	lasttime;
-	word		result1,result2;
+    longword	lasttime;
+    word		result1, result2;
 
-	do
-	{
-		result1 = INL_GetJoyButtons(joy);
-		lasttime = TimeCount;
-		while (TimeCount == lasttime)
-			;
-		result2 = INL_GetJoyButtons(joy);
-	} while (result1 != result2);
-	return(result1);
+    do
+    {
+        result1 = INL_GetJoyButtons(joy);
+        lasttime = TimeCount;
+        while (TimeCount == lasttime)
+            Update_Time();
+        result2 = INL_GetJoyButtons(joy);
+    } while (result1 != result2);
+    return(result1);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -429,12 +278,7 @@ IN_GetJoyButtonsDB(word joy)
 static void
 INL_StartKbd(void)
 {
-	INL_KeyHook = NULL;			// no key hook routine
-
-	IN_ClearKeysDown();
-
-	OldKeyVect = getvect(KeyInt);
-	setvect(KeyInt,INL_KeyService);
+    IN_ClearKeysDown();
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -445,9 +289,6 @@ INL_StartKbd(void)
 static void
 INL_ShutKbd(void)
 {
-	poke(0x40,0x17,peek(0x40,0x17) & 0xfaf0);	// Clear ctrl/alt/shift flags
-
-	setvect(KeyInt,OldKeyVect);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -458,27 +299,7 @@ INL_ShutKbd(void)
 static boolean
 INL_StartMouse(void)
 {
-#if 0
-	if (getvect(MouseInt))
-	{
-		Mouse(MReset);
-		if (_AX == 0xffff)
-			return(true);
-	}
-	return(false);
-#endif
- union REGS regs;
- unsigned char far *vector;
-
-
- if ((vector=MK_FP(peek(0,0x33*4+2),peek(0,0x33*4)))==NULL)
-   return false;
-
- if (*vector == 207)
-   return false;
-
- Mouse(MReset);
- return true;
+    return IN_HasMouse();
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -497,13 +318,13 @@ INL_ShutMouse(void)
 static void
 INL_SetJoyScale(word joy)
 {
-	JoystickDef	*def;
+    JoystickDef* def;
 
-	def = &JoyDefs[joy];
-	def->joyMultXL = JoyScaleMax / (def->threshMinX - def->joyMinX);
-	def->joyMultXH = JoyScaleMax / (def->joyMaxX - def->threshMaxX);
-	def->joyMultYL = JoyScaleMax / (def->threshMinY - def->joyMinY);
-	def->joyMultYH = JoyScaleMax / (def->joyMaxY - def->threshMaxY);
+    def = &JoyDefs[joy];
+    def->joyMultXL = JoyScaleMax / (def->threshMinX - def->joyMinX);
+    def->joyMultXH = JoyScaleMax / (def->joyMaxX - def->threshMaxX);
+    def->joyMultYL = JoyScaleMax / (def->threshMinY - def->joyMinY);
+    def->joyMultYH = JoyScaleMax / (def->joyMaxY - def->threshMaxY);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -513,28 +334,28 @@ INL_SetJoyScale(word joy)
 //
 ///////////////////////////////////////////////////////////////////////////
 void
-IN_SetupJoy(word joy,word minx,word maxx,word miny,word maxy)
+IN_SetupJoy(word joy, word minx, word maxx, word miny, word maxy)
 {
-	word		d,r;
-	JoystickDef	*def;
+    word d, r;
+    JoystickDef* def;
 
-	def = &JoyDefs[joy];
+    def = &JoyDefs[joy];
 
-	def->joyMinX = minx;
-	def->joyMaxX = maxx;
-	r = maxx - minx;
-	d = r / 3;
-	def->threshMinX = ((r / 2) - d) + minx;
-	def->threshMaxX = ((r / 2) + d) + minx;
+    def->joyMinX = minx;
+    def->joyMaxX = maxx;
+    r = maxx - minx;
+    d = r / 3;
+    def->threshMinX = ((r / 2) - d) + minx;
+    def->threshMaxX = ((r / 2) + d) + minx;
 
-	def->joyMinY = miny;
-	def->joyMaxY = maxy;
-	r = maxy - miny;
-	d = r / 3;
-	def->threshMinY = ((r / 2) - d) + miny;
-	def->threshMaxY = ((r / 2) + d) + miny;
+    def->joyMinY = miny;
+    def->joyMaxY = maxy;
+    r = maxy - miny;
+    d = r / 3;
+    def->threshMinY = ((r / 2) - d) + miny;
+    def->threshMaxY = ((r / 2) + d) + miny;
 
-	INL_SetJoyScale(joy);
+    INL_SetJoyScale(joy);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -546,21 +367,20 @@ IN_SetupJoy(word joy,word minx,word maxx,word miny,word maxy)
 static boolean
 INL_StartJoy(word joy)
 {
-	word		x,y;
+    word x, y;
 
-	IN_GetJoyAbs(joy,&x,&y);
+    IN_GetJoyAbs(joy, &x, &y);
 
-	if
-	(
-		((x == 0) || (x > MaxJoyValue - 10))
-	||	((y == 0) || (y > MaxJoyValue - 10))
-	)
-		return(false);
-	else
-	{
-		IN_SetupJoy(joy,0,x * 2,0,y * 2);
-		return(true);
-	}
+    if (
+        ((x == 0) || (x > MaxJoyValue - 10))
+        || ((y == 0) || (y > MaxJoyValue - 10))
+    )
+        return(false);
+    else
+    {
+        IN_SetupJoy(joy, 0, x * 2, 0, y * 2);
+        return(true);
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -571,7 +391,7 @@ INL_StartJoy(word joy)
 static void
 INL_ShutJoy(word joy)
 {
-	JoysPresent[joy] = false;
+    JoysPresent[joy] = false;
 }
 
 
@@ -583,34 +403,34 @@ INL_ShutJoy(word joy)
 void
 IN_Startup(void)
 {
-	boolean	checkjoys,checkmouse;
-	word	i;
+    boolean	checkjoys, checkmouse;
+    word	i;
 
-	if (IN_Started)
-		return;
+    if (IN_Started)
+        return;
 
-	checkjoys = true;
-	checkmouse = true;
-	for (i = 1;i < _argc;i++)
-	{
-		switch (US_CheckParm(_argv[i],ParmStrings))
-		{
-		case 0:
-			checkjoys = false;
-			break;
-		case 1:
-			checkmouse = false;
-			break;
-		}
-	}
+    checkjoys = true;
+    checkmouse = true;
+    for (i = 1; i < _argc; i++)
+    {
+        switch (US_CheckParm(_argv[i], ParmStrings))
+        {
+        case 0:
+            checkjoys = false;
+            break;
+        case 1:
+            checkmouse = false;
+            break;
+        }
+    }
 
-	INL_StartKbd();
-	MousePresent = checkmouse? INL_StartMouse() : false;
+    INL_StartKbd();
+    MousePresent = checkmouse ? INL_StartMouse() : false;
 
-	for (i = 0;i < MaxJoys;i++)
-		JoysPresent[i] = checkjoys? INL_StartJoy(i) : false;
+    for (i = 0; i < MaxJoys; i++)
+        JoysPresent[i] = checkjoys ? INL_StartJoy(i) : false;
 
-	IN_Started = true;
+    IN_Started = true;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -619,17 +439,16 @@ IN_Startup(void)
 //
 ///////////////////////////////////////////////////////////////////////////
 void
-IN_Default(boolean gotit,ControlType in)
+IN_Default(boolean gotit, ControlType in)
 {
-	if
-	(
-		(!gotit)
-	|| 	((in == ctrl_Joystick1) && !JoysPresent[0])
-	|| 	((in == ctrl_Joystick2) && !JoysPresent[1])
-	|| 	((in == ctrl_Mouse) && !MousePresent)
-	)
-		in = ctrl_Keyboard1;
-	IN_SetControlType(0,in);
+    if (
+        (!gotit)
+        || ((in == ctrl_Joystick1) && !JoysPresent[0])
+        || ((in == ctrl_Joystick2) && !JoysPresent[1])
+        || ((in == ctrl_Mouse) && !MousePresent)
+    )
+        in = ctrl_Keyboard1;
+    IN_SetControlType(0, in);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -640,29 +459,17 @@ IN_Default(boolean gotit,ControlType in)
 void
 IN_Shutdown(void)
 {
-	word	i;
+    word i;
 
-	if (!IN_Started)
-		return;
+    if (!IN_Started)
+        return;
 
-	INL_ShutMouse();
-	for (i = 0;i < MaxJoys;i++)
-		INL_ShutJoy(i);
-	INL_ShutKbd();
+    INL_ShutMouse();
+    for (i = 0; i < MaxJoys; i++)
+        INL_ShutJoy(i);
+    INL_ShutKbd();
 
-	IN_Started = false;
-}
-
-///////////////////////////////////////////////////////////////////////////
-//
-//	IN_SetKeyHook() - Sets the routine that gets called by INL_KeyService()
-//			everytime a real make/break code gets hit
-//
-///////////////////////////////////////////////////////////////////////////
-void
-IN_SetKeyHook(void (*hook)())
-{
-	INL_KeyHook = hook;
+    IN_Started = false;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -673,11 +480,9 @@ IN_SetKeyHook(void (*hook)())
 void
 IN_ClearKeysDown(void)
 {
-	int	i;
-
-	LastScan = sc_None;
-	LastASCII = key_None;
-	memset (Keyboard,0,sizeof(Keyboard));
+    LastScan = sc_None;
+    LastASCII = key_None;
+    memset(Keyboard, 0, sizeof(Keyboard));
 }
 
 
@@ -688,128 +493,127 @@ IN_ClearKeysDown(void)
 //
 ///////////////////////////////////////////////////////////////////////////
 void
-IN_ReadControl(int player,ControlInfo *info)
+IN_ReadControl(int16_t player, ControlInfo* info)
 {
-			boolean		realdelta;
-			byte		dbyte;
-			word		buttons;
-			int			dx,dy;
-			Motion		mx,my;
-			ControlType	type;
-register	KeyboardDef	*def;
+    boolean		realdelta;
+    byte		dbyte;
+    word		buttons;
+    int16_t		dx, dy;
+    Motion		mx, my;
+    ControlType	type;
+    register	KeyboardDef* def;
 
-	dx = dy = 0;
-	mx = my = motion_None;
-	buttons = 0;
+    dx = dy = 0;
+    mx = my = motion_None;
+    buttons = 0;
 
-	if (DemoMode == demo_Playback)
-	{
-		dbyte = DemoBuffer[DemoOffset + 1];
-		my = (dbyte & 3) - 1;
-		mx = ((dbyte >> 2) & 3) - 1;
-		buttons = (dbyte >> 4) & 3;
+    if (DemoMode == demo_Playback)
+    {
+        dbyte = DemoBuffer[DemoOffset + 1];
+        my = (dbyte & 3) - 1;
+        mx = ((dbyte >> 2) & 3) - 1;
+        buttons = (dbyte >> 4) & 3;
 
-		if (!(--DemoBuffer[DemoOffset]))
-		{
-			DemoOffset += 2;
-			if (DemoOffset >= DemoSize)
-				DemoMode = demo_PlayDone;
-		}
+        if (!(--DemoBuffer[DemoOffset]))
+        {
+            DemoOffset += 2;
+            if (DemoOffset >= DemoSize)
+                DemoMode = demo_PlayDone;
+        }
 
-		realdelta = false;
-	}
-	else if (DemoMode == demo_PlayDone)
-		Quit("Demo playback exceeded");
-	else
-	{
-		switch (type = Controls[player])
-		{
-		case ctrl_Keyboard:
-			def = &KbdDefs;
+        realdelta = false;
+    }
+    else if (DemoMode == demo_PlayDone)
+        Quit("Demo playback exceeded");
+    else
+    {
+        switch (type = Controls[player])
+        {
+        case ctrl_Keyboard:
+            def = &KbdDefs;
 
-			if (Keyboard[def->upleft])
-				mx = motion_Left,my = motion_Up;
-			else if (Keyboard[def->upright])
-				mx = motion_Right,my = motion_Up;
-			else if (Keyboard[def->downleft])
-				mx = motion_Left,my = motion_Down;
-			else if (Keyboard[def->downright])
-				mx = motion_Right,my = motion_Down;
+            if (Keyboard[def->upleft])
+                mx = motion_Left, my = motion_Up;
+            else if (Keyboard[def->upright])
+                mx = motion_Right, my = motion_Up;
+            else if (Keyboard[def->downleft])
+                mx = motion_Left, my = motion_Down;
+            else if (Keyboard[def->downright])
+                mx = motion_Right, my = motion_Down;
 
-			if (Keyboard[def->up])
-				my = motion_Up;
-			else if (Keyboard[def->down])
-				my = motion_Down;
+            if (Keyboard[def->up])
+                my = motion_Up;
+            else if (Keyboard[def->down])
+                my = motion_Down;
 
-			if (Keyboard[def->left])
-				mx = motion_Left;
-			else if (Keyboard[def->right])
-				mx = motion_Right;
+            if (Keyboard[def->left])
+                mx = motion_Left;
+            else if (Keyboard[def->right])
+                mx = motion_Right;
 
-			if (Keyboard[def->button0])
-				buttons += 1 << 0;
-			if (Keyboard[def->button1])
-				buttons += 1 << 1;
-			realdelta = false;
-			break;
-		case ctrl_Joystick1:
-		case ctrl_Joystick2:
-			INL_GetJoyDelta(type - ctrl_Joystick,&dx,&dy);
-			buttons = INL_GetJoyButtons(type - ctrl_Joystick);
-			realdelta = true;
-			break;
-		case ctrl_Mouse:
-			INL_GetMouseDelta(&dx,&dy);
-			buttons = INL_GetMouseButtons();
-			realdelta = true;
-			break;
-		}
-	}
+            if (Keyboard[def->button0])
+                buttons += 1 << 0;
+            if (Keyboard[def->button1])
+                buttons += 1 << 1;
+            realdelta = false;
+            break;
+        case ctrl_Joystick1:
+        case ctrl_Joystick2:
+            INL_GetJoyDelta(type - ctrl_Joystick, &dx, &dy);
+            buttons = INL_GetJoyButtons(type - ctrl_Joystick);
+            realdelta = true;
+            break;
+        case ctrl_Mouse:
+            INL_GetMouseDelta(&dx, &dy);
+            buttons = INL_GetMouseButtons();
+            realdelta = true;
+            break;
+        }
+    }
 
-	if (realdelta)
-	{
-		mx = (dx < 0)? motion_Left : ((dx > 0)? motion_Right : motion_None);
-		my = (dy < 0)? motion_Up : ((dy > 0)? motion_Down : motion_None);
-	}
-	else
-	{
-		dx = mx * 127;
-		dy = my * 127;
-	}
+    if (realdelta)
+    {
+        mx = (dx < 0) ? motion_Left : ((dx > 0) ? motion_Right : motion_None);
+        my = (dy < 0) ? motion_Up : ((dy > 0) ? motion_Down : motion_None);
+    }
+    else
+    {
+        dx = mx * 127;
+        dy = my * 127;
+    }
 
-	info->x = dx;
-	info->xaxis = mx;
-	info->y = dy;
-	info->yaxis = my;
-	info->button0 = buttons & (1 << 0);
-	info->button1 = buttons & (1 << 1);
-	info->button2 = buttons & (1 << 2);
-	info->button3 = buttons & (1 << 3);
-	info->dir = DirTable[((my + 1) * 3) + (mx + 1)];
+    info->x = dx;
+    info->xaxis = mx;
+    info->y = dy;
+    info->yaxis = my;
+    info->button0 = buttons & (1 << 0);
+    info->button1 = buttons & (1 << 1);
+    info->button2 = buttons & (1 << 2);
+    info->button3 = buttons & (1 << 3);
+    info->dir = DirTable[((my + 1) * 3) + (mx + 1)];
 
-	if (DemoMode == demo_Record)
-	{
-		// Pack the control info into a byte
-		dbyte = (buttons << 4) | ((mx + 1) << 2) | (my + 1);
+    if (DemoMode == demo_Record)
+    {
+        // Pack the control info into a byte
+        dbyte = (buttons << 4) | ((mx + 1) << 2) | (my + 1);
 
-		if
-		(
-			(DemoBuffer[DemoOffset + 1] == dbyte)
-		&&	(DemoBuffer[DemoOffset] < 255)
-		)
-			(DemoBuffer[DemoOffset])++;
-		else
-		{
-			if (DemoOffset || DemoBuffer[DemoOffset])
-				DemoOffset += 2;
+        if (
+            (DemoBuffer[DemoOffset + 1] == dbyte)
+            && (DemoBuffer[DemoOffset] < 255)
+        )
+            (DemoBuffer[DemoOffset])++;
+        else
+        {
+            if (DemoOffset || DemoBuffer[DemoOffset])
+                DemoOffset += 2;
 
-			if (DemoOffset >= DemoSize)
-				Quit("Demo buffer overflow");
+            if (DemoOffset >= DemoSize)
+                Quit("Demo buffer overflow");
 
-			DemoBuffer[DemoOffset] = 1;
-			DemoBuffer[DemoOffset + 1] = dbyte;
-		}
-	}
+            DemoBuffer[DemoOffset] = 1;
+            DemoBuffer[DemoOffset + 1] = dbyte;
+        }
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -819,10 +623,10 @@ register	KeyboardDef	*def;
 //
 ///////////////////////////////////////////////////////////////////////////
 void
-IN_SetControlType(int player,ControlType type)
+IN_SetControlType(int16_t player, ControlType type)
 {
-	// DEBUG - check that requested type is present?
-	Controls[player] = type;
+    // DEBUG - check that requested type is present?
+    Controls[player] = type;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -834,12 +638,12 @@ IN_SetControlType(int player,ControlType type)
 ScanCode
 IN_WaitForKey(void)
 {
-	ScanCode	result;
+    ScanCode result;
 
-	while (!(result = LastScan))
-		;
-	LastScan = 0;
-	return(result);
+    while (!(result = LastScan))
+        Update_Key();
+    LastScan = 0;
+    return(result);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -851,12 +655,12 @@ IN_WaitForKey(void)
 char
 IN_WaitForASCII(void)
 {
-	char		result;
+    char result;
 
-	while (!(result = LastASCII))
-		;
-	LastASCII = '\0';
-	return(result);
+    while (!(result = LastASCII))
+        Update_Key();
+    LastASCII = '\0';
+    return(result);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -870,57 +674,57 @@ boolean	btnstate[8];
 
 void IN_StartAck(void)
 {
-	unsigned	i,buttons;
+    uint16_t i, buttons;
 
-//
-// get initial state of everything
-//
-	IN_ClearKeysDown();
-	memset (btnstate,0,sizeof(btnstate));
+    //
+    // get initial state of everything
+    //
+    IN_ClearKeysDown();
+    memset(btnstate, 0, sizeof(btnstate));
 
-	buttons = IN_JoyButtons () << 4;
-	if (MousePresent)
-		buttons |= IN_MouseButtons ();
+    buttons = IN_JoyButtons() << 4;
+    if (MousePresent)
+        buttons |= IN_MouseButtons();
 
-	for (i=0;i<8;i++,buttons>>=1)
-		if (buttons&1)
-			btnstate[i] = true;
+    for (i = 0; i < 8; i++, buttons >>= 1)
+        if (buttons & 1)
+            btnstate[i] = true;
 }
 
 
-boolean IN_CheckAck (void)
+boolean IN_CheckAck(void)
 {
-	unsigned	i,buttons;
+    uint16_t i, buttons;
 
-//
-// see if something has been pressed
-//
-	if (LastScan)
-		return true;
+    //
+    // see if something has been pressed
+    //
+    if (LastScan)
+        return true;
 
-	buttons = IN_JoyButtons () << 4;
-	if (MousePresent)
-		buttons |= IN_MouseButtons ();
+    buttons = IN_JoyButtons() << 4;
+    if (MousePresent)
+        buttons |= IN_MouseButtons();
 
-	for (i=0;i<8;i++,buttons>>=1)
-		if ( buttons&1 )
-		{
-			if (!btnstate[i])
-				return true;
-		}
-		else
-			btnstate[i]=false;
+    for (i = 0; i < 8; i++, buttons >>= 1)
+        if (buttons & 1)
+        {
+            if (!btnstate[i])
+                return true;
+        }
+        else
+            btnstate[i] = false;
 
-	return false;
+    return false;
 }
 
 
-void IN_Ack (void)
+void IN_Ack(void)
 {
-	IN_StartAck ();
+    IN_StartAck();
 
-	while (!IN_CheckAck ())
-	;
+    while (!IN_CheckAck())
+        Update_Key();
 }
 
 
@@ -934,16 +738,17 @@ void IN_Ack (void)
 ///////////////////////////////////////////////////////////////////////////
 boolean IN_UserInput(longword delay)
 {
-	longword	lasttime;
+    longword lasttime;
 
-	lasttime = TimeCount;
-	IN_StartAck ();
-	do
-	{
-		if (IN_CheckAck())
-			return true;
-	} while (TimeCount - lasttime < delay);
-	return(false);
+    lasttime = TimeCount;
+    IN_StartAck();
+    do
+    {
+        if (IN_CheckAck())
+            return true;
+        Update_Time();
+    } while (TimeCount - lasttime < delay);
+    return(false);
 }
 
 //===========================================================================
@@ -956,15 +761,12 @@ boolean IN_UserInput(longword delay)
 ===================
 */
 
-byte	IN_MouseButtons (void)
+byte	IN_MouseButtons(void)
 {
-	if (MousePresent)
-	{
-		Mouse(MButtons);
-		return _BX;
-	}
-	else
-		return 0;
+    if (MousePresent)
+        return (byte)INL_GetMouseButtons();
+    else
+        return 0;
 }
 
 
@@ -976,15 +778,9 @@ byte	IN_MouseButtons (void)
 ===================
 */
 
-byte	IN_JoyButtons (void)
+byte	IN_JoyButtons(void)
 {
-	unsigned joybits;
-
-	joybits = inportb(0x201);	// Get all the joystick buttons
-	joybits >>= 4;				// only the high bits are useful
-	joybits ^= 15;				// return with 1=pressed
-
-	return joybits;
+    return (byte)INL_GetJoyButtons(0);
 }
 
 

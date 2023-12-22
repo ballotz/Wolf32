@@ -7,6 +7,8 @@
     <ClCompile Include="WOLFSRC\ID_CA.C" />
     <ClCompile Include="WOLFSRC\ID_VL.C" />
     <ClCompile Include="WOLFSRC\ID_VH.C" />
+    <ClCompile Include="WOLFSRC\ID_IN.C" />
+    <ClCompile Include="WOLFSRC\bridge.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WOLFSRC\WL_DEF.H" />
@@ -20,5 +22,6 @@
     <ClInclude Include="WOLFSRC\ID_CA.H" />
     <ClInclude Include="WOLFSRC\ID_IN.H" />
     <ClInclude Include="WOLFSRC\WL_MENU.H" />
+    <ClInclude Include="WOLFSRC\bridge.h" />
   </ItemGroup>
 </Project>

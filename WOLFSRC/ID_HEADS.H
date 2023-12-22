@@ -82,6 +82,7 @@ typedef	struct
 
 #define	nil	((void *)0)
 
+#include "bridge.h"
 
 #include "ID_MM.H"
 #include "ID_PM.H"
