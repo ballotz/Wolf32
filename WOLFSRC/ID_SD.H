@@ -111,7 +111,8 @@ typedef	struct
 
 typedef	struct
 {
-    byte	mChar, cChar,
+    byte
+        mChar, cChar,
         mScale, cScale,
         mAttack, cAttack,
         mSus, cSus,
@@ -128,8 +129,7 @@ typedef	struct
 {
     SoundCommon	common;
     Instrument	inst;
-    byte		block,
-        data[1];
+    byte		block, data[1];
 } AdLibSound;
 
 //
@@ -155,13 +155,15 @@ typedef	struct
 #if 1
 typedef	struct
 {
-    word	length,
+    word
+        length,
         values[1];
 } MusicGroup;
 #else
 typedef	struct
 {
-    word	flags,
+    word
+        flags,
         count,
         offsets[1];
 } MusicGroup;
@@ -170,13 +172,13 @@ typedef	struct
 typedef	struct
 {
     /* This part needs to be set up by the user */
-    word        mood, * moods[sqMaxMoods];
+    word        mood, *moods[sqMaxMoods];
 
     /* The rest is set up by the code */
-    Instrument	inst;
-    boolean		percussive;
-    word* seq;
-    longword	nextevent;
+    Instrument  inst;
+    boolean     percussive;
+    word*       seq;
+    longword    nextevent;
 } ActiveTrack;
 
 #define	sqmode_Normal		0
@@ -192,12 +194,12 @@ SoundSourcePresent,
 SoundBlasterPresent,
 NeedsMusic,					// For Caching Mgr
 SoundPositioned;
-extern	SDMode		SoundMode;
-extern	SDSMode		DigiMode;
-extern	SMMode		MusicMode;
-extern	boolean		DigiPlaying;
-extern	int16_t			DigiMap[];
-extern	longword	TimeCount;					// Global time in ticks
+extern	SDMode      SoundMode;
+extern	SDSMode     DigiMode;
+extern	SMMode      MusicMode;
+extern	boolean     DigiPlaying;
+extern	int16_t     DigiMap[];
+extern	longword    TimeCount;					// Global time in ticks
 
 // Function prototypes
 extern	void	SD_Startup(void),
