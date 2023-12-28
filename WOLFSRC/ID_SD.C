@@ -33,40 +33,14 @@
 extern int _argc;
 extern char** _argv;
 
-//#include <dos.h>
-
 #ifdef	_MUSE_      // Will be defined in ID_Types.h
 #include "ID_SD.h"
 #else
 #include "ID_HEADS.H"
 #endif
 #pragma	hdrstop
-//#pragma	warn	-pia
-
-#ifdef	nil
-#undef	nil
-#endif
-#define	nil	0
 
 #define	SDL_SoundFinished()	{SoundNumber = SoundPriority = 0;}
-
-//// Macros for SoundBlaster stuff
-//#define	sbOut(n,b)	outportb((n) + sbLocation,b)
-//#define	sbIn(n)		inportb((n) + sbLocation)
-//#define	sbWriteDelay()	while (sbIn(sbWriteStat) & 0x80);
-//#define	sbReadDelay()	while (sbIn(sbDataAvail) & 0x80);
-
-//// Macros for AdLib stuff
-//#define	selreg(n)	outportb(alFMAddr,n)
-//#define	writereg(n)	outportb(alFMData,n)
-//#define	readstat()	inportb(alFMStatus)
-
-//	Imports from ID_SD_A.ASM
-extern void SDL_SetDS(void),
-            SDL_IndicatePC(boolean on);
-extern void SDL_t0ExtremeAsmService_ISR(void),
-            SDL_t0FastAsmService_ISR(void),
-            SDL_t0SlowAsmService_ISR(void);
 
 //	Global variables
 boolean     SoundSourcePresent,
@@ -77,8 +51,8 @@ boolean     SoundSourcePresent,
 SDMode      SoundMode;
 SMMode      MusicMode;
 SDSMode     DigiMode;
-word        HackCount;
-word*       SoundTable;	// Really * _seg *SoundTable, but that don't work
+//word        HackCount;
+memptr*     SoundTable;
 //boolean     ssIsTandy;
 //word        ssPort = 2;
 int16_t     DigiMap[LASTSOUND];
@@ -86,7 +60,7 @@ int16_t     DigiMap[LASTSOUND];
 //	Internal variables
 static	boolean SD_Started;
 boolean         nextsoundpos;
-longword        TimerDivisor, TimerCount;
+//longword        TimerDivisor, TimerCount;
 static char*    ParmStrings[] =
 {
     "noal",
@@ -99,13 +73,13 @@ static char*    ParmStrings[] =
     "ss3",
     nil
 };
-static void     (*SoundUserHook)(void);
+//static void     (*SoundUserHook)(void);
 soundnames      SoundNumber, DigiNumber;
 word            SoundPriority, DigiPriority;
 int16_t         LeftPosition, RightPosition;
-void            (*t0OldService_ISR)(void);
-int32_t			LocalTime;
-word			TimerRate;
+//void            (*t0OldService_ISR)(void);
+//int32_t         LocalTime;
+//word            TimerRate;
 
 word			NumDigi, DigiLeft, DigiPage;
 word			*DigiList;
@@ -116,58 +90,18 @@ static memptr   DigiNextAddr;
 static word     DigiNextLen;
 
 //	SoundBlaster variables
-static	boolean					sbNoCheck, sbNoProCheck;
-static	volatile boolean		sbSamplePlaying;
-static	byte					sbOldIntMask = -1;
-static	volatile byte			*sbNextSegPtr;
-static	byte					sbDMA = 1,
-                                sbDMAa1 = 0x83, sbDMAa2 = 2, sbDMAa3 = 3,
-                                sba1Vals[] = { 0x87,0x83,0,0x82 },
-                                sba2Vals[] = { 0,2,0,6 },
-                                sba3Vals[] = { 1,3,0,7 };
-static	int16_t					sbLocation = -1, sbInterrupt = 7, sbIntVec = 0xf,
-                                sbIntVectors[] = { -1,-1,0xa,0xb,-1,0xd,-1,0xf,-1,-1,-1 };
-static	volatile longword		sbNextSegLen;
-static	volatile SampledSound	*sbSamples;
-static	void                    (*sbOldIntHand_ISR)(void);
-static	byte					sbpOldFMMix, sbpOldVOCMix;
+static	boolean sbNoCheck, sbNoProCheck;
 
 //	SoundSource variables
-boolean				ssNoCheck;
-//boolean				ssActive;
-//word				ssControl, ssStatus, ssData;
-//byte				ssOn, ssOff;
-//volatile byte		*ssSample;
-//volatile longword	ssLengthLeft;
+boolean         ssNoCheck;
 
 //	PC Sound variables
-//volatile byte	pcLastSample, *pcSound;
-//longword		pcLengthLeft;
-//word			pcSoundLookup[255];
 
 //	AdLib variables
-boolean			alNoCheck;
-//byte			*alSound;
-//word			alBlock;
-//longword		alLengthLeft;
-//longword		alTimeCount;
-//Instrument		alZeroInst;
-
-// This table maps channel numbers to carrier and modulator op cells
-static	byte			carriers[9] = { 3, 4, 5,11,12,13,19,20,21 },
-                        modifiers[9] = { 0, 1, 2, 8, 9,10,16,17,18 },
-// This table maps percussive voice numbers to op cells
-                        pcarriers[5] = { 19,0xff,0xff,0xff,0xff },
-                        pmodifiers[5] = { 16,17,18,20,21 };
+boolean         alNoCheck;
 
 //	Sequencer variables
-boolean			        sqActive;
-//static	word			alFXReg;
-static	ActiveTrack*    tracks[sqMaxTracks],
-                        mytracks[sqMaxTracks];
-static	word			sqMode, sqFadeStep;
-word			        *sqHack, *sqHackPtr, sqHackLen, sqHackSeqLen;
-int32_t			        sqHackTime;
+boolean         sqActive;
 
 //	Internal routines
 void SDL_DigitizedDone(void);
@@ -177,28 +111,28 @@ void SDL_DigitizedDone(void);
 //	SDL_SetTimer0() - Sets system timer 0 to the specified speed
 //
 ///////////////////////////////////////////////////////////////////////////
-#pragma	argsused
-static void
-SDL_SetTimer0(word speed)
-{
-#ifndef TPROF	// If using Borland's profiling, don't screw with the timer
-    asm	pushf
-    asm	cli
-
-    outportb(0x43, 0x36);				// Change timer 0
-    outportb(0x40, speed);
-    outportb(0x40, speed >> 8);
-    // Kludge to handle special case for digitized PC sounds
-    if (TimerDivisor == (1192030 / (TickBase * 100)))
-        TimerDivisor = (1192030 / (TickBase * 10));
-    else
-        TimerDivisor = speed;
-
-    asm	popf
-#else
-    TimerDivisor = 0x10000;
-#endif
-}
+//#pragma	argsused
+//static void
+//SDL_SetTimer0(word speed)
+//{
+//#ifndef TPROF	// If using Borland's profiling, don't screw with the timer
+//    asm	pushf
+//    asm	cli
+//
+//    outportb(0x43, 0x36);				// Change timer 0
+//    outportb(0x40, speed);
+//    outportb(0x40, speed >> 8);
+//    // Kludge to handle special case for digitized PC sounds
+//    if (TimerDivisor == (1192030 / (TickBase * 100)))
+//        TimerDivisor = (1192030 / (TickBase * 10));
+//    else
+//        TimerDivisor = speed;
+//
+//    asm	popf
+//#else
+//    TimerDivisor = 0x10000;
+//#endif
+//}
 
 ///////////////////////////////////////////////////////////////////////////
 //
@@ -206,45 +140,45 @@ SDL_SetTimer0(word speed)
 //		interrupts generated by system timer 0 per second
 //
 ///////////////////////////////////////////////////////////////////////////
-static void
-SDL_SetIntsPerSec(word ints)
-{
-    TimerRate = ints;
-    SDL_SetTimer0(1192030 / ints);
-}
+//static void
+//SDL_SetIntsPerSec(word ints)
+//{
+//    TimerRate = ints;
+//    SDL_SetTimer0(1192030 / ints);
+//}
 
-static void
-SDL_SetTimerSpeed(void)
-{
-    word rate;
-    void (*isr)(void);
-
-    if ((DigiMode == sds_PC) && DigiPlaying)
-    {
-        rate = TickBase * 100;
-        isr = SDL_t0ExtremeAsmService_ISR;
-    }
-    else if (
-        (MusicMode == smm_AdLib)
-        || ((DigiMode == sds_SoundSource) && DigiPlaying)
-        )
-    {
-        rate = TickBase * 10;
-        isr = SDL_t0FastAsmService_ISR;
-    }
-    else
-    {
-        rate = TickBase * 2;
-        isr = SDL_t0SlowAsmService_ISR;
-    }
-
-    if (rate != TimerRate)
-    {
-        setvect(8, isr);
-        SDL_SetIntsPerSec(rate);
-        TimerRate = rate;
-    }
-}
+//static void
+//SDL_SetTimerSpeed(void)
+//{
+//    word rate;
+//    void (*isr)(void);
+//
+//    if ((DigiMode == sds_PC) && DigiPlaying)
+//    {
+//        rate = TickBase * 100;
+//        isr = SDL_t0ExtremeAsmService_ISR;
+//    }
+//    else if (
+//        (MusicMode == smm_AdLib)
+//        || ((DigiMode == sds_SoundSource) && DigiPlaying)
+//        )
+//    {
+//        rate = TickBase * 10;
+//        isr = SDL_t0FastAsmService_ISR;
+//    }
+//    else
+//    {
+//        rate = TickBase * 2;
+//        isr = SDL_t0SlowAsmService_ISR;
+//    }
+//
+//    if (rate != TimerRate)
+//    {
+//        setvect(8, isr);
+//        SDL_SetIntsPerSec(rate);
+//        TimerRate = rate;
+//    }
+//}
 
 //
 //	SoundBlaster code
@@ -263,27 +197,7 @@ static void
 #endif
 SDL_SBStopSample(void)
 {
-    byte is;
-
-    asm	pushf
-    asm	cli
-
-    if (sbSamplePlaying)
-    {
-        sbSamplePlaying = false;
-
-        sbWriteDelay();
-        sbOut(sbWriteCmd, 0xd0);	// Turn off DSP DMA
-
-        is = inportb(0x21);	// Restore interrupt mask bit
-        if (sbOldIntMask & (1 << sbInterrupt))
-            is |= (1 << sbInterrupt);
-        else
-            is &= ~(1 << sbInterrupt);
-        outportb(0x21, is);
-    }
-
-    asm	popf
+    SoundBlaster_StopSample();
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -293,81 +207,87 @@ SDL_SBStopSample(void)
 //	 controller, and tells the SB to start doing DMA requests for DAC
 //
 ///////////////////////////////////////////////////////////////////////////
-static longword
-SDL_SBPlaySeg(volatile byte* data, longword length)
-{
-    uint16_t		datapage;
-    longword		dataofs, uselen;
-
-    uselen = length;
-    datapage = FP_SEG(data) >> 12;
-    dataofs = ((FP_SEG(data) & 0xfff) << 4) + FP_OFF(data);
-    if (dataofs >= 0x10000)
-    {
-        datapage++;
-        dataofs -= 0x10000;
-    }
-
-    if (dataofs + uselen > 0x10000)
-        uselen = 0x10000 - dataofs;
-
-    uselen--;
-
-    // Program the DMA controller
-    asm	pushf
-    asm	cli
-    outportb(0x0a, sbDMA | 4);					// Mask off DMA on channel sbDMA
-    outportb(0x0c, 0);							// Clear byte ptr flip-flop to lower byte
-    outportb(0x0b, 0x49);						// Set transfer mode for D/A conv
-    outportb(sbDMAa2, (byte)dataofs);			// Give LSB of address
-    outportb(sbDMAa2, (byte)(dataofs >> 8));		// Give MSB of address
-    outportb(sbDMAa1, (byte)datapage);			// Give page of address
-    outportb(sbDMAa3, (byte)uselen);				// Give LSB of length
-    outportb(sbDMAa3, (byte)(uselen >> 8));		// Give MSB of length
-    outportb(0x0a, sbDMA);						// Re-enable DMA on channel sbDMA
-
-    // Start playing the thing
-    sbWriteDelay();
-    sbOut(sbWriteCmd, 0x14);
-    sbWriteDelay();
-    sbOut(sbWriteData, (byte)uselen);
-    sbWriteDelay();
-    sbOut(sbWriteData, (byte)(uselen >> 8));
-    asm	popf
-
-    return(uselen + 1);
-}
+//static longword
+//SDL_SBPlaySeg(volatile byte* data, longword length)
+//{
+//    uint16_t		datapage;
+//    longword		dataofs, uselen;
+//
+//    uselen = length;
+//    datapage = FP_SEG(data) >> 12;
+//    dataofs = ((FP_SEG(data) & 0xfff) << 4) + FP_OFF(data);
+//    if (dataofs >= 0x10000)
+//    {
+//        datapage++;
+//        dataofs -= 0x10000;
+//    }
+//
+//    if (dataofs + uselen > 0x10000)
+//        uselen = 0x10000 - dataofs;
+//
+//    uselen--;
+//
+//    // Program the DMA controller
+//    asm	pushf
+//    asm	cli
+//    outportb(0x0a, sbDMA | 4);					// Mask off DMA on channel sbDMA
+//    outportb(0x0c, 0);							// Clear byte ptr flip-flop to lower byte
+//    outportb(0x0b, 0x49);						// Set transfer mode for D/A conv
+//    outportb(sbDMAa2, (byte)dataofs);			// Give LSB of address
+//    outportb(sbDMAa2, (byte)(dataofs >> 8));		// Give MSB of address
+//    outportb(sbDMAa1, (byte)datapage);			// Give page of address
+//    outportb(sbDMAa3, (byte)uselen);				// Give LSB of length
+//    outportb(sbDMAa3, (byte)(uselen >> 8));		// Give MSB of length
+//    outportb(0x0a, sbDMA);						// Re-enable DMA on channel sbDMA
+//
+//    // Start playing the thing
+//    sbWriteDelay();
+//    sbOut(sbWriteCmd, 0x14);
+//    sbWriteDelay();
+//    sbOut(sbWriteData, (byte)uselen);
+//    sbWriteDelay();
+//    sbOut(sbWriteData, (byte)(uselen >> 8));
+//    asm	popf
+//
+//    return(uselen + 1);
+//}
 
 ///////////////////////////////////////////////////////////////////////////
 //
 //	SDL_SBService_ISR() - Services the SoundBlaster DMA interrupt
 //
 ///////////////////////////////////////////////////////////////////////////
-static void
-SDL_SBService_ISR(void)
+//static void
+//SDL_SBService_ISR(void)
+//{
+//    longword	used;
+//
+//    sbIn(sbDataAvail);	// Ack interrupt to SB
+//
+//    if (sbNextSegPtr)
+//    {
+//        used = SDL_SBPlaySeg(sbNextSegPtr, sbNextSegLen);
+//        if (sbNextSegLen <= used)
+//            sbNextSegPtr = nil;
+//        else
+//        {
+//            sbNextSegPtr += used;
+//            sbNextSegLen -= used;
+//        }
+//    }
+//    else
+//    {
+//        SDL_SBStopSample();
+//        SDL_DigitizedDone();
+//    }
+//
+//    outportb(0x20, 0x20);	// Ack interrupt
+//}
+
+void SoundBlaster_SoundFinished()
 {
-    longword	used;
-
-    sbIn(sbDataAvail);	// Ack interrupt to SB
-
-    if (sbNextSegPtr)
-    {
-        used = SDL_SBPlaySeg(sbNextSegPtr, sbNextSegLen);
-        if (sbNextSegLen <= used)
-            sbNextSegPtr = nil;
-        else
-        {
-            sbNextSegPtr += used;
-            sbNextSegLen -= used;
-        }
-    }
-    else
-    {
-        SDL_SBStopSample();
-        SDL_DigitizedDone();
-    }
-
-    outportb(0x20, 0x20);	// Ack interrupt
+    SDL_SBStopSample();
+    SDL_DigitizedDone();
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -383,32 +303,8 @@ static void
 #endif
 SDL_SBPlaySample(byte* data, longword len)
 {
-    longword	used;
-
     SDL_SBStopSample();
-
-    asm	pushf
-    asm	cli
-
-    used = SDL_SBPlaySeg(data, len);
-    if (len <= used)
-        sbNextSegPtr = nil;
-    else
-    {
-        sbNextSegPtr = data + used;
-        sbNextSegLen = len - used;
-    }
-
-    // Save old interrupt status and unmask ours
-    sbOldIntMask = inportb(0x21);
-    outportb(0x21, sbOldIntMask & ~(1 << sbInterrupt));
-
-    sbWriteDelay();
-    sbOut(sbWriteCmd, 0xd4);						// Make sure DSP DMA is enabled
-
-    sbSamplePlaying = true;
-
-    asm	popf
+    SoundBlaster_PlaySample(data, len);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -421,22 +317,13 @@ SDL_SBPlaySample(byte* data, longword len)
 static void
 SDL_PositionSBP(int16_t leftpos, int16_t rightpos)
 {
-    byte	v;
-
     if (!SBProPresent)
         return;
 
     leftpos = 15 - leftpos;
     rightpos = 15 - rightpos;
-    v = ((leftpos & 0x0f) << 4) | (rightpos & 0x0f);
 
-    asm	pushf
-    asm	cli
-
-    sbOut(sbpMixerAddr, sbpmVoiceVol);
-    sbOut(sbpMixerData, v);
-
-    asm	popf
+    SoundBlaster_Level(leftpos, rightpos);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -445,48 +332,48 @@ SDL_PositionSBP(int16_t leftpos, int16_t rightpos)
 //		particular I/O location
 //
 ///////////////////////////////////////////////////////////////////////////
-static boolean
-SDL_CheckSB(int16_t port)
-{
-    int16_t	i;
-
-    sbLocation = port << 4;		// Initialize stuff for later use
-
-    sbOut(sbReset, true);		// Reset the SoundBlaster DSP
-    asm	mov	dx, 0x388				// Wait >4usec
-    asm	in	al, dx
-    asm	in	al, dx
-    asm	in	al, dx
-    asm	in	al, dx
-    asm	in	al, dx
-    asm	in	al, dx
-    asm	in	al, dx
-    asm	in	al, dx
-    asm	in	al, dx
-
-    sbOut(sbReset, false);		// Turn off sb DSP reset
-    asm	mov	dx, 0x388				// Wait >100usec
-    asm	mov	cx, 100
-    usecloop:
-    asm	in	al, dx
-    asm	loop usecloop
-
-    for (i = 0; i < 100; i++)
-    {
-        if (sbIn(sbDataAvail) & 0x80)		// If data is available...
-        {
-            if (sbIn(sbReadData) == 0xaa)	// If it matches correct value
-                return(true);
-            else
-            {
-                sbLocation = -1;			// Otherwise not a SoundBlaster
-                return(false);
-            }
-        }
-    }
-    sbLocation = -1;						// Retry count exceeded - fail
-    return(false);
-}
+//static boolean
+//SDL_CheckSB(int16_t port)
+//{
+//    int16_t	i;
+//
+//    sbLocation = port << 4;		// Initialize stuff for later use
+//
+//    sbOut(sbReset, true);		// Reset the SoundBlaster DSP
+//    asm	mov	dx, 0x388				// Wait >4usec
+//    asm	in	al, dx
+//    asm	in	al, dx
+//    asm	in	al, dx
+//    asm	in	al, dx
+//    asm	in	al, dx
+//    asm	in	al, dx
+//    asm	in	al, dx
+//    asm	in	al, dx
+//    asm	in	al, dx
+//
+//    sbOut(sbReset, false);		// Turn off sb DSP reset
+//    asm	mov	dx, 0x388				// Wait >100usec
+//    asm	mov	cx, 100
+//    usecloop:
+//    asm	in	al, dx
+//    asm	loop usecloop
+//
+//    for (i = 0; i < 100; i++)
+//    {
+//        if (sbIn(sbDataAvail) & 0x80)		// If data is available...
+//        {
+//            if (sbIn(sbReadData) == 0xaa)	// If it matches correct value
+//                return(true);
+//            else
+//            {
+//                sbLocation = -1;			// Otherwise not a SoundBlaster
+//                return(false);
+//            }
+//        }
+//    }
+//    sbLocation = -1;						// Retry count exceeded - fail
+//    return(false);
+//}
 
 ///////////////////////////////////////////////////////////////////////////
 //
@@ -499,30 +386,7 @@ SDL_CheckSB(int16_t port)
 static boolean
 SDL_DetectSoundBlaster(int16_t port)
 {
-    int16_t	i;
-
-    if (port == 0)					// If user specifies default, use 2
-        port = 2;
-    if (port == -1)
-    {
-        if (SDL_CheckSB(2))			// Check default before scanning
-            return(true);
-
-        if (SDL_CheckSB(4))			// Check other SB Pro location before scan
-            return(true);
-
-        for (i = 1; i <= 6; i++)		// Scan through possible SB locations
-        {
-            if ((i == 2) || (i == 4))
-                continue;
-
-            if (SDL_CheckSB(i))		// If found at this address,
-                return(true);		//	return success
-        }
-        return(false);				// All addresses failed, return failure
-    }
-    else
-        return(SDL_CheckSB(port));	// User specified address or default
+    return SoundBlaster_Detect();
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -531,17 +395,17 @@ SDL_DetectSoundBlaster(int16_t port)
 //		code. Sets up sbDMA, and sbDMAa1-sbDMAa3 (used by SDL_SBPlaySeg()).
 //
 ///////////////////////////////////////////////////////////////////////////
-void
-SDL_SBSetDMA(byte channel)
-{
-    if (channel > 3)
-        Quit("SDL_SBSetDMA() - invalid SoundBlaster DMA channel");
-
-    sbDMA = channel;
-    sbDMAa1 = sba1Vals[channel];
-    sbDMAa2 = sba2Vals[channel];
-    sbDMAa3 = sba3Vals[channel];
-}
+//void
+//SDL_SBSetDMA(byte channel)
+//{
+//    if (channel > 3)
+//        Quit("SDL_SBSetDMA() - invalid SoundBlaster DMA channel");
+//
+//    sbDMA = channel;
+//    sbDMAa1 = sba1Vals[channel];
+//    sbDMAa2 = sba2Vals[channel];
+//    sbDMAa3 = sba3Vals[channel];
+//}
 
 ///////////////////////////////////////////////////////////////////////////
 //
@@ -551,52 +415,7 @@ SDL_SBSetDMA(byte channel)
 static void
 SDL_StartSB(void)
 {
-    byte	timevalue, test;
-
-    sbIntVec = sbIntVectors[sbInterrupt];
-    if (sbIntVec < 0)
-        Quit("SDL_StartSB: Illegal or unsupported interrupt number for SoundBlaster");
-
-    sbOldIntHand_ISR = getvect(sbIntVec);	// Get old interrupt handler
-    setvect(sbIntVec, SDL_SBService_ISR);	// Set mine
-
-    sbWriteDelay();
-    sbOut(sbWriteCmd, 0xd1);				// Turn on DSP speaker
-
-    // Set the SoundBlaster DAC time constant for 7KHz
-    timevalue = 256 - (1000000 / 7000);
-    sbWriteDelay();
-    sbOut(sbWriteCmd, 0x40);
-    sbWriteDelay();
-    sbOut(sbWriteData, timevalue);
-
-    SBProPresent = false;
-    if (sbNoProCheck)
-        return;
-
-    // Check to see if this is a SB Pro
-    sbOut(sbpMixerAddr, sbpmFMVol);
-    sbpOldFMMix = sbIn(sbpMixerData);
-    sbOut(sbpMixerData, 0xbb);
-    test = sbIn(sbpMixerData);
-    if (test == 0xbb)
-    {
-        // Boost FM output levels to be equivilent with digitized output
-        sbOut(sbpMixerData, 0xff);
-        test = sbIn(sbpMixerData);
-        if (test == 0xff)
-        {
-            SBProPresent = true;
-
-            // Save old Voice output levels (SB Pro)
-            sbOut(sbpMixerAddr, sbpmVoiceVol);
-            sbpOldVOCMix = sbIn(sbpMixerData);
-
-            // Turn SB Pro stereo DAC off
-            sbOut(sbpMixerAddr, sbpmControl);
-            sbOut(sbpMixerData, 0);				// 0=off,2=on
-        }
-    }
+    SBProPresent = true;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -608,19 +427,6 @@ static void
 SDL_ShutSB(void)
 {
     SDL_SBStopSample();
-
-    if (SBProPresent)
-    {
-        // Restore FM output levels (SB Pro)
-        sbOut(sbpMixerAddr, sbpmFMVol);
-        sbOut(sbpMixerData, sbpOldFMMix);
-
-        // Restore Voice output levels (SB Pro)
-        sbOut(sbpMixerAddr, sbpmVoiceVol);
-        sbOut(sbpMixerData, sbpOldVOCMix);
-    }
-
-    setvect(sbIntVec, sbOldIntHand_ISR);		// Set vector back
 }
 
 //	Sound Source Code
@@ -684,6 +490,11 @@ SDL_SSStopSample(void)
 //    }
 //done:;
 //}
+
+void SoundSource_SoundFinished()
+{
+    SDL_DigitizedDone();
+}
 
 ///////////////////////////////////////////////////////////////////////////
 //
@@ -920,6 +731,12 @@ SDL_PCService(void)
 }
 #endif
 
+void PCSpeaker_SoundFinished()
+{
+    SDL_PCStopSound();
+    SDL_SoundFinished();
+}
+
 ///////////////////////////////////////////////////////////////////////////
 //
 //	SDL_ShutPC() - Turns off the pc speaker
@@ -939,30 +756,8 @@ SDL_LoadDigiSegment(word page)
 {
     memptr	addr;
 
-#if 0	// for debugging
-    asm	mov	dx, STATUS_REGISTER_1
-    asm	in	al, dx
-    asm	mov	dx, ATR_INDEX
-    asm	mov	al, ATR_OVERSCAN
-    asm	out	dx, al
-    asm	mov	al, 10	// bright green
-    asm	out	dx, al
-#endif
-
     addr = PM_GetSoundPage(page);
     PM_SetPageLock(PMSoundStart + page, pml_Locked);
-
-#if 0	// for debugging
-    asm	mov	dx, STATUS_REGISTER_1
-    asm	in	al, dx
-    asm	mov	dx, ATR_INDEX
-    asm	mov	al, ATR_OVERSCAN
-    asm	out	dx, al
-    asm	mov	al, 3	// blue
-    asm	out	dx, al
-    asm	mov	al, 0x20	// normal
-    asm	out	dx, al
-#endif
 
     return(addr);
 }
@@ -1040,7 +835,7 @@ SD_Poll(void)
             DigiLastSegment = false;
         }
     }
-    SDL_SetTimerSpeed();
+    //SDL_SetTimerSpeed();
 }
 
 void
@@ -1161,10 +956,10 @@ SD_SetDigiDevice(SDSMode mode)
 
         DigiMode = mode;
 
-        if (mode == sds_SoundSource)
-            SDL_StartSS();
+        //if (mode == sds_SoundSource)
+        //    SDL_StartSS();
 
-        SDL_SetTimerSpeed();
+        //SDL_SetTimerSpeed();
     }
 }
 
@@ -1381,7 +1176,10 @@ SDL_ALPlaySound(AdLibSound* sound)
     //SDL_AlSetFXInst(&alZeroInst);	// DEBUG
     //SDL_AlSetFXInst(inst);
 
-    AdLib_PlaySound(sound);
+    if (sizeof(AdLibSound) != sizeof(BridgeAdLibSound))
+        Quit("SDL_ALPlaySound() - AdLibSound struct size mismatch");
+
+    AdLib_PlaySound((BridgeAdLibSound*)sound);
 }
 
 #if 0
@@ -1416,6 +1214,11 @@ SDL_ALSoundService(void)
     }
 }
 #endif
+
+void AdLib_SoundFinished()
+{
+    SDL_SoundFinished();
+}
 
 #if 0
 void
@@ -1467,19 +1270,6 @@ static void
 SDL_CleanAL(void)
 {
     AdLib_Clean();
-}
-
-///////////////////////////////////////////////////////////////////////////
-//
-//	SDL_StartAL() - Starts up the AdLib card for sound effects
-//
-///////////////////////////////////////////////////////////////////////////
-static void
-SDL_StartAL(void)
-{
-    //alFXReg = 0;
-    //alOut(alEffects, alFXReg);
-    //SDL_AlSetFXInst(&alZeroInst);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1628,12 +1418,6 @@ SDL_CleanDevice(void)
 static void
 SDL_StartDevice(void)
 {
-    switch (SoundMode)
-    {
-    case sdm_AdLib:
-        SDL_StartAL();
-        break;
-    }
     SoundNumber = SoundPriority = 0;
 }
 
@@ -1685,12 +1469,12 @@ SD_SetSoundMode(SDMode mode)
         SDL_ShutDevice();
         SoundMode = mode;
 #ifndef	_MUSE_
-        SoundTable = (word*)(&audiosegs[tableoffset]);
+        SoundTable = (memptr*)(&audiosegs[tableoffset]);
 #endif
         SDL_StartDevice();
     }
 
-    SDL_SetTimerSpeed();
+    //SDL_SetTimerSpeed();
 
     return(result);
 }
@@ -1725,7 +1509,7 @@ SD_SetMusicMode(SMMode mode)
     if (result)
         MusicMode = mode;
 
-    SDL_SetTimerSpeed();
+    //SDL_SetTimerSpeed();
 
     return(result);
 }
@@ -1744,7 +1528,7 @@ SD_Startup(void)
     if (SD_Started)
         return;
 
-    SDL_SetDS();
+    //SDL_SetDS();
 
     //ssIsTandy = false;
     ssNoCheck = false;
@@ -1787,11 +1571,9 @@ SD_Startup(void)
     }
 #endif
 
-    SoundUserHook = 0;
+    //SoundUserHook = 0;
 
-    t0OldService_ISR = getvect(8);	// Get old timer 0 ISR
-
-    LocalTime = TimeCount = 0;
+    TimeCount = 0;
 
     SD_SetSoundMode(sdm_Off);
     SD_SetMusicMode(smm_Off);
@@ -1818,37 +1600,35 @@ SD_Startup(void)
                     {
                     case 'A':
                         temp = strtol(env + 1, &env, 16);
-                        if
-                            (
-                                (temp >= 0x210)
-                                && (temp <= 0x260)
-                                && (!(temp & 0x00f))
-                                )
+                        if (
+                            (temp >= 0x210)
+                            && (temp <= 0x260)
+                            && (!(temp & 0x00f))
+                        )
                             port = (temp - 0x200) >> 4;
                         else
                             Quit("SD_Startup: Unsupported address value in BLASTER");
                         break;
                     case 'I':
-                        temp = strtol(env + 1, &env, 10);
-                        if
-                            (
-                                (temp >= 0)
-                                && (temp <= 10)
-                                && (sbIntVectors[temp] != -1)
-                                )
-                        {
-                            sbInterrupt = temp;
-                            sbIntVec = sbIntVectors[sbInterrupt];
-                        }
-                        else
-                            Quit("SD_Startup: Unsupported interrupt value in BLASTER");
+                        //temp = strtol(env + 1, &env, 10);
+                        //if (
+                        //    (temp >= 0)
+                        //    && (temp <= 10)
+                        //    && (sbIntVectors[temp] != -1)
+                        //)
+                        //{
+                        //    sbInterrupt = temp;
+                        //    sbIntVec = sbIntVectors[sbInterrupt];
+                        //}
+                        //else
+                        //    Quit("SD_Startup: Unsupported interrupt value in BLASTER");
                         break;
                     case 'D':
-                        temp = strtol(env + 1, &env, 10);
-                        if ((temp == 0) || (temp == 1) || (temp == 3))
-                            SDL_SBSetDMA(temp);
-                        else
-                            Quit("SD_Startup: Unsupported DMA value in BLASTER");
+                        //temp = strtol(env + 1, &env, 10);
+                        //if ((temp == 0) || (temp == 1) || (temp == 3))
+                        //    SDL_SBSetDMA(temp);
+                        //else
+                        //    Quit("SD_Startup: Unsupported DMA value in BLASTER");
                         break;
                     default:
                         while (isspace(*env))
@@ -1948,23 +1728,7 @@ SD_Shutdown(void)
     if (SoundSourcePresent)
         SDL_ShutSS();
 
-    SDL_SetTimer0(0);
-
-    setvect(8, t0OldService_ISR);
-
     SD_Started = false;
-}
-
-///////////////////////////////////////////////////////////////////////////
-//
-//	SD_SetUserHook() - sets the routine that the Sound Mgr calls every 1/70th
-//		of a second from its timer 0 ISR
-//
-///////////////////////////////////////////////////////////////////////////
-void
-SD_SetUserHook(void (*hook)(void))
-{
-    SoundUserHook = hook;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -2081,7 +1845,7 @@ SD_SoundPlaying(void)
         result = PCSpeaker_SoundPlaying();
         break;
     case sdm_AdLib:
-        result = AdLib_SoundPlaying;
+        result = AdLib_SoundPlaying();
         break;
     }
 

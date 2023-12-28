@@ -39,6 +39,12 @@ void Update_Time();
 // keyboard event (key up/down)
 void INL_KeyService_ISR(uint8_t key);
 
+// sound playback end event
+void AdLib_SoundFinished();
+void PCSpeaker_SoundFinished();
+void SoundSource_SoundFinished();
+void SoundBlaster_SoundFinished();
+
 //------------------------------------------------------------------------------
 // events from application
 //------------------------------------------------------------------------------
@@ -58,8 +64,38 @@ void AdLib_Clean();
 // Shuts down the AdLib card for sound effects
 void AdLib_Shut();
 
+typedef	struct
+{
+    uint32_t    length;
+    uint16_t    priority;
+} BridgeSoundCommon;
+
+typedef	struct
+{
+    uint8_t
+        mChar, cChar,
+        mScale, cScale,
+        mAttack, cAttack,
+        mSus, cSus,
+        mWave, cWave,
+        nConn,
+
+        // These are only for Muse - these bytes are really unused
+        voice,
+        mode,
+        unused[3];
+} BridgeAdLibInstrument;
+
+typedef	struct
+{
+    BridgeSoundCommon       common;
+    BridgeAdLibInstrument   inst;
+    uint8_t                 block, data[1];
+} BridgeAdLibSound;
+
 // Plays the specified sound on the AdLib card
-void AdLib_PlaySound(AdLibSound* sound);
+// When finished must call AdLib_SoundFinished()
+void AdLib_PlaySound(BridgeAdLibSound* sound);
 
 // Turns off any sound effects playing through the AdLib card
 void AdLib_StopSound();
@@ -97,3 +133,13 @@ void SoundSource_PlaySample(uint8_t* data, uint32_t length);
 // Stops a sample playing on the Sound Source
 void SoundSource_StopSample();
 
+// Determines if there's a SoundBlaster
+uint8_t SoundBlaster_Detect();
+
+// Sets the attenuation levels for the left and right channels
+void SoundBlaster_Level(int16_t left, int16_t right);
+
+void SoundBlaster_PlaySample(uint8_t* data, uint32_t length);
+
+// Stops any active sampled sound
+void SoundBlaster_StopSample();
