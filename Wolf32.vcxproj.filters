@@ -12,6 +12,7 @@
     <ClCompile Include="WOLFSRC\ID_SD.C" />
     <ClCompile Include="WOLFSRC\ID_US_1.C" />
     <ClCompile Include="WOLFSRC\WL_MENU.C" />
+    <ClCompile Include="WOLFSRC\WL_GAME.C" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WOLFSRC\WL_DEF.H" />
