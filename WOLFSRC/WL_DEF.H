@@ -963,18 +963,18 @@ void PicturePause(void);
 =============================================================================
 */
 
-extern	uint16_t screenloc[3];
-extern	uint16_t freelatch;
+extern	uint16_t    screenloc[3];
+extern	uint16_t    freelatch;
 
-extern	int32_t 	lasttimecount;
-extern	int32_t 	frameon;
-extern	boolean	fizzlein;
+extern	int32_t     lasttimecount;
+extern	int32_t     frameon;
+extern	boolean     fizzlein;
 
-extern	uint16_t	wallheight[MAXVIEWWIDTH];
+extern	uint16_t    wallheight[MAXVIEWWIDTH];
 
-extern	fixed	tileglobal;
-extern	fixed	focallength;
-extern	fixed	mindist;
+extern	fixed       tileglobal;
+extern	fixed       focallength;
+extern	fixed       mindist;
 
 //
 // math tables

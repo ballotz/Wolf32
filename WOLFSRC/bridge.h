@@ -18,6 +18,9 @@ void Update_Key();
 // Gets the amount that the mouse has moved
 void INL_GetMouseDelta(int16_t* dx, int16_t* dy);
 
+// Reset the amount that the mouse has moved
+void Mouse_ResetDelta();
+
 // Gets the status of the mouse buttons
 uint16_t INL_GetMouseButtons(void);
 
@@ -38,6 +41,12 @@ void IN_GetJoyAbs(uint16_t joy, uint16_t* xp, uint16_t* yp);
 
 // Returns the button status of the specified joystick
 uint16_t INL_GetJoyButtons(uint16_t joy);
+
+//------------------------------------------------------------------------------
+// VR
+//------------------------------------------------------------------------------
+
+int16_t VR_GetAngle();
 
 //------------------------------------------------------------------------------
 // TimeCount

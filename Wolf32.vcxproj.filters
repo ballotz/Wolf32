@@ -13,6 +13,7 @@
     <ClCompile Include="WOLFSRC\ID_US_1.C" />
     <ClCompile Include="WOLFSRC\WL_MENU.C" />
     <ClCompile Include="WOLFSRC\WL_GAME.C" />
+    <ClCompile Include="WOLFSRC\WL_PLAY.C" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WOLFSRC\WL_DEF.H" />

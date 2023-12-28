@@ -645,8 +645,6 @@ void BossKey(void)
 ////////////////////////////////////////////////////////////////////
 int16_t CP_CheckQuick(uint16_t scancode)
 {
-    int16_t mousex, mousey;
-
     switch (scancode)
     {
         //
@@ -719,7 +717,7 @@ int16_t CP_CheckQuick(uint16_t scancode)
             lasttimecount = TimeCount;
 
             if (MousePresent)
-                INL_GetMouseDelta(&mousex, &mousey); // Clear accumulated mouse movement
+                Mouse_ResetDelta(); // Clear accumulated mouse movement
 
             PM_CheckMainMem();
 
@@ -793,7 +791,7 @@ int16_t CP_CheckQuick(uint16_t scancode)
             lasttimecount = TimeCount;
 
             if (MousePresent)
-                INL_GetMouseDelta(&mousex, &mousey); // Clear accumulated mouse movement
+                Mouse_ResetDelta(); // Clear accumulated mouse movement
             PM_CheckMainMem();
 
 #ifndef SPEAR
