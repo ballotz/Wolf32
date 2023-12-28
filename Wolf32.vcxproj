@@ -148,6 +148,7 @@
     <ClCompile Include="WOLFSRC\ID_US_1.C" />
     <ClCompile Include="WOLFSRC\ID_VH.C" />
     <ClCompile Include="WOLFSRC\ID_VL.C" />
+    <ClCompile Include="WOLFSRC\WL_DRAW.C" />
     <ClCompile Include="WOLFSRC\WL_GAME.C" />
     <ClCompile Include="WOLFSRC\WL_MAIN.C" />
     <ClCompile Include="WOLFSRC\WL_MENU.C" />
