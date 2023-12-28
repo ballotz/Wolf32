@@ -10,6 +10,7 @@
     <ClCompile Include="WOLFSRC\ID_IN.C" />
     <ClCompile Include="WOLFSRC\bridge.c" />
     <ClCompile Include="WOLFSRC\ID_SD.C" />
+    <ClCompile Include="WOLFSRC\ID_US_1.C" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WOLFSRC\WL_DEF.H" />
