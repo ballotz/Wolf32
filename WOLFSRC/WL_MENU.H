@@ -122,15 +122,14 @@ void DrawWindow(int16_t x, int16_t y, int16_t w, int16_t h, int16_t wcolor);
 void DrawOutline(int16_t x, int16_t y, int16_t w, int16_t h, int16_t color1, int16_t color2);
 void WaitKeyUp(void);
 void ReadAnyControl(ControlInfo* ci);
-void TicDelay(int16_t count);
+void TicDelay(uint32_t count);
 void CacheLump(int16_t lumpstart, int16_t lumpend);
 void UnCacheLump(int16_t lumpstart, int16_t lumpend);
 void StartCPMusic(int16_t song);
-int16_t  Confirm(char* string);
+int16_t Confirm(char* string);
 void Message(char* string);
 void CheckPause(void);
 void ShootSnd(void);
-void CheckSecretMissions(void);
 void BossKey(void);
 
 void DrawGun(CP_iteminfo* item_i, CP_itemtype* items, int16_t x, int16_t* y, int16_t which, int16_t basey, void (*routine)(int16_t w));
@@ -170,19 +169,18 @@ void TrackWhichGame(int16_t w);
 void DrawNewGameDiff(int16_t w);
 void FixupCustom(int16_t w);
 
-void CP_NewGame(void);
-void CP_Sound(void);
-int16_t  CP_LoadGame(int16_t quick);
-int16_t  CP_SaveGame(int16_t quick);
-void CP_Control(void);
-void CP_ChangeView(void);
-void CP_ExitOptions(void);
+void CP_NewGame(int16_t unused);
+void CP_Sound(int16_t unused);
+int16_t CP_LoadGame(int16_t quick);
+int16_t CP_SaveGame(int16_t quick);
+void CP_Control(int16_t unused);
+void CP_ChangeView(int16_t unused);
 void CP_Quit(void);
-void CP_ViewScores(void);
-int16_t  CP_EndGame(void);
-int16_t  CP_CheckQuick(uint16_t scancode);
-void CustomControls(void);
-void MouseSensitivity(void);
+void CP_ViewScores(int16_t unused);
+int16_t CP_EndGame(void);
+int16_t CP_CheckQuick(uint16_t scancode);
+void CustomControls(int16_t unused);
+void MouseSensitivity(int16_t unused);
 
 void CheckForEpisodes(void);
 
@@ -224,8 +222,8 @@ typedef struct {
 
 extern LRstruct LevelRatios[];
 
-void Write(int16_t x, int16_t y, char* string);
-void NonShareware(void);
-int16_t GetYorN(int16_t x, int16_t y, int16_t pic);
+//void Write(int16_t x, int16_t y, char* string);
+//void NonShareware(void);
+//int16_t GetYorN(int16_t x, int16_t y, int16_t pic);
 
 

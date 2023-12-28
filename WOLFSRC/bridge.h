@@ -2,16 +2,36 @@
 #include <stdint.h>
 
 //------------------------------------------------------------------------------
-// state request by application
+// Keyboard
 //------------------------------------------------------------------------------
 
-uint8_t IN_HasMouse();
+// keyboard event (key up/down)
+void INL_KeyService_ISR(uint8_t key);
+
+// request keyboard update trough INL_KeyService_ISR()
+void Update_Key();
+
+//------------------------------------------------------------------------------
+// Mouse
+//------------------------------------------------------------------------------
 
 // Gets the amount that the mouse has moved
-void INL_GetMouseDelta(int16_t* x, int16_t* y);
+void INL_GetMouseDelta(int16_t* dx, int16_t* dy);
 
 // Gets the status of the mouse buttons
 uint16_t INL_GetMouseButtons(void);
+
+// 0, no mouse
+// 1, mouse available
+uint8_t IN_HasMouse();
+
+void Mouse_SetPos(int16_t x, int16_t y);
+
+void Mouse_GetPos(int16_t* x, int16_t* y);
+
+//------------------------------------------------------------------------------
+// Joystick
+//------------------------------------------------------------------------------
 
 // Reads the absolute position of the specified joystick
 void IN_GetJoyAbs(uint16_t joy, uint16_t* xp, uint16_t* yp);
@@ -20,33 +40,16 @@ void IN_GetJoyAbs(uint16_t joy, uint16_t* xp, uint16_t* yp);
 uint16_t INL_GetJoyButtons(uint16_t joy);
 
 //------------------------------------------------------------------------------
-// update request by application
-// calls added to update app state that won't change without ISR
+// TimeCount
 //------------------------------------------------------------------------------
 
 extern uint32_t TimeCount;
-
-// request keyboard update trough INL_KeyService_ISR()
-void Update_Key();
 
 // request time update (TimeCount)
 void Update_Time();
 
 //------------------------------------------------------------------------------
-// events to application
-//------------------------------------------------------------------------------
-
-// keyboard event (key up/down)
-void INL_KeyService_ISR(uint8_t key);
-
-// sound playback end event
-void AdLib_SoundFinished();
-void PCSpeaker_SoundFinished();
-void SoundSource_SoundFinished();
-void SoundBlaster_SoundFinished();
-
-//------------------------------------------------------------------------------
-// events from application
+// AdLib
 //------------------------------------------------------------------------------
 
 // starts playing the music pointed to
@@ -103,6 +106,12 @@ void AdLib_StopSound();
 // Determines if an AdLib sound is playing
 uint8_t AdLib_SoundPlaying();
 
+void AdLib_SoundFinished();
+
+//------------------------------------------------------------------------------
+// PC Speaker
+//------------------------------------------------------------------------------
+
 // Turns off the pc speaker
 void PCSpeaker_Shut();
 
@@ -110,6 +119,7 @@ void PCSpeaker_Shut();
 void PCSpeaker_StopSound();
 
 // Plays the specified sound on the PC speaker
+// When finished must call PCSpeaker_SoundFinished()
 void PCSpeaker_PlaySound(uint8_t* data, uint32_t length);
 
 // Stops a sample playing on the PC speaker
@@ -121,6 +131,12 @@ void PCSpeaker_PlaySample(uint8_t* data, uint32_t length);
 // Determines if a PC speaker sound is playing
 uint8_t PCSpeaker_SoundPlaying();
 
+void PCSpeaker_SoundFinished();
+
+//------------------------------------------------------------------------------
+// SoundSource
+//------------------------------------------------------------------------------
+
 // Determines if there's a SoundSource
 uint8_t SoundSource_Detect();
 
@@ -128,10 +144,17 @@ uint8_t SoundSource_Detect();
 void SoundSource_Shut();
 
 // Plays the specified sample on the Sound Source
+// When finished must call SoundSource_SoundFinished()
 void SoundSource_PlaySample(uint8_t* data, uint32_t length);
 
 // Stops a sample playing on the Sound Source
 void SoundSource_StopSample();
+
+void SoundSource_SoundFinished();
+
+//------------------------------------------------------------------------------
+// SoundBlaster
+//------------------------------------------------------------------------------
 
 // Determines if there's a SoundBlaster
 uint8_t SoundBlaster_Detect();
@@ -139,7 +162,20 @@ uint8_t SoundBlaster_Detect();
 // Sets the attenuation levels for the left and right channels
 void SoundBlaster_Level(int16_t left, int16_t right);
 
+// Plays a sampled sound on the SoundBlaster
+// When finished must call SoundBlaster_SoundFinished()
 void SoundBlaster_PlaySample(uint8_t* data, uint32_t length);
 
 // Stops any active sampled sound
 void SoundBlaster_StopSample();
+
+void SoundBlaster_SoundFinished();
+
+//------------------------------------------------------------------------------
+// filesystem
+//------------------------------------------------------------------------------
+
+void FS_FindFirst();
+
+void FS_FindNext();
+
