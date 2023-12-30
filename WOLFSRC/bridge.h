@@ -180,11 +180,3 @@ void SoundBlaster_StopSample();
 
 void SoundBlaster_SoundFinished();
 
-//------------------------------------------------------------------------------
-// filesystem
-//------------------------------------------------------------------------------
-
-void FS_FindFirst();
-
-void FS_FindNext();
-

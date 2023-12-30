@@ -112,7 +112,266 @@ int16_t     horizwall[MAXWALLTILES], vertwall[MAXWALLTILES];
 */
 
 
-void AsmRefresh(void);			// in WL_DR_A.ASM
+//void AsmRefresh(void);			// in WL_DR_A.ASM
+
+#define DEG90   900
+#define DEG180  1800
+#define DEG270  2700
+#define DEG360  3600
+#define OP_JLE  0x7e
+#define OP_JGE  0x7d
+
+int32_t xpartialbyystep(word xpartial)
+{
+    int32_t ystephi = ystep >> 16;
+    int32_t ysteplo = ystep & 0xFFFF;
+    int32_t xpartiallo = xpartial;
+
+    return ystephi * xpartiallo +
+        (ysteplo * xpartiallo >> 16);
+}
+
+int32_t ypartialbyxstep(word ypartial)
+{
+    int32_t xstephi = xstep >> 16;
+    int32_t xsteplo = xstep & 0xFFFF;
+    int32_t ypartiallo = ypartial;
+
+    return xstephi * ypartiallo +
+        (xsteplo * ypartiallo >> 16);
+}
+
+void AsmRefresh()
+{
+    int16_t angle; // angle of the ray through pixx
+    int16_t xspot; // xspot (yinttile<<6)+xtile (index into tilemap and spotvis)
+    int16_t yspot; // yspot (xinttile<<6)+ytile (index into tilemap and spotvis)
+
+    byte horizop, vertop;
+    int16_t temp16;
+    int32_t temp32;
+
+    horizop = OP_JLE;
+    vertop = OP_JLE;
+
+    pixx = 0;
+    while (pixx++ < viewwidth)
+    {
+        // Setup to trace a ray through pixx view pixel
+
+        angle = midangle + pixelangle[pixx];
+
+        if (angle < 0)
+        {
+            // -90 - -1 degree arc
+            angle += FINEANGLES;
+            goto entry360;
+        }
+
+        if (angle < DEG90)
+        {
+            // 0-89 degree arc
+        entry90:
+            xtilestep = 1;
+            ytilestep = -1;
+            horizop = OP_JGE;
+            vertop = OP_JLE;
+            xstep = finetangent[DEG90 - 1 - angle];
+            ystep = -finetangent[angle];
+            xpartial = xpartialup;
+            ypartial = ypartialdown;
+            goto initvars;
+        }
+
+        if (angle < DEG180)
+        {
+            // 90-179 degree arc
+            xtilestep = -1;
+            ytilestep = -1;
+            horizop = OP_JLE;
+            vertop = OP_JLE;
+            xstep = -finetangent[angle - DEG90];
+            ystep = -finetangent[DEG180 - 1 - angle];
+            xpartial = xpartialdown;
+            ypartial = ypartialdown;
+            goto initvars;
+        }
+
+        if (angle < DEG270)
+        {
+            // 180-269 degree arc
+            xtilestep = -1;
+            ytilestep = 1;
+            horizop = OP_JLE;
+            vertop = OP_JGE;
+            xstep = -finetangent[DEG270 - 1 - angle];
+            ystep = finetangent[angle - DEG180];
+            xpartial = xpartialdown;
+            ypartial = ypartialup;
+            goto initvars;
+        }
+
+        if (angle < DEG360)
+        {
+            // 270-359 degree arc
+        entry360:
+            xtilestep = 1;
+            ytilestep = 1;
+            horizop = OP_JGE;
+            vertop = OP_JGE;
+            xstep = finetangent[angle - DEG270];
+            ystep = finetangent[DEG360 - 1 - angle];
+            xpartial = xpartialup;
+            ypartial = ypartialup;
+            goto initvars;
+        }
+
+        angle -= FINEANGLES;
+        goto entry90;
+
+        // initialise variables for intersection testing
+    initvars:
+        yintercept = xpartialbyystep(xpartial);
+        yintercept += viewy;
+        xtile = focaltx + xtilestep;
+        xspot = (xtile << 6) + yinttile;
+        xintercept = ypartialbyxstep(ypartial);
+        xintercept += viewx;
+        ytile = focalty + ytilestep;
+        yspot = (xinttile << 6) + ytile;
+
+        // trace along this angle until we hit a wall
+        // CORE LOOP!
+
+        // check intersections with vertical walls
+    vertcheck:
+        if (vertop == OP_JLE)
+            if ((yintercept >> 16) <= ytile) // (ytilestep==-1)
+                goto horizentry;
+        if (vertop == OP_JGE)
+            if ((yintercept >> 16) >= ytile) // (ytilestep==1)
+                goto horizentry;
+    vertentry:
+        if (*((byte*)tilemap + xspot) == 0)
+        {
+        passvert:
+            *((byte*)spotvis + xspot) = true;
+            xtile += xtilestep;
+            yintercept += ystep;
+            xspot = (xtile << 6) + yinttile;
+            goto vertcheck;
+        }
+
+        tilehit = *((byte*)tilemap + xspot);
+        if (tilehit < 0)
+            goto vertdoor;
+        xintercept = xtile << 16;
+        yintercept = (ytile << 16) + (yintercept & 0xFFFF);
+        HitVertWall();
+        continue;
+
+        // check intersections with horizontal walls
+    horizcheck:
+        if (horizop == OP_JLE)
+            if ((xintercept >> 16) <= xtile) // (xtilestep==-1)
+                goto vertentry;
+        if (horizop == OP_JGE)
+            if ((xintercept >> 16) >= xtile) // (xtilestep==1)
+                goto vertentry;
+    horizentry:
+        if (*((byte*)tilemap + yspot) == 0)
+        {
+        passhoriz:
+            *((byte*)spotvis + yspot) = true;
+            ytile += ytilestep;
+            xintercept += xstep;
+            yspot = (xinttile << 6) + ytile;
+            goto horizcheck;
+        }
+
+        tilehit = *((byte*)tilemap + yspot);
+        if (tilehit < 0)
+            goto horizdoor;
+        xintercept = (xtile << 16) + (xintercept & 0xFFFF);
+        yintercept = ytile << 16;
+        HitHorizWall();
+        continue;
+
+        // hit a special horizontal wall, so find which coordinate a door would be
+        // intersected at, and check to see if the door is open past that point
+    horizdoor:
+        if (tilehit & 0x40) // both high bits set == pushable wall
+            goto horizpushwall;
+        // strip high bit
+        // index into word width door table
+        temp16 = tilehit & 0x7F;
+        // half a step gets to door position
+        // add half step to current intercept
+        temp32 = (xstep >> 1) + xintercept;
+        if ((xintercept >> 16) != (temp32 >> 16)) // is it still in the same tile?
+            // midpoint is outside tile, so it hit the side of the wall before a door
+            goto passhoriz; // continue tracing
+        // the trace hit the door plane at pixel position (temp32 & 0xFFFF), see if the door is
+        // closed that much
+        if ((temp32 & 0xFFFF) < doorposition[temp16]) // position of leading edge of door
+            goto passhoriz;
+        // draw the door
+        xintercept = (xintercept & 0xFFFF0000) + (temp32 & 0xFFFF); // save pixel intercept position
+        yintercept = (ytile << 16) + 0x8000; // intercept in middle of tile
+        HitHorizDoor();
+        continue;
+
+        // hit a sliding horizontal wall
+    horizpushwall:
+        temp32 = xstep * pwallpos; // multiply xstep by pwallmove (0-63)
+        temp32 >>= 6; // then divide by 64 to accomplish a fixed point multiplication
+        temp32 += xintercept; // add partial step to current intercept
+        if ((xintercept >> 16) != (temp32 >> 16)) // is it still in the same tile?
+            goto passhoriz; // no, it hit the side
+        // draw the pushable wall at the new height
+        xintercept = temp32; // save pixel intercept position
+        yintercept = ytile << 16;
+        HitHorizPWall();
+        continue;
+
+        // hit a special vertical wall, so find which coordinate a door would be
+        // intersected at, and check to see if the door is open past that point
+    vertdoor:
+        if (tilehit & 0x40) // both high bits set == pushable wall
+            goto vertpushwall;
+        // strip high bit
+        // index into word width doorposition
+        temp16 = tilehit & 0x7F;
+        // half a step gets to door position
+        // add half step to current intercept pos
+        temp32 = (ystep >> 1) + yintercept;
+        if ((yintercept >> 16) != (temp32 >> 16)) // is it still in the same tile?
+            // midpoint is outside tile, so it hit the side of the wall before a door
+            goto passvert;
+        // the trace hit the door plane at pixel position (temp32 & 0xFFFF), see if the door is
+        // closed that much
+        if ((temp32 & 0xFFFF) < doorposition[temp16]) // position of leading edge of door
+            goto passvert; // continue tracing
+        // draw the door
+        yintercept = (yintercept & 0xFFFF0000) + (temp32 & 0xFFFF); // save pixel intercept position
+        xintercept = (xtile << 16) + 0x8000; // intercept in middle of tile
+        HitVertDoor();
+        continue;
+
+        // hit a sliding vertical wall
+    vertpushwall:
+        temp32 = ystep * pwallpos; // multiply ystep by pwallmove (0-63)
+        temp32 >>= 6; // then divide by 64 to accomplish a fixed point multiplication
+        temp32 += yintercept; // add partial step to current intercept
+        if ((yintercept >> 16) != (temp32 >> 16)) // is it still in the same tile?
+            goto passvert; // no, it hit the side
+        // draw the pushable wall at the new height
+        yintercept = temp32; // save pixel intercept position
+        xintercept = xtile << 16;
+        HitVertPWall();
+        continue;
+    }
+}
 
 /*
 ============================================================================
@@ -137,51 +396,28 @@ void AsmRefresh(void);			// in WL_DR_A.ASM
 ========================
 */
 
-#pragma warn -rvl			// I stick the return value in with ASMs
-
 fixed FixedByFrac(fixed a, fixed b)
 {
-    //
-    // setup
-    //
-    asm	mov	si, [WORD PTR b + 2]	// sign of result = sign of fraction
-
-    asm	mov	ax, [WORD PTR a]
-    asm	mov	cx, [WORD PTR a + 2]
-
-    asm or cx, cx
-    asm	jns	aok :				// negative?
-    asm	neg	cx
-    asm	neg	ax
-    asm	sbb	cx, 0
-    asm xor si, 0x8000			// toggle sign of result
-    aok :
-
-    //
-    // multiply  cx:ax by bx
-    //
-    asm	mov	bx, [WORD PTR b]
-    asm	mul	bx					// fraction*fraction
-    asm	mov	di, dx				// di is low word of result
-    asm	mov	ax, cx				//
-    asm	mul	bx					// units*fraction
-    asm add	ax, di
-    asm	adc	dx, 0
-
-    //
-    // put result dx:ax in 2's complement
-    //
-    asm	test	si, 0x8000		// is the result negative?
-    asm	jz	ansok :
-    asm	neg	dx
-    asm	neg	ax
-    asm	sbb	dx, 0
-
-    ansok : ;
-
+    // ((ah << 16) + al) * ((bh << 16) + bl) >> 16 =
+    // ((ah << 16) * (bh << 16) >> 16) +
+    // ((ah << 16) * bl >> 16) +
+    // (al * (bh << 16) >> 16) +
+    // (al * bl >> 16) =
+    // (ah * bh << 16) +
+    // ah * bl +
+    // al * bh +
+    // (al * bl >> 16)
+    int32_t ah = a >> 16;
+    int32_t al = a & 0xFFFF;
+    int32_t bh = b >> 16;
+    int32_t bl = b & 0xFFFF;
+    return
+        (ah * bh << 16) +
+        ah * bl +
+        al * bh +
+        (al * bl >> 16);
 }
 
-#pragma warn +rvl
 
 //==========================================================================
 
@@ -229,9 +465,9 @@ void TransformActor(objtype* ob)
                                 // the midpoint could put parts of the shape
                                 // into an adjacent wall
 
-//
-// calculate newy
-//
+    //
+    // calculate newy
+    //
     gxt = FixedByFrac(gx, viewsin);
     gyt = FixedByFrac(gy, viewcos);
     ny = gyt + gxt;
@@ -250,9 +486,9 @@ void TransformActor(objtype* ob)
 
     ob->viewx = centerx + ny * scale / nx;	// DEBUG: use assembly divide
 
-//
-// calculate height (heightnumerator/(nx>>8))
-//
+    //
+    // calculate height (heightnumerator/(nx>>8))
+    //
     //asm	mov	ax, [WORD PTR heightnumerator]
     //asm	mov	dx, [WORD PTR heightnumerator + 2]
     //asm	idiv[WORD PTR nx + 1]			// nx>>8
@@ -324,9 +560,9 @@ boolean TransformTile(int16_t tx, int16_t ty, int16_t* dispx, int16_t* dispheigh
 
     *dispx = centerx + ny * scale / nx;	// DEBUG: use assembly divide
 
-//
-// calculate height (heightnumerator/(nx>>8))
-//
+    //
+    // calculate height (heightnumerator/(nx>>8))
+    //
     //asm	mov	ax, [WORD PTR heightnumerator]
     //asm	mov	dx, [WORD PTR heightnumerator + 2]
     //asm	idiv[WORD PTR nx + 1]			// nx>>8
@@ -650,9 +886,9 @@ void HitHorizDoor(void)
     }
     else
     {
-        if (lastside != -1)				// if not the first scaled post
-            ScalePost();			// draw last post
-    // first pixel in this door
+        if (lastside != -1)         // if not the first scaled post
+            ScalePost();            // draw last post
+        // first pixel in this door
         lastside = 2;
         lasttilehit = tilehit;
         postx = pixx;
@@ -718,9 +954,9 @@ void HitVertDoor(void)
     }
     else
     {
-        if (lastside != -1)				// if not the first scaled post
-            ScalePost();			// draw last post
-    // first pixel in this door
+        if (lastside != -1)         // if not the first scaled post
+            ScalePost();            // draw last post
+        // first pixel in this door
         lastside = 2;
         lasttilehit = tilehit;
         postx = pixx;
@@ -826,8 +1062,8 @@ void HitHorizPWall(void)
 
 void HitVertPWall(void)
 {
-    int16_t			wallpic;
-    uint16_t	texture, offset;
+    int16_t     wallpic;
+    uint16_t    texture, offset;
 
     texture = (yintercept >> 4) & 0xfc0;
     offset = pwallpos << 10;
