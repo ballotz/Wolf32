@@ -623,12 +623,12 @@ int16_t	CalcHeight(void)
 /*
 ===================
 =
-= ScaleLine
+= ScaleWallLine
 =
 ===================
 */
 
-void ScaleLine(byte mask, uint16_t dest, byte* source, uint16_t height)
+void ScaleWallLine(byte mask, uint16_t dest, byte* source, uint16_t height)
 {
     int32_t step, texel;
 
@@ -637,7 +637,7 @@ void ScaleLine(byte mask, uint16_t dest, byte* source, uint16_t height)
 
     if (height > viewheight)
     {
-        texel += step * (height - viewheight);
+        texel += step * (height - viewheight) >> 1;
         height = viewheight;
     }
 
@@ -712,7 +712,7 @@ void ScalePost(void)		// VGA version
     //asm	out	dx, al						// set bit mask register
     //asm	lds	si, DWORD PTR[postsource]
     //asm	call DWORD PTR[bp]				// scale the line of pixels
-    ScaleLine(mask, dest, postsourceaddress + postsourceoffset, height);
+    ScaleWallLine(mask, dest, postsourceaddress + postsourceoffset, height);
 
     //asm	mov	al, BYTE PTR[ss:mapmasks2 - 1 + bx]   // -1 because no widths of 0
     //asm	or al, al
@@ -729,7 +729,7 @@ void ScalePost(void)		// VGA version
 
     //asm	out	dx, al						// set bit mask register
     //asm	call DWORD PTR[bp]				// scale the line of pixels
-    ScaleLine(mask, dest, postsourceaddress + postsourceoffset, height);
+    ScaleWallLine(mask, dest, postsourceaddress + postsourceoffset, height);
 
     //asm	mov	al, BYTE PTR[ss:mapmasks3 - 1 + bx]	// -1 because no widths of 0
     //asm	or al, al
@@ -746,7 +746,7 @@ void ScalePost(void)		// VGA version
 
     //asm	out	dx, al						// set bit mask register
     //asm	call DWORD PTR[bp]				// scale the line of pixels
-    ScaleLine(mask, dest, postsourceaddress + postsourceoffset, height);
+    ScaleWallLine(mask, dest, postsourceaddress + postsourceoffset, height);
 
 nomore:
     //asm	mov	ax, ss
@@ -1364,6 +1364,190 @@ int16_t	CalcRotate(objtype* ob)
     return angle / (ANGLES / 8);
 }
 
+typedef struct
+{
+    byte offset;
+    byte length;
+} linecmd_t;
+
+void DecodeSpriteLine(byte* linecmds, byte line[64])
+{
+    linecmd_t*  command;
+    int16_t     count, i;
+
+    count = 0;
+    while (1)
+    {
+        command = (linecmd_t*)linecmds;
+        if (command->length == 0)
+            break;
+        else
+        {
+            for (i = 0; i < command->offset; ++i)
+                line[count++] = 0xFF;
+            for (i = 0; i < command->length; ++i)
+                line[count++] = linecmds[sizeof(linecmd_t) + i];
+        }
+        linecmds += sizeof(linecmd_t) + command->length;
+    }
+
+    for (i = count; i < 64; ++i)
+        line[count++] = 0xFF;
+}
+
+/*
+=======================
+=
+= ScaleShape
+=
+=======================
+*/
+
+void ScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
+{
+    t_compshape *shape;
+    int32_t     step, texu0, texv0, texu, texv;
+    int16_t     scale, x0, x1, x, y0, y1, y, u, lastu;
+    byte        *linecmds;
+    byte        spriteline[64], texel;
+    uint16_t    mask, dest;
+
+    shape = PM_GetSpritePage(shapenum);
+
+    scale = height >> 3;    // low three bits are fractional
+    if (!scale || scale > maxscale)
+        return;				// too close or far away
+
+    step = (64 << 16) / scale;
+    texu0 = 0;
+    texv0 = 0;
+
+    // view area - clipping - x
+    x0 = xcenter - (scale >> 1);
+    x1 = x0 + scale;
+    if (x0 < 0)
+    {
+        texu0 += step * -x0;
+        x0 = 0;
+    }
+    if (x1 > viewwidth - 1)
+        x1 = viewwidth - 1;
+
+    // view area - clipping - y
+    y0 = (viewheight - scale) >> 1;
+    y1 = y0 + scale;
+    if (scale > viewheight)
+    {
+        texv0 += step * (scale - viewheight) >> 1;
+        y0 = 0;
+        y1 = viewheight - 1;
+    }
+
+    lastu = -1;
+
+    texu = texu0;
+    for (x = x0; x <= x1; ++x)
+    {
+        if (wallheight[x] >= height)
+            continue;       // obscured by closer wall
+
+        u = texu >> 16;
+
+        if (u < shape->leftpix)
+            continue;       // left limit of sprite
+        if (u > shape->rightpix)
+            continue;       // right limit of sprite
+
+        // do in only once for column
+        if (lastu != u)
+        {
+            lastu = u;
+            // decode the sprite commands into a column of texels
+            linecmds = (byte*)shape + shape->dataofs[u - shape->leftpix];
+            DecodeSpriteLine(linecmds, spriteline);
+        }
+
+        mask = 1 << (x & 3);
+        dest = bufferofs + (x >> 2) + y0 * SCREENBWIDE;
+        texv = texv0;
+        for (y = y0; y <= y1; ++y)
+        {
+            texel = spriteline[texv >> 16];
+            if (texel != 0xFF)
+                VGA_Write(mask, dest, texel);
+            dest += SCREENBWIDE;
+            texv += step;
+        }
+
+        texu += step;
+    }
+}
+
+/*
+=======================
+=
+= SimpleScaleShape
+=
+= NO CLIPPING, height in pixels
+=
+*/
+
+void SimpleScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
+{
+    t_compshape *shape;
+    int32_t     step, texu, texv;
+    int16_t     scale, x0, x1, x, y0, y1, y, u, lastu;
+    byte        *linecmds;
+    byte        spriteline[64], texel;
+    uint16_t    mask, dest;
+
+    shape = PM_GetSpritePage(shapenum);
+
+    scale = height >> 1;
+
+    step = (64 << 16) / scale;
+
+    x0 = xcenter - (scale >> 1);
+    x1 = x0 + scale;
+    y0 = (viewheight - scale) >> 1;
+    y1 = y0 + scale;
+
+    lastu = -1;
+
+    texu = 0;
+    for (x = x0; x <= x1; ++x)
+    {
+        u = texu >> 16;
+
+        if (u < shape->leftpix)
+            continue;       // left limit of sprite
+        if (u > shape->rightpix)
+            continue;       // right limit of sprite
+
+        // do in only once for column
+        if (lastu != u)
+        {
+            lastu = u;
+            // decode the sprite commands into a column of texels
+            linecmds = (byte*)shape + shape->dataofs[u - shape->leftpix];
+            DecodeSpriteLine(linecmds, spriteline);
+        }
+
+        mask = 1 << (x & 3);
+        dest = bufferofs + (x >> 2) + y0 * SCREENBWIDE;
+        texv = 0;
+        for (y = y0; y <= y1; ++y)
+        {
+            texel = spriteline[texv >> 16];
+            if (texel != 0xFF)
+                VGA_Write(mask, dest, texel);
+            dest += SCREENBWIDE;
+            texv += step;
+        }
+
+        texu += step;
+    }
+}
 
 /*
 =====================
