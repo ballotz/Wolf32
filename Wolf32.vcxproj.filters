@@ -18,6 +18,7 @@
     <ClCompile Include="WOLFSRC\WL_AGENT.C" />
     <ClCompile Include="WOLFSRC\WL_STATE.C" />
     <ClCompile Include="WOLFSRC\WL_ACT1.C" />
+    <ClCompile Include="WOLFSRC\WL_ACT2.C" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WOLFSRC\WL_DEF.H" />
