@@ -34,7 +34,7 @@ void ClearSplitVWB (void)
 //
 ////////////////////////////////////////////////////////
 
-void EndScreen (int palette, int screen)
+void EndScreen (int16_t palette, int16_t screen)
 {
 	CA_CacheScreen (screen);
 	VW_UpdateScreen ();
@@ -108,8 +108,8 @@ void EndSpear(void)
 void Victory (void)
 {
 #ifndef SPEARDEMO
-	long	sec;
-	int i,min,kr,sr,tr,x;
+	int32_t	sec;
+	int16_t i,min,kr,sr,tr,x;
 	char tempstr[8];
 
 #define RATIOX	6
@@ -230,15 +230,15 @@ void Victory (void)
 	VW_UpdateScreen ();
 
 	itoa(kr,tempstr,10);
-	x=RATIOX+24-strlen(tempstr)*2;
+	x=RATIOX+24-(int16_t)strlen(tempstr)*2;
 	Write(x,RATIOY,tempstr);
 
 	itoa(sr,tempstr,10);
-	x=RATIOX+24-strlen(tempstr)*2;
+	x=RATIOX+24-(int16_t)strlen(tempstr)*2;
 	Write(x,RATIOY+2,tempstr);
 
 	itoa(tr,tempstr,10);
-	x=RATIOX+24-strlen(tempstr)*2;
+	x=RATIOX+24-(int16_t)strlen(tempstr)*2;
 	Write(x,RATIOY+4,tempstr);
 
 
@@ -328,21 +328,21 @@ void PG13 (void)
 
 //==========================================================================
 
-void Write(int x,int y,char *string)
+void Write(int16_t x, int16_t y, char *string)
 {
- int alpha[]={L_NUM0PIC,L_NUM1PIC,L_NUM2PIC,L_NUM3PIC,L_NUM4PIC,L_NUM5PIC,
+ int16_t alpha[]={L_NUM0PIC,L_NUM1PIC,L_NUM2PIC,L_NUM3PIC,L_NUM4PIC,L_NUM5PIC,
 	L_NUM6PIC,L_NUM7PIC,L_NUM8PIC,L_NUM9PIC,L_COLONPIC,0,0,0,0,0,0,L_APIC,L_BPIC,
 	L_CPIC,L_DPIC,L_EPIC,L_FPIC,L_GPIC,L_HPIC,L_IPIC,L_JPIC,L_KPIC,
 	L_LPIC,L_MPIC,L_NPIC,L_OPIC,L_PPIC,L_QPIC,L_RPIC,L_SPIC,L_TPIC,
 	L_UPIC,L_VPIC,L_WPIC,L_XPIC,L_YPIC,L_ZPIC};
 
- int i,ox,nx,ny;
+ int16_t i,ox,nx,ny;
  char ch;
 
 
  ox=nx=x*8;
  ny=y*8;
- for (i=0;i<strlen(string);i++)
+ for (i=0;i<(int16_t)strlen(string);i++)
    if (string[i]=='\n')
    {
 	nx=ox;
@@ -391,8 +391,8 @@ void Write(int x,int y,char *string)
 //
 void BJ_Breathe(void)
 {
-	static int which=0,max=10;
-	int pics[2]={L_GUYPIC,L_GUY2PIC};
+	static int16_t which=0,max=10;
+	int16_t pics[2]={L_GUYPIC,L_GUY2PIC};
 
 
 	if (TimeCount>max)
@@ -428,18 +428,18 @@ LRstruct LevelRatios[20];
 
 void LevelCompleted (void)
 {
-	#define VBLWAIT	30
-	#define PAR_AMOUNT	500
+	#define VBLWAIT			30
+	#define PAR_AMOUNT		500
 	#define PERCENT100AMT	10000
 	typedef struct {
-			float time;
-			char timestr[6];
-			} times;
+	    float time;
+	    char timestr[6];
+	} times;
 
-	int	x,i,min,sec,ratio,kr,sr,tr;
-	unsigned	temp;
+	int16_t x,i,min,sec,ratio,kr,sr,tr;
+	uint16_t temp;
 	char tempstr[10];
-	long bonus,timeleft=0;
+	int32_t bonus,timeleft=0;
 	times parTimes[]=
 	{
 #ifndef SPEAR
@@ -621,7 +621,7 @@ void LevelCompleted (void)
 	   sec = 99*60;
 
 	 if (gamestate.TimeCount<parTimes[gamestate.episode*10+mapon].time*4200)
-		timeleft=(parTimes[gamestate.episode*10+mapon].time*4200)/70-sec;
+		timeleft=(int32_t)((parTimes[gamestate.episode*10+mapon].time*4200)/70-sec);
 
 	 min=sec/60;
 	 sec%=60;
@@ -665,8 +665,8 @@ void LevelCompleted (void)
 	 {
 	  for (i=0;i<=timeleft;i++)
 	  {
-	   ltoa((long)i*PAR_AMOUNT,tempstr,10);
-	   x=36-strlen(tempstr)*2;
+	   ltoa((int32_t)i*PAR_AMOUNT,tempstr,10);
+	   x=36-(int16_t)strlen(tempstr)*2;
 	   Write(x,7,tempstr);
 	   if (!(i%(PAR_AMOUNT/10)))
 		 SD_PlaySound(ENDBONUS1SND);
@@ -696,7 +696,7 @@ void LevelCompleted (void)
 	 for (i=0;i<=ratio;i++)
 	 {
 	  itoa(i,tempstr,10);
-	  x=RATIOXX-strlen(tempstr)*2;
+	  x=RATIOXX-(int16_t)strlen(tempstr)*2;
 	  Write(x,14,tempstr);
 	  if (!(i%10))
 		SD_PlaySound(ENDBONUS1SND);
@@ -713,7 +713,7 @@ void LevelCompleted (void)
 	   SD_StopSound();
 	   bonus+=PERCENT100AMT;
 	   ltoa(bonus,tempstr,10);
-	   x=(RATIOXX-1)-strlen(tempstr)*2;
+	   x=(RATIOXX-1)-(int16_t)strlen(tempstr)*2;
 	   Write(x,7,tempstr);
 	   VW_UpdateScreen();
 	   SD_PlaySound(PERCENT100SND);
@@ -740,7 +740,7 @@ void LevelCompleted (void)
 	 for (i=0;i<=ratio;i++)
 	 {
 	  itoa(i,tempstr,10);
-	  x=RATIOXX-strlen(tempstr)*2;
+	  x=RATIOXX-(int16_t)strlen(tempstr)*2;
 	  Write(x,16,tempstr);
 	  if (!(i%10))
 		SD_PlaySound(ENDBONUS1SND);
@@ -758,7 +758,7 @@ void LevelCompleted (void)
 	   SD_StopSound();
 	   bonus+=PERCENT100AMT;
 	   ltoa(bonus,tempstr,10);
-	   x=(RATIOXX-1)-strlen(tempstr)*2;
+	   x=(RATIOXX-1)-(int16_t)strlen(tempstr)*2;
 	   Write(x,7,tempstr);
 	   VW_UpdateScreen();
 	   SD_PlaySound(PERCENT100SND);
@@ -784,7 +784,7 @@ void LevelCompleted (void)
 	 for (i=0;i<=ratio;i++)
 	 {
 	  itoa(i,tempstr,10);
-	  x=RATIOXX-strlen(tempstr)*2;
+	  x=RATIOXX-(int16_t)strlen(tempstr)*2;
 	  Write(x,18,tempstr);
 	  if (!(i%10))
 		SD_PlaySound(ENDBONUS1SND);
@@ -800,7 +800,7 @@ void LevelCompleted (void)
 	   SD_StopSound();
 	   bonus+=PERCENT100AMT;
 	   ltoa(bonus,tempstr,10);
-	   x=(RATIOXX-1)-strlen(tempstr)*2;
+	   x=(RATIOXX-1)-(int16_t)strlen(tempstr)*2;
 	   Write(x,7,tempstr);
 	   VW_UpdateScreen();
 	   SD_PlaySound(PERCENT100SND);
@@ -825,25 +825,25 @@ void LevelCompleted (void)
 	 done:
 
 	 itoa(kr,tempstr,10);
-	 x=RATIOXX-strlen(tempstr)*2;
+	 x=RATIOXX-(int16_t)strlen(tempstr)*2;
 	 Write(x,14,tempstr);
 
 	 itoa(sr,tempstr,10);
-	 x=RATIOXX-strlen(tempstr)*2;
+	 x=RATIOXX-(int16_t)strlen(tempstr)*2;
 	 Write(x,16,tempstr);
 
 	 itoa(tr,tempstr,10);
-	 x=RATIOXX-strlen(tempstr)*2;
+	 x=RATIOXX-(int16_t)strlen(tempstr)*2;
 	 Write(x,18,tempstr);
 
-	 bonus=(long)timeleft*PAR_AMOUNT+
+	 bonus=(int32_t)timeleft*PAR_AMOUNT+
 		   (PERCENT100AMT*(kr==100))+
 		   (PERCENT100AMT*(sr==100))+
 		   (PERCENT100AMT*(tr==100));
 
 	 GivePoints(bonus);
 	 ltoa(bonus,tempstr,10);
-	 x=36-strlen(tempstr)*2;
+	 x=36-(int16_t)strlen(tempstr)*2;
 	 Write(x,7,tempstr);
 
 	 //
@@ -969,13 +969,13 @@ void LevelCompleted (void)
 =================
 */
 
-boolean PreloadUpdate(unsigned current, unsigned total)
+boolean PreloadUpdate(uint16_t current, uint16_t total)
 {
-	unsigned w = WindowW - 10;
+	uint16_t w = WindowW - 10;
 
 
 	VWB_Bar(WindowX + 5,WindowY + WindowH - 3,w,2,BLACK);
-	w = ((long)w * current) / total;
+	w = ((int32_t)w * current) / total;
 	if (w)
 	{
 	 VWB_Bar(WindowX + 5,WindowY + WindowH - 3,w,2,0x37); //SECONDCOLOR);
@@ -1031,9 +1031,7 @@ void	DrawHighScores(void)
 {
 	char		buffer[16],*str,buffer1[5];
 	byte		temp,temp1,temp2,temp3;
-	word		i,j,
-				w,h,
-				x,y;
+	word		i,w,h;
 	HighScore	*s;
 
 
@@ -1192,10 +1190,10 @@ void	DrawHighScores(void)
 =======================
 */
 
-void	CheckHighScore (long score,word other)
+void	CheckHighScore (int32_t score,word other)
 {
 	word		i,j;
-	int			n;
+	int16_t		n;
 	HighScore	myscore;
 
 	strcpy(myscore.name,"");
@@ -1458,9 +1456,9 @@ char 	far CopyProFailedStrs[][100] = {
 		far MiscCorrect[4][5] = {"ss","8",STR_STAR,"45"};
 
 
-int  BackDoor(char *s)
+int16_t  BackDoor(char *s)
 {
-	int i;
+	int16_t i;
 
 
 	strlwr(s);
@@ -1488,7 +1486,7 @@ void CopyProtection(void)
 #define TYPEBOX_BKGD	0x9c
 #define PRINTCOLOR		HIGHLIGHT
 
-	int	i,match,whichboss,bossnum,try,whichline,enemypicked[4]={0,0,0,0},
+	int16_t	i,match,whichboss,bossnum,try,whichline,enemypicked[4]={0,0,0,0},
 		bosses[4] = { BOSSPIC1PIC,BOSSPIC2PIC,BOSSPIC3PIC,BOSSPIC4PIC },
 		whichone,whichpicked[4]={0,0,0,0},quiztype,whichmem,
 		memberpicked[5]={0,0,0,0,0},wordpicked[5]={0,0,0,0,0},whichword;
@@ -1679,7 +1677,7 @@ void CopyProtection(void)
 		}
 		else
 		{
-			int start;
+			int16_t start;
 
 
 			SD_PlaySound(BONUS1UPSND);

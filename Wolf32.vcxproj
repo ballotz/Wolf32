@@ -153,6 +153,7 @@
     <ClCompile Include="WOLFSRC\WL_AGENT.C" />
     <ClCompile Include="WOLFSRC\WL_DRAW.C" />
     <ClCompile Include="WOLFSRC\WL_GAME.C" />
+    <ClCompile Include="WOLFSRC\WL_INTER.C" />
     <ClCompile Include="WOLFSRC\WL_MAIN.C" />
     <ClCompile Include="WOLFSRC\WL_MENU.C" />
     <ClCompile Include="WOLFSRC\WL_PLAY.C" />

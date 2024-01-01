@@ -936,6 +936,7 @@ void    StartBonusFlash(void);
 =============================================================================
 */
 
+void Write(int16_t x, int16_t y, char* string);
 void IntroScreen(void);
 void PreloadGraphics(void);
 void LevelCompleted(void);
