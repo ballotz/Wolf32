@@ -47,6 +47,18 @@ void VL_WaitVBL(int16_t vbls)
 /*
 ;==============
 ;
+; VL_SetCRTC
+;
+;==============
+*/
+void VL_SetCRTC(int16_t crtc)
+{
+
+}
+
+/*
+;==============
+;
 ; VL_SetScreen
 ;
 ;==============

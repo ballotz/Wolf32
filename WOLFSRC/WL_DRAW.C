@@ -121,6 +121,13 @@ int16_t     horizwall[MAXWALLTILES], vertwall[MAXWALLTILES];
 #define OP_JLE  0x7e
 #define OP_JGE  0x7d
 
+void HitVertWall(void);
+void HitHorizWall(void);
+void HitHorizDoor(void);
+void HitVertDoor(void);
+void HitHorizPWall(void);
+void HitVertPWall(void);
+
 int32_t xpartialbyystep(word xpartial)
 {
     int32_t ystephi = ystep >> 16;
@@ -154,20 +161,16 @@ void AsmRefresh()
     horizop = OP_JLE;
     vertop = OP_JLE;
 
-    pixx = 0;
-    while (pixx++ < viewwidth)
+    for (pixx = 0; pixx < viewwidth; ++pixx)
     {
         // Setup to trace a ray through pixx view pixel
-
         angle = midangle + pixelangle[pixx];
-
         if (angle < 0)
         {
             // -90 - -1 degree arc
             angle += FINEANGLES;
             goto entry360;
         }
-
         if (angle < DEG90)
         {
             // 0-89 degree arc
@@ -182,7 +185,6 @@ void AsmRefresh()
             ypartial = ypartialdown;
             goto initvars;
         }
-
         if (angle < DEG180)
         {
             // 90-179 degree arc
@@ -196,7 +198,6 @@ void AsmRefresh()
             ypartial = ypartialdown;
             goto initvars;
         }
-
         if (angle < DEG270)
         {
             // 180-269 degree arc
@@ -210,7 +211,6 @@ void AsmRefresh()
             ypartial = ypartialup;
             goto initvars;
         }
-
         if (angle < DEG360)
         {
             // 270-359 degree arc
@@ -225,7 +225,6 @@ void AsmRefresh()
             ypartial = ypartialup;
             goto initvars;
         }
-
         angle -= FINEANGLES;
         goto entry90;
 
@@ -446,7 +445,6 @@ fixed FixedByFrac(fixed a, fixed b)
 //
 void TransformActor(objtype* ob)
 {
-    int16_t ratio;
     fixed gx, gy, gxt, gyt, nx, ny;
     int32_t	temp;
 
@@ -524,7 +522,6 @@ void TransformActor(objtype* ob)
 
 boolean TransformTile(int16_t tx, int16_t ty, int16_t* dispx, int16_t* dispheight)
 {
-    int16_t ratio;
     fixed gx, gy, gxt, gyt, nx, ny;
     int32_t	temp;
 
@@ -597,9 +594,7 @@ boolean TransformTile(int16_t tx, int16_t ty, int16_t* dispx, int16_t* dispheigh
 
 int16_t	CalcHeight(void)
 {
-    int16_t	transheight;
-    int16_t ratio;
-    fixed gxt, gyt, nx, ny;
+    fixed gxt, gyt, nx;
     int32_t	gx, gy;
 
     gx = xintercept - viewx;
@@ -628,73 +623,135 @@ int16_t	CalcHeight(void)
 /*
 ===================
 =
+= ScaleLine
+=
+===================
+*/
+
+void ScaleLine(byte mask, uint16_t dest, byte* source, uint16_t height)
+{
+    int32_t step, texel;
+
+    step = (64 << 16) / height;
+    texel = 0;
+
+    if (height > viewheight)
+    {
+        texel += step * (height - viewheight);
+        height = viewheight;
+    }
+
+    dest += ((viewheight - height) >> 1) * SCREENBWIDE;
+
+    while (height)
+    {
+        VGA_Write(mask, dest, source[texel >> 16]);
+        dest += SCREENBWIDE;
+        texel += step;
+        height--;
+    }
+}
+
+/*
+===================
+=
 = ScalePost
 =
 ===================
 */
 
-int32_t		postsource;
-uint16_t	postx;
-uint16_t	postwidth;
+byte*       postsourceaddress;
+uint16_t    postsourceoffset;
+uint16_t    postx;
+uint16_t    postwidth;
 
 void ScalePost(void)		// VGA version
 {
-    asm	mov	ax, SCREENSEG
-    asm	mov	es, ax
+    uint16_t    height, dest;
+    int16_t     maskindex;
+    byte        mask;
 
-    asm	mov	bx, [postx]
-    asm	shl	bx, 1
-    asm	mov	bp, WORD PTR[wallheight + bx]		// fractional height (low 3 bits frac)
-    asmand bp, 0xfff8				// bp = heightscaler*4
-    asm	shr	bp, 1
-    asm	cmp	bp, [maxscaleshl2]
-    asm	jle	heightok
-    asm	mov	bp, [maxscaleshl2]
-    heightok:
-    asm	add	bp, OFFSET fullscalefarcall
+    //asm	mov	ax, SCREENSEG
+    //asm	mov	es, ax
+
+    //asm	mov	bx, [postx]
+    //asm	shl	bx, 1
+    //asm	mov	bp, WORD PTR[wallheight + bx]		// fractional height (low 3 bits frac)
+    height = wallheight[postx];
+
+    //asm	and bp, 0xfff8				// bp = heightscaler*4
+    //asm	shr	bp, 1
+    height = (height & 0xfff8) >> 1;
+
+    //asm	cmp	bp, [maxscaleshl2]
+    //asm	jle	heightok
+    //asm	mov	bp, [maxscaleshl2]
+    //heightok:
+    if (height > maxscaleshl2)
+        height = maxscaleshl2;
+
+    //asm	add	bp, OFFSET fullscalefarcall
+
     //
     // scale a byte wide strip of wall
     //
-    asm	mov	bx, [postx]
-    asm	mov	di, bx
-    asm	shr	di, 2						// X in bytes
-    asm	add	di, [bufferofs]
+    //asm	mov	bx, [postx]
+    //asm	mov	di, bx
+    //asm	shr	di, 2						// X in bytes
+    //asm	add	di, [bufferofs]
+    dest = (postx >> 2) + bufferofs;
 
-    asmand bx, 3
-    asm	shl	bx, 3						// bx = pixel*8+pixwidth
-    asm	add	bx, [postwidth]
+    //asm	and bx, 3
+    //asm	shl	bx, 3						// bx = pixel*8+pixwidth
+    //asm	add	bx, [postwidth]
+    //asm	mov	al, BYTE PTR[mapmasks1 - 1 + bx]	// -1 because no widths of 0
+    maskindex = -1 + ((postx & 3) << 3) + postwidth;
+    mask = *((byte*)mapmasks1 + maskindex);
 
-    asm	mov	al, BYTE PTR[mapmasks1 - 1 + bx]	// -1 because no widths of 0
-    asm	mov	dx, SC_INDEX + 1
-    asm	out	dx, al						// set bit mask register
-    asm	lds	si, DWORD PTR[postsource]
-    asm	call DWORD PTR[bp]				// scale the line of pixels
+    //asm	mov	dx, SC_INDEX + 1
+    //asm	out	dx, al						// set bit mask register
+    //asm	lds	si, DWORD PTR[postsource]
+    //asm	call DWORD PTR[bp]				// scale the line of pixels
+    ScaleLine(mask, dest, postsourceaddress + postsourceoffset, height);
 
-    asm	mov	al, BYTE PTR[ss:mapmasks2 - 1 + bx]   // -1 because no widths of 0
-    asm or al, al
-    asm	jz	nomore
+    //asm	mov	al, BYTE PTR[ss:mapmasks2 - 1 + bx]   // -1 because no widths of 0
+    //asm	or al, al
+    //asm	jz	nomore
+    mask = *((byte*)mapmasks2 + maskindex);
+    if (mask == 0)
+        goto nomore;
 
     //
     // draw a second byte for vertical strips that cross two bytes
     //
-    asm	inc	di
-    asm	out	dx, al						// set bit mask register
-    asm	call DWORD PTR[bp]				// scale the line of pixels
+    //asm	inc	di
+    ++dest;
 
-    asm	mov	al, BYTE PTR[ss:mapmasks3 - 1 + bx]	// -1 because no widths of 0
-    asm or al, al
-    asm	jz	nomore
+    //asm	out	dx, al						// set bit mask register
+    //asm	call DWORD PTR[bp]				// scale the line of pixels
+    ScaleLine(mask, dest, postsourceaddress + postsourceoffset, height);
+
+    //asm	mov	al, BYTE PTR[ss:mapmasks3 - 1 + bx]	// -1 because no widths of 0
+    //asm	or al, al
+    //asm	jz	nomore
+    mask = *((byte*)mapmasks3 + maskindex);
+    if (mask == 0)
+        goto nomore;
+
     //
     // draw a third byte for vertical strips that cross three bytes
     //
-    asm	inc	di
-    asm	out	dx, al						// set bit mask register
-    asm	call DWORD PTR[bp]				// scale the line of pixels
+    //asm	inc	di
+    ++dest;
 
+    //asm	out	dx, al						// set bit mask register
+    //asm	call DWORD PTR[bp]				// scale the line of pixels
+    ScaleLine(mask, dest, postsourceaddress + postsourceoffset, height);
 
-    nomore:
-    asm	mov	ax, ss
-    asm	mov	ds, ax
+nomore:
+    //asm	mov	ax, ss
+    //asm	mov	ds, ax
+    ;
 }
 
 void  FarScalePost(void)				// just so other files can call
@@ -730,7 +787,7 @@ void HitVertWall(void)
     if (lastside == 1 && lastintercept == xtile && lasttilehit == tilehit)
     {
         // in the same wall type as last time, so check for optimized draw
-        if (texture == (uint16_t)postsource)
+        if (texture == postsourceoffset)
         {
             // wide scale
             postwidth++;
@@ -740,7 +797,7 @@ void HitVertWall(void)
         else
         {
             ScalePost();
-            (uint16_t)postsource = texture;
+            postsourceoffset = texture;
             postwidth = 1;
             postx = pixx;
         }
@@ -769,8 +826,8 @@ void HitVertWall(void)
         else
             wallpic = vertwall[tilehit];
 
-        *(((uint16_t*)&postsource) + 1) = (uint16_t)PM_GetPage(wallpic);
-        (uint16_t)postsource = texture;
+        postsourceaddress = PM_GetPage(wallpic);
+        postsourceoffset = texture;
 
     }
 }
@@ -789,8 +846,8 @@ void HitVertWall(void)
 
 void HitHorizWall(void)
 {
-    int16_t			wallpic;
-    uint16_t	texture;
+    int16_t     wallpic;
+    uint16_t    texture;
 
     texture = (xintercept >> 4) & 0xfc0;
     if (ytilestep == -1)
@@ -802,7 +859,7 @@ void HitHorizWall(void)
     if (lastside == 0 && lastintercept == ytile && lasttilehit == tilehit)
     {
         // in the same wall type as last time, so check for optimized draw
-        if (texture == (uint16_t)postsource)
+        if (texture == postsourceoffset)
         {
             // wide scale
             postwidth++;
@@ -812,7 +869,7 @@ void HitHorizWall(void)
         else
         {
             ScalePost();
-            (uint16_t)postsource = texture;
+            postsourceoffset = texture;
             postwidth = 1;
             postx = pixx;
         }
@@ -841,8 +898,8 @@ void HitHorizWall(void)
         else
             wallpic = horizwall[tilehit];
 
-        *(((uint16_t*)&postsource) + 1) = (uint16_t)PM_GetPage(wallpic);
-        (uint16_t)postsource = texture;
+        postsourceaddress = PM_GetPage(wallpic);
+        postsourceoffset = texture;
     }
 
 }
@@ -869,7 +926,7 @@ void HitHorizDoor(void)
     if (lasttilehit == tilehit)
     {
         // in the same door as last time, so check for optimized draw
-        if (texture == (uint16_t)postsource)
+        if (texture == postsourceoffset)
         {
             // wide scale
             postwidth++;
@@ -879,7 +936,7 @@ void HitHorizDoor(void)
         else
         {
             ScalePost();
-            (uint16_t)postsource = texture;
+            postsourceoffset = texture;
             postwidth = 1;
             postx = pixx;
         }
@@ -910,8 +967,8 @@ void HitHorizDoor(void)
             break;
         }
 
-        *(((uint16_t*)&postsource) + 1) = (uint16_t)PM_GetPage(doorpage);
-        (uint16_t)postsource = texture;
+        postsourceaddress = PM_GetPage(doorpage);
+        postsourceoffset = texture;
     }
 }
 
@@ -937,7 +994,7 @@ void HitVertDoor(void)
     if (lasttilehit == tilehit)
     {
         // in the same door as last time, so check for optimized draw
-        if (texture == (uint16_t)postsource)
+        if (texture == postsourceoffset)
         {
             // wide scale
             postwidth++;
@@ -947,7 +1004,7 @@ void HitVertDoor(void)
         else
         {
             ScalePost();
-            (uint16_t)postsource = texture;
+            postsourceoffset = texture;
             postwidth = 1;
             postx = pixx;
         }
@@ -978,8 +1035,8 @@ void HitVertDoor(void)
             break;
         }
 
-        *(((uint16_t*)&postsource) + 1) = (uint16_t)PM_GetPage(doorpage + 1);
-        (uint16_t)postsource = texture;
+        postsourceaddress = PM_GetPage(doorpage + 1);
+        postsourceoffset = texture;
     }
 }
 
@@ -998,7 +1055,7 @@ void HitVertDoor(void)
 
 void HitHorizPWall(void)
 {
-    int16_t			wallpic;
+    int16_t		wallpic;
     uint16_t	texture, offset;
 
     texture = (xintercept >> 4) & 0xfc0;
@@ -1016,7 +1073,7 @@ void HitHorizPWall(void)
     if (lasttilehit == tilehit)
     {
         // in the same wall type as last time, so check for optimized draw
-        if (texture == (uint16_t)postsource)
+        if (texture == postsourceoffset)
         {
             // wide scale
             postwidth++;
@@ -1026,7 +1083,7 @@ void HitHorizPWall(void)
         else
         {
             ScalePost();
-            (uint16_t)postsource = texture;
+            postsourceoffset = texture;
             postwidth = 1;
             postx = pixx;
         }
@@ -1043,8 +1100,8 @@ void HitHorizPWall(void)
 
         wallpic = horizwall[tilehit & 63];
 
-        *(((uint16_t*)&postsource) + 1) = (uint16_t)PM_GetPage(wallpic);
-        (uint16_t)postsource = texture;
+        postsourceaddress = PM_GetPage(wallpic);
+        postsourceoffset = texture;
     }
 
 }
@@ -1080,7 +1137,7 @@ void HitVertPWall(void)
     if (lasttilehit == tilehit)
     {
         // in the same wall type as last time, so check for optimized draw
-        if (texture == (uint16_t)postsource)
+        if (texture == postsourceoffset)
         {
             // wide scale
             postwidth++;
@@ -1090,7 +1147,7 @@ void HitVertPWall(void)
         else
         {
             ScalePost();
-            (uint16_t)postsource = texture;
+            postsourceoffset = texture;
             postwidth = 1;
             postx = pixx;
         }
@@ -1107,8 +1164,8 @@ void HitVertPWall(void)
 
         wallpic = vertwall[tilehit & 63];
 
-        *(((uint16_t*)&postsource) + 1) = (uint16_t)PM_GetPage(wallpic);
-        (uint16_t)postsource = texture;
+        postsourceaddress = PM_GetPage(wallpic);
+        postsourceoffset = texture;
     }
 
 }
@@ -1211,44 +1268,64 @@ void VGAClearScreen(void)
 {
     uint16_t ceiling = vgaCeiling[gamestate.episode * 10 + mapon];
 
+    uint16_t width, halfheight, dest, i, j;
+
+    width = viewwidth >> 2;
+    halfheight = viewheight >> 1;
+    dest = bufferofs;
+
+    for (i = 0; i < halfheight; ++i)
+    {
+        for (j = 0; j < width; ++j)
+            VGA_Write(0xF, dest + j, ceiling);
+        dest += SCREENBWIDE;
+    }
+
+    for (i = 0; i < halfheight; ++i)
+    {
+        for (j = 0; j < width; ++j)
+            VGA_Write(0xF, dest + j, 0x1919);
+        dest += SCREENBWIDE;
+    }
+
     //
     // clear the screen
     //
-    asm	mov	dx, SC_INDEX
-    asm	mov	ax, SC_MAPMASK + 15 * 256	// write through all planes
-    asm	out	dx, ax
+    //asm	mov	dx, SC_INDEX
+    //asm	mov	ax, SC_MAPMASK + 15 * 256	// write through all planes
+    //asm	out	dx, ax
 
-    asm	mov	dx, 80
-    asm	mov	ax, [viewwidth]
-    asm	shr	ax, 2
-    asm	sub	dx, ax					// dx = 40-viewwidth/2
+    //asm	mov	dx, 80
+    //asm	mov	ax, [viewwidth]
+    //asm	shr	ax, 2
+    //asm	sub	dx, ax					// dx = 40-viewwidth/2
 
-    asm	mov	bx, [viewwidth]
-    asm	shr	bx, 3					// bl = viewwidth/8
-    asm	mov	bh, BYTE PTR[viewheight]
-    asm	shr	bh, 1					// half height
+    //asm	mov	bx, [viewwidth]
+    //asm	shr	bx, 3					// bl = viewwidth/8
+    //asm	mov	bh, BYTE PTR[viewheight]
+    //asm	shr	bh, 1					// half height
 
-    asm	mov	es, [screenseg]
-    asm	mov	di, [bufferofs]
-    asm	mov	ax, [ceiling]
+    //asm	mov	es, [screenseg]
+    //asm	mov	di, [bufferofs]
+    //asm	mov	ax, [ceiling]
 
-    toploop:
-    asm	mov	cl, bl
-    asm	rep	stosw
-    asm	add	di, dx
-    asm	dec	bh
-    asm	jnz	toploop
+    //toploop:
+    //asm	mov	cl, bl
+    //asm	rep	stosw
+    //asm	add	di, dx
+    //asm	dec	bh
+    //asm	jnz	toploop
 
-    asm	mov	bh, BYTE PTR[viewheight]
-    asm	shr	bh, 1					// half height
-    asm	mov	ax, 0x1919
+    //asm	mov	bh, BYTE PTR[viewheight]
+    //asm	shr	bh, 1					// half height
+    //asm	mov	ax, 0x1919
 
-    bottomloop:
-    asm	mov	cl, bl
-    asm	rep	stosw
-    asm	add	di, dx
-    asm	dec	bh
-    asm	jnz	bottomloop
+    //bottomloop:
+    //asm	mov	cl, bl
+    //asm	rep	stosw
+    //asm	add	di, dx
+    //asm	dec	bh
+    //asm	jnz	bottomloop
 }
 
 //==========================================================================
@@ -1311,10 +1388,10 @@ visobj_t	vislist[MAXVISABLE], *visptr, *visstep, *farthest;
 
 void DrawScaleds(void)
 {
-    int16_t     i, j, least, numvisable, height;
-    memptr      shape;
+    int16_t     i, /*j,*/ least, numvisable, height;
+    //memptr      shape;
     byte        *tilespot, *visspot;
-    int16_t     shapenum;
+    //int16_t     shapenum;
     uint16_t    spotloc;
 
     statobj_t   *statptr;
@@ -1475,7 +1552,7 @@ void DrawPlayerWeapon(void)
 
 void CalcTics(void)
 {
-    int32_t	newtime, oldtimecount;
+    int32_t	newtime/*, oldtimecount*/;
 
     //
     // calculate tics since last refresh for adaptive timing
@@ -1554,9 +1631,9 @@ void WallRefresh(void)
     viewty = player->y >> TILESHIFT;
 
     xpartialdown = viewx & (TILEGLOBAL - 1);
-    xpartialup = TILEGLOBAL - xpartialdown;
+    xpartialup = (uint16_t)(TILEGLOBAL - xpartialdown);
     ypartialdown = viewy & (TILEGLOBAL - 1);
-    ypartialup = TILEGLOBAL - ypartialdown;
+    ypartialup = (uint16_t)(TILEGLOBAL - ypartialdown);
 
     lastside = -1;			// the first pixel is on a new wall
     AsmRefresh();
@@ -1575,7 +1652,7 @@ void WallRefresh(void)
 
 void	ThreeDRefresh(void)
 {
-    int16_t tracedir;
+    //int16_t tracedir;
 
     // this wouldn't need to be done except for my debugger/video wierdness
     //outportb(SC_INDEX, SC_MAPMASK);
@@ -1583,12 +1660,7 @@ void	ThreeDRefresh(void)
     //
     // clear out the traced array
     //
-    asm	mov	ax, ds
-    asm	mov	es, ax
-    asm	mov	di, OFFSET spotvis
-    asmxor ax, ax
-    asm	mov	cx, 2048							// 64*64 / 2
-    asm	rep stosw
+    memset(spotvis, 0, sizeof(spotvis));
 
     bufferofs += screenofs;
 
@@ -1602,8 +1674,8 @@ void	ThreeDRefresh(void)
     //
     // draw all the scaled images
     //
-    DrawScaleds();			// draw scaled stuff
-    DrawPlayerWeapon();	// draw player's hands
+    DrawScaleds();      // draw scaled stuff
+    DrawPlayerWeapon(); // draw player's hands
 
     //
     // show screen and time last cycle
@@ -1620,15 +1692,16 @@ void	ThreeDRefresh(void)
     bufferofs -= screenofs;
     displayofs = bufferofs;
 
-    asm	cli
-    asm	mov	cx, [displayofs]
-    asm	mov	dx, 3d4h		// CRTC address register
-    asm	mov	al, 0ch		// start address high register
-    asm	out	dx, al
-    asm	inc	dx
-    asm	mov	al, ch
-    asm	out	dx, al   	// set the high byte
-    asm	sti
+    //asm	cli
+    //asm	mov	cx, [displayofs]
+    //asm	mov	dx, 3d4h		// CRTC address register
+    //asm	mov	al, 0ch		// start address high register
+    //asm	out	dx, al
+    //asm	inc	dx
+    //asm	mov	al, ch
+    //asm	out	dx, al   	// set the high byte
+    //asm	sti
+    VL_SetCRTC(displayofs);
 
     bufferofs += SCREENSIZE;
     if (bufferofs > PAGE3START)

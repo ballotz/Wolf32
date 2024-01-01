@@ -112,7 +112,7 @@ void VL_ClearVideo(byte color);
 
 void VL_SetLineWidth(uint16_t width);
 void VL_WaitVBL(int16_t vbls);
-void VL_CrtcStart(int16_t crtc);
+void VL_SetCRTC(int16_t crtc);
 void VL_SetScreen(int16_t crtc, int16_t pelpan);
 
 void VL_FillPalette(int16_t red, int16_t green, int16_t blue);
