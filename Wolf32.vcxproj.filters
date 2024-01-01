@@ -15,6 +15,7 @@
     <ClCompile Include="WOLFSRC\WL_GAME.C" />
     <ClCompile Include="WOLFSRC\WL_PLAY.C" />
     <ClCompile Include="WOLFSRC\WL_DRAW.C" />
+    <ClCompile Include="WOLFSRC\WL_AGENT.C" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WOLFSRC\WL_DEF.H" />

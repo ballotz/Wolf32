@@ -33,12 +33,12 @@
 // player state info
 //
 boolean		running;
-long		thrustspeed;
+int32_t		thrustspeed;
 
-unsigned	plux,pluy;			// player coordinates scaled to unsigned
+uint16_t	plux,pluy;			// player coordinates scaled to unsigned
 
-int			anglefrac;
-int			gotgatgun;	// JR
+int16_t		anglefrac;
+int16_t		gotgatgun;	// JR
 
 objtype		*LastAttacker;
 
@@ -58,7 +58,7 @@ statetype s_player = {false,0,0,T_Player,NULL,NULL};
 statetype s_attack = {false,0,0,T_Attack,NULL,NULL};
 
 
-long	playerxmove,playerymove;
+int32_t	playerxmove,playerymove;
 
 struct atkinf
 {
@@ -73,11 +73,11 @@ struct atkinf
 };
 
 
-int	strafeangle[9] = {0,90,180,270,45,135,225,315,0};
+int16_t	strafeangle[9] = {0,90,180,270,45,135,225,315,0};
 
 void DrawWeapon (void);
-void GiveWeapon (int weapon);
-void	GiveAmmo (int ammo);
+void GiveWeapon (int16_t weapon);
+void GiveAmmo (int16_t ammo);
 
 //===========================================================================
 
@@ -94,7 +94,7 @@ void SelectItem (void);
 boolean TryMove (objtype *ob);
 void T_Player (objtype *ob);
 
-void ClipMove (objtype *ob, long xmove, long ymove);
+void ClipMove (objtype *ob, int32_t xmove, int32_t ymove);
 
 /*
 =============================================================================
@@ -116,7 +116,7 @@ void ClipMove (objtype *ob, long xmove, long ymove);
 
 void CheckWeaponChange (void)
 {
-	int	i,buttons;
+	int16_t	i;
 
 	if (!gamestate.ammo)		// must use knife with no ammo
 		return;
@@ -148,10 +148,9 @@ void CheckWeaponChange (void)
 
 void ControlMovement (objtype *ob)
 {
-	long	oldx,oldy;
-	int		angle,maxxmove;
-	int		angleunits;
-	long	speed;
+	int32_t	oldx,oldy;
+	int16_t	angle;
+	int16_t	angleunits;
 
 	thrustspeed = 0;
 
@@ -241,9 +240,9 @@ void ControlMovement (objtype *ob)
 ==================
 */
 
-void StatusDrawPic (unsigned x, unsigned y, unsigned picnum)
+void StatusDrawPic (uint16_t x, uint16_t y, uint16_t picnum)
 {
-	unsigned	temp;
+	uint16_t	temp;
 
 	temp = bufferofs;
 	bufferofs = 0;
@@ -302,7 +301,7 @@ void DrawFace (void)
 
 #define FACETICS	70
 
-int	facecount;
+int16_t	facecount;
 
 void	UpdateFace (void)
 {
@@ -334,14 +333,14 @@ void	UpdateFace (void)
 ===============
 */
 
-void	LatchNumber (int x, int y, int width, long number)
+void	LatchNumber (int16_t x, int16_t y, int16_t width, int32_t number)
 {
-	unsigned	length,c;
-	char	str[20];
+	uint16_t	length,c;
+	char		str[20];
 
 	ltoa (number,str,10);
 
-	length = strlen (str);
+	length = (uint16_t)strlen (str);
 
 	while (length<width)
 	{
@@ -383,7 +382,7 @@ void	DrawHealth (void)
 ===============
 */
 
-void	TakeDamage (int points,objtype *attacker)
+void	TakeDamage (int16_t points,objtype *attacker)
 {
 	LastAttacker = attacker;
 
@@ -431,7 +430,7 @@ void	TakeDamage (int points,objtype *attacker)
 ===============
 */
 
-void	HealSelf (int points)
+void	HealSelf (int16_t points)
 {
 	gamestate.health += points;
 	if (gamestate.health>100)
@@ -520,7 +519,7 @@ void	DrawScore (void)
 ===============
 */
 
-void	GivePoints (long points)
+void	GivePoints (int32_t points)
 {
 	gamestate.score += points;
 	while (gamestate.score >= gamestate.nextextra)
@@ -578,7 +577,7 @@ void DrawKeys (void)
 ==================
 */
 
-void GiveWeapon (int weapon)
+void GiveWeapon (int16_t weapon)
 {
 	GiveAmmo (6);
 
@@ -614,7 +613,7 @@ void	DrawAmmo (void)
 ===============
 */
 
-void	GiveAmmo (int ammo)
+void	GiveAmmo (int16_t ammo)
 {
 	if (!gamestate.ammo)				// knife was out
 	{
@@ -640,7 +639,7 @@ void	GiveAmmo (int ammo)
 ==================
 */
 
-void GiveKey (int key)
+void GiveKey (int16_t key)
 {
 	gamestate.keys |= (1<<key);
 	DrawKeys ();
@@ -800,9 +799,9 @@ void GetBonus (statobj_t *check)
 
 boolean TryMove (objtype *ob)
 {
-	int			xl,yl,xh,yh,x,y;
+	int16_t			xl,yl,xh,yh,x,y;
 	objtype		*check;
-	long		deltax,deltay;
+	int32_t		deltax,deltay;
 
 	xl = (ob->x-PLAYERSIZE) >>TILESHIFT;
 	yl = (ob->y-PLAYERSIZE) >>TILESHIFT;
@@ -863,9 +862,9 @@ boolean TryMove (objtype *ob)
 ===================
 */
 
-void ClipMove (objtype *ob, long xmove, long ymove)
+void ClipMove (objtype *ob, int32_t xmove, int32_t ymove)
 {
-	long	basex,basey;
+	int32_t	basex,basey;
 
 	basex = ob->x;
 	basey = ob->y;
@@ -876,8 +875,8 @@ void ClipMove (objtype *ob, long xmove, long ymove)
 		return;
 
 	if (noclip && ob->x > 2*TILEGLOBAL && ob->y > 2*TILEGLOBAL &&
-	ob->x < (((long)(mapwidth-1))<<TILESHIFT)
-	&& ob->y < (((long)(mapheight-1))<<TILESHIFT) )
+	ob->x < (((int32_t)(mapwidth-1))<<TILESHIFT)
+	&& ob->y < (((int32_t)(mapheight-1))<<TILESHIFT) )
 		return;		// walk through walls
 
 	if (!SD_SoundPlaying())
@@ -925,11 +924,10 @@ void VictoryTile (void)
 ===================
 */
 
-void Thrust (int angle, long speed)
+void Thrust (int16_t angle, int32_t speed)
 {
-	long xmove,ymove;
-	long	slowmax;
-	unsigned	offset;
+	int32_t 	xmove,ymove;
+	uint16_t	offset;
 
 
 	//
@@ -1007,8 +1005,7 @@ void Cmd_Fire (void)
 
 void Cmd_Use (void)
 {
-	objtype 	*check;
-	int			checkx,checky,doornum,dir;
+	int16_t		checkx,checky,doornum,dir;
 	boolean		elevatorok;
 
 
@@ -1097,7 +1094,7 @@ void Cmd_Use (void)
 ===============
 */
 
-void SpawnPlayer (int tilex, int tiley, int dir)
+void SpawnPlayer (int16_t tilex, int16_t tiley, int16_t dir)
 {
 	player->obclass = playerobj;
 	player->active = true;
@@ -1105,8 +1102,8 @@ void SpawnPlayer (int tilex, int tiley, int dir)
 	player->tiley = tiley;
 	player->areanumber =
 		*(mapsegs[0] + farmapylookup[player->tiley]+player->tilex);
-	player->x = ((long)tilex<<TILESHIFT)+TILEGLOBAL/2;
-	player->y = ((long)tiley<<TILESHIFT)+TILEGLOBAL/2;
+	player->x = ((int32_t)tilex<<TILESHIFT)+TILEGLOBAL/2;
+	player->y = ((int32_t)tiley<<TILESHIFT)+TILEGLOBAL/2;
 	player->state = &s_player;
 	player->angle = (1-dir)*90;
 	if (player->angle<0)
@@ -1133,7 +1130,7 @@ void SpawnPlayer (int tilex, int tiley, int dir)
 void	KnifeAttack (objtype *ob)
 {
 	objtype *check,*closest;
-	long	dist;
+	int32_t	dist;
 
 	SD_PlaySound (ATKKNIFESND);
 // actually fire
@@ -1168,9 +1165,9 @@ void	KnifeAttack (objtype *ob)
 void	GunAttack (objtype *ob)
 {
 	objtype *check,*closest,*oldclosest;
-	int		damage;
-	int		dx,dy,dist;
-	long	viewdist;
+	int16_t	damage;
+	int16_t	dx,dy,dist;
+	int32_t	viewdist;
 
 	switch (gamestate.weapon)
 	{
@@ -1254,7 +1251,7 @@ void	GunAttack (objtype *ob)
 
 void VictorySpin (void)
 {
-	long	desty;
+	int32_t	desty;
 
 	if (player->angle > 270)
 	{
@@ -1269,7 +1266,7 @@ void VictorySpin (void)
 			player->angle = 270;
 	}
 
-	desty = (((long)player->tiley-5)<<TILESHIFT)-0x3000;
+	desty = (((int32_t)player->tiley-5)<<TILESHIFT)-0x3000;
 
 	if (player->y > desty)
 	{
