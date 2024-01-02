@@ -48,13 +48,13 @@ TEXT FORMATTING COMMANDS
 =============================================================================
 */
 
-int			pagenum,numpages;
+int16_t		pagenum,numpages;
 
-unsigned	leftmargin[TEXTROWS],rightmargin[TEXTROWS];
-char		far *text;
-unsigned	rowon;
+uint16_t	leftmargin[TEXTROWS],rightmargin[TEXTROWS];
+char		*text;
+uint16_t	rowon;
 
-int			picx,picy,picnum,picdelay;
+int16_t		picx,picy,picnum,picdelay;
 boolean		layoutdone;
 
 //===========================================================================
@@ -83,7 +83,7 @@ void RipToEOL (void)
 =====================
 */
 
-int	ParseNumber (void)
+int16_t	ParseNumber (void)
 {
 	char	ch;
 	char	num[80],*numptr;
@@ -185,8 +185,8 @@ void	TimedPicCommand (void)
 
 void HandleCommand (void)
 {
-	int	i,margin,top,bottom;
-	int	picwidth,picheight,picmid;
+	int16_t	i,margin,top,bottom;
+	int16_t	picwidth,picheight,picmid;
 
 	switch (toupper(*++text))
 	{
@@ -352,8 +352,8 @@ void HandleCtrls (void)
 void HandleWord (void)
 {
 	char		word[WORDLIMIT];
-	int			i,wordindex;
-	unsigned	wwidth,wheight,newpos;
+	int16_t		wordindex;
+	uint16_t	wwidth,wheight,newpos;
 
 
 	//
@@ -411,7 +411,7 @@ void HandleWord (void)
 
 void PageLayout (boolean shownumber)
 {
-	int		i,oldfontcolor;
+	int16_t	i,oldfontcolor;
 	char	ch;
 
 	oldfontcolor = fontcolor;
@@ -500,7 +500,7 @@ void PageLayout (boolean shownumber)
 		VWB_DrawPropString (str);
 	}
 
-	fontcolor = oldfontcolor;
+	fontcolor = (byte)oldfontcolor;
 }
 
 //===========================================================================
@@ -542,7 +542,7 @@ void BackPage (void)
 */
 void CacheLayoutGraphics (void)
 {
-	char	far *bombpoint, far *textstart;
+	char	*bombpoint, *textstart;
 	char	ch;
 
 	textstart = text;
@@ -596,13 +596,13 @@ void CacheLayoutGraphics (void)
 */
 
 #ifdef JAPAN
-void ShowArticle (int which)
+void ShowArticle (int16_t which)
 #else
-void ShowArticle (char far *article)
+void ShowArticle (char *article)
 #endif
 {
 	#ifdef JAPAN
-	int		snames[10] = {	H_HELP1PIC,
+	int16_t	snames[10] = {	H_HELP1PIC,
 							H_HELP2PIC,
 							H_HELP3PIC,
 							H_HELP4PIC,
@@ -612,7 +612,7 @@ void ShowArticle (char far *article)
 							H_HELP8PIC,
 							H_HELP9PIC,
 							H_HELP10PIC};
-	int		enames[14] = {
+	int16_t	enames[14] = {
 							0,0,
 							#ifndef JAPDEMO
 							C_ENDGAME1APIC,
@@ -630,8 +630,7 @@ void ShowArticle (char far *article)
 							#endif
 							};
 	#endif
-	unsigned	oldfontnumber;
-	unsigned	temp;
+	uint16_t	oldfontnumber;
 	boolean 	newpage,firstpage;
 
 	#ifdef JAPAN
@@ -712,8 +711,8 @@ void ShowArticle (char far *article)
 		}
 
 		#ifndef SPEAR
-		if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("goobers"))
-			PicturePause();
+		//if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("goobers"))
+		//	PicturePause();
 		#endif
 
 	} while (LastScan != sc_Escape);
@@ -727,9 +726,9 @@ void ShowArticle (char far *article)
 
 #ifndef JAPAN
 #ifdef ARTSEXTERN
-int 	endextern = T_ENDART1;
+int16_t 	endextern = T_ENDART1;
 #ifndef SPEAR
-int		helpextern = T_HELPART;
+int16_t		helpextern = T_HELPART;
 #endif
 #endif
 char helpfilename[13] = "HELPART.",
@@ -746,8 +745,8 @@ char helpfilename[13] = "HELPART.",
 #ifndef SPEAR
 void HelpScreens (void)
 {
-	int			artnum;
-	char far 	*text;
+	int16_t		artnum;
+	char		*text;
 	memptr		layout;
 
 
@@ -767,11 +766,11 @@ void HelpScreens (void)
 #ifdef ARTSEXTERN
 	artnum = helpextern;
 	CA_CacheGrChunk (artnum);
-	text = (char _seg *)grsegs[artnum];
+	text = (char*)grsegs[artnum];
 	MM_SetLock (&grsegs[artnum], true);
 #else
 	CA_LoadFile (helpfilename,&layout);
-	text = (char _seg *)layout;
+	text = (char*)layout;
 	MM_SetLock (&layout, true);
 #endif
 
@@ -799,8 +798,8 @@ void HelpScreens (void)
 //
 void EndText (void)
 {
-	int			artnum;
-	char far 	*text;
+	int16_t		artnum;
+	char		*text;
 	memptr		layout;
 
 
@@ -828,12 +827,12 @@ void EndText (void)
 #ifdef ARTSEXTERN
 	artnum = endextern+gamestate.episode;
 	CA_CacheGrChunk (artnum);
-	text = (char _seg *)grsegs[artnum];
+	text = (char*)grsegs[artnum];
 	MM_SetLock (&grsegs[artnum], true);
 #else
 	endfilename[6] = '1'+gamestate.episode;
 	CA_LoadFile (endfilename,&layout);
-	text = (char _seg *)layout;
+	text = (char*)layout;
 	MM_SetLock (&layout, true);
 #endif
 
@@ -849,8 +848,7 @@ void EndText (void)
 	VW_FadeOut();
 	SETFONTCOLOR(0,15);
 	IN_ClearKeysDown();
-	if (MousePresent)
-		Mouse(MDelta);	// Clear accumulated mouse movement
+    Mouse_ResetDelta(); // Clear accumulated mouse movement
 
 	FreeMusic ();
 	CA_DownLevel ();
