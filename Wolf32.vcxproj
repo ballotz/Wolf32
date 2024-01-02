@@ -140,6 +140,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="WOLFSRC\bridge.c" />
+    <ClCompile Include="WOLFSRC\GAMEPAL.C" />
     <ClCompile Include="WOLFSRC\ID_CA.C" />
     <ClCompile Include="WOLFSRC\ID_IN.C" />
     <ClCompile Include="WOLFSRC\ID_MM.C" />
@@ -148,6 +149,7 @@
     <ClCompile Include="WOLFSRC\ID_US_1.C" />
     <ClCompile Include="WOLFSRC\ID_VH.C" />
     <ClCompile Include="WOLFSRC\ID_VL.C" />
+    <ClCompile Include="WOLFSRC\SIGNON.C" />
     <ClCompile Include="WOLFSRC\WL_ACT1.C" />
     <ClCompile Include="WOLFSRC\WL_ACT2.C" />
     <ClCompile Include="WOLFSRC\WL_AGENT.C" />
