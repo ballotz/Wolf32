@@ -1686,8 +1686,8 @@ int16_t CalibrateJoystick(void)
         if (Keyboard[sc_Escape])
             return 0;
 #ifndef SPEAR
-        if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("goobers"))
-            PicturePause();
+        //if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("goobers"))
+        //    PicturePause();
 #endif
 
     } while (!(jb & 1));
@@ -1720,8 +1720,8 @@ int16_t CalibrateJoystick(void)
         if (Keyboard[sc_Escape])
             return 0;
 #ifndef SPEAR
-        if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("goobers"))
-            PicturePause();
+        //if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("goobers"))
+        //    PicturePause();
 #endif
     } while (!(jb & 2));
 
@@ -1916,11 +1916,11 @@ void MouseSensitivity(int16_t unused)
         }
 
 #ifndef SPEAR
-        if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("goobers"))
+        //if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("goobers"))
 #else
-        if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("debugmode"))
+        //if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("debugmode"))
 #endif
-            PicturePause();
+            //PicturePause();
 
         if (ci.button0 || Keyboard[sc_Space] || Keyboard[sc_Enter])
             exit = 1;
@@ -2762,11 +2762,11 @@ void CP_ChangeView(int16_t unused)
         }
 
 #ifndef SPEAR
-        if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("goobers"))
+        //if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("goobers"))
 #else
-        if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("debugmode"))
+        //if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("debugmode"))
 #endif
-            PicturePause();
+            //PicturePause();
 
         if (ci.button0 || Keyboard[sc_Enter])
             exit = 1;
@@ -3162,11 +3162,11 @@ int16_t HandleMenu(CP_iteminfo* item_i, CP_itemtype* items, void (*routine)(int1
             // CHECK FOR SCREEN CAPTURE
             //
 #ifndef SPEAR
-            if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("goobers"))
+            //if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("goobers"))
 #else
-            if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("debugmode"))
+            //if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("debugmode"))
 #endif
-                PicturePause();
+                //PicturePause();
 
 
             if (key >= 'a')
@@ -3608,8 +3608,8 @@ int16_t Confirm(char* string)
         }
 
 #ifndef SPEAR
-        if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("goobers"))
-            PicturePause();
+        //if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("goobers"))
+        //    PicturePause();
 #endif
 
 #ifdef SPANISH
@@ -3663,8 +3663,8 @@ int16_t GetYorN(int16_t x, int16_t y, int16_t pic)
     do
     {
 #ifndef SPEAR
-        if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("goobers"))
-            PicturePause();
+        //if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("goobers"))
+        //    PicturePause();
 #endif
 
 #ifdef SPANISH

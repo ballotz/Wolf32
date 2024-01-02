@@ -74,7 +74,7 @@
 #define PLAYERSPEED		3000
 #define RUNSPEED   		6000
 
-#define	SCREENSEG		0xa000
+//#define	SCREENSEG		0xa000
 
 #define SCREENBWIDE		80
 
@@ -942,6 +942,7 @@ void PreloadGraphics(void);
 void LevelCompleted(void);
 void CheckHighScore(int32_t score, word other);
 void Victory(void);
+void PG13(void);
 void ClearSplitVWB(void);
 
 
@@ -953,8 +954,8 @@ void ClearSplitVWB(void);
 =============================================================================
 */
 
-int16_t DebugKeys(void);
-void PicturePause(void);
+//int16_t DebugKeys(void);
+//void PicturePause(void);
 
 
 /*
@@ -1091,13 +1092,13 @@ extern	byte		mapmasks1[4][8];
 extern	byte		mapmasks2[4][8];
 extern	byte		mapmasks3[4][8];
 
-extern	int16_t		maxscale, maxscaleshl2;
+//extern	int16_t		maxscale, maxscaleshl2;
 
-extern	boolean	insetupscaling;
+//extern	boolean	insetupscaling;
 
-void SetupScaling(int16_t maxscaleheight);
-void ScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height);
-void SimpleScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height);
+//void SetupScaling(int16_t maxscaleheight);
+//void ScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height);
+//void SimpleScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height);
 
 /*
 =============================================================================

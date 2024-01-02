@@ -668,7 +668,7 @@ void SetupWalls(void)
 void SignonScreen(void)                        // VGA version
 {
     VL_SetVGAPlaneMode();
-    VL_TestPaletteSet();
+    //VL_TestPaletteSet();
     VL_SetPalette(&gamepal);
 
     if (!virtualreality)
@@ -693,7 +693,7 @@ void FinishSignon(void)
 {
 
 #ifndef SPEAR
-    VW_Bar(0, 189, 300, 11, peekb(0xa000, 0));
+    VW_Bar(0, 189, 300, 11, *screenseg);
     WindowX = 0;
     WindowW = 320;
     PrintY = 190;
@@ -713,7 +713,7 @@ void FinishSignon(void)
         IN_Ack();
 
 #ifndef JAPAN
-    VW_Bar(0, 189, 300, 11, peekb(0xa000, 0));
+    VW_Bar(0, 189, 300, 11, *screenseg);
 
     PrintY = 190;
     SETFONTCOLOR(10, 4);
@@ -1074,8 +1074,8 @@ void DoJukebox(void)
 
 void InitGame()
 {
-    int16_t                     i, x, y;
-    uint16_t* blockstart;
+    int16_t     i, x, y;
+    uint16_t    *blockstart;
 
     if (MS_CheckParm("virtual"))
         virtualreality = true;
@@ -1174,7 +1174,7 @@ void InitGame()
     if (virtualreality)
     {
         NoWait = true;
-        geninterrupt(0x60);
+        //geninterrupt(0x60);
     }
 }
 
@@ -1205,7 +1205,7 @@ boolean SetViewSize(uint16_t width, uint16_t height)
     // build all needed compiled scalers
     //
     //	MM_BombOnError (false);
-    SetupScaling((int16_t)(viewwidth * 1.5));
+    //SetupScaling((int16_t)(viewwidth * 1.5));
 #if 0
     MM_BombOnError(true);
     if (mmerror)
@@ -1259,43 +1259,43 @@ void NewViewSize(int16_t width)
 void Quit(char* error)
 {
     //uint16_t        finscreen;
-    memptr	screen;
+    //memptr	screen;
 
-    if (virtualreality)
-        geninterrupt(0x61);
+    //if (virtualreality)
+    //    geninterrupt(0x61);
 
     ClearMemory();
     if (!*error)
     {
 #ifndef JAPAN
-        CA_CacheGrChunk(ORDERSCREEN);
-        screen = grsegs[ORDERSCREEN];
+        //CA_CacheGrChunk(ORDERSCREEN);
+        //screen = grsegs[ORDERSCREEN];
 #endif
         WriteConfig();
     }
     else
     {
-        CA_CacheGrChunk(ERRORSCREEN);
-        screen = grsegs[ERRORSCREEN];
+        //CA_CacheGrChunk(ERRORSCREEN);
+        //screen = grsegs[ERRORSCREEN];
     }
 
     ShutdownId();
 
     if (error && *error)
     {
-        movedata((uint16_t)screen, 7, 0xb800, 0, 7 * 160);
-        gotoxy(10, 4);
+        //movedata((uint16_t)screen, 7, 0xb800, 0, 7 * 160);
+        //gotoxy(10, 4);
         puts(error);
-        gotoxy(1, 8);
+        //gotoxy(1, 8);
         exit(1);
     }
     else
         if (!error || !(*error))
         {
-            clrscr();
+            //clrscr();
 #ifndef JAPAN
-            movedata((uint16_t)screen, 7, 0xb800, 0, 4000);
-            gotoxy(1, 24);
+            //movedata((uint16_t)screen, 7, 0xb800, 0, 4000);
+            //gotoxy(1, 24);
 #endif
             //asm	mov	bh,0
             //asm	mov	dh,23	// row

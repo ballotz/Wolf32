@@ -660,6 +660,29 @@ void ScaleWallLine(byte mask, uint16_t dest, byte* source, uint16_t height)
 ===================
 */
 
+//
+// bit mask tables for drawing scaled strips up to eight pixels wide
+//
+
+
+byte	mapmasks1[4][8] = {
+{1 ,3 ,7 ,15,15,15,15,15},
+{2 ,6 ,14,14,14,14,14,14},
+{4 ,12,12,12,12,12,12,12},
+{8 ,8 ,8 ,8 ,8 ,8 ,8 ,8} };
+
+byte	mapmasks2[4][8] = {
+{0 ,0 ,0 ,0 ,1 ,3 ,7 ,15},
+{0 ,0 ,0 ,1 ,3 ,7 ,15,15},
+{0 ,0 ,1 ,3 ,7 ,15,15,15},
+{0 ,1 ,3 ,7 ,15,15,15,15} };
+
+byte	mapmasks3[4][8] = {
+{0 ,0 ,0 ,0 ,0 ,0 ,0 ,0},
+{0 ,0 ,0 ,0 ,0 ,0 ,0 ,1},
+{0 ,0 ,0 ,0 ,0 ,0 ,1 ,3},
+{0 ,0 ,0 ,0 ,0 ,1 ,3 ,7} };
+
 byte*       postsourceaddress;
 uint16_t    postsourceoffset;
 uint16_t    postx;
@@ -687,8 +710,8 @@ void ScalePost(void)		// VGA version
     //asm	jle	heightok
     //asm	mov	bp, [maxscaleshl2]
     //heightok:
-    if (height > maxscaleshl2)
-        height = maxscaleshl2;
+    //if (height > maxscaleshl2)
+    //    height = maxscaleshl2;
 
     //asm	add	bp, OFFSET fullscalefarcall
 
@@ -1415,8 +1438,10 @@ void ScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
     shape = PM_GetSpritePage(shapenum);
 
     scale = height >> 3;    // low three bits are fractional
-    if (!scale || scale > maxscale)
-        return;				// too close or far away
+    //if (!scale || scale > maxscale)
+    //    return;				// too close or far away
+    if (!scale)
+        return;				// too far away
 
     step = (64 << 16) / scale;
     texu0 = 0;

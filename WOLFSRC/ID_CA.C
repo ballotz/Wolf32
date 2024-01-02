@@ -846,9 +846,12 @@ void CA_Shutdown(void)
     close(profilehandle);
 #endif
 
-    close(maphandle);
-    close(grhandle);
-    close(audiohandle);
+    if (maphandle)
+        close(maphandle);
+    if (grhandle)
+        close(grhandle);
+    if (audiohandle)
+        close(audiohandle);
 }
 
 //===========================================================================

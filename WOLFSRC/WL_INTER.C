@@ -275,8 +275,8 @@ void Victory (void)
 	IN_Ack();
 
 	#ifndef SPEAR
-	if (Keyboard[sc_P] && MS_CheckParm("goobers"))
-		PicturePause();
+	//if (Keyboard[sc_P] && MS_CheckParm("goobers"))
+	//	PicturePause();
 	#endif
 
 	VW_FadeOut ();
@@ -938,8 +938,8 @@ void LevelCompleted (void)
 #endif
 
 	#ifndef SPEAR
-	if (Keyboard[sc_P] && MS_CheckParm("goobers"))
-		PicturePause();
+	//if (Keyboard[sc_P] && MS_CheckParm("goobers"))
+	//	PicturePause();
 	#endif
 
 	VW_FadeOut ();

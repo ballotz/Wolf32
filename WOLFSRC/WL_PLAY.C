@@ -816,17 +816,17 @@ void CheckKeys(void)
     //
     // TAB-? debug keys
     //
-    if (Keyboard[sc_Tab] && DebugOk)
-    {
-        CA_CacheGrChunk(STARTFONT);
-        fontnumber = 0;
-        SETFONTCOLOR(0, 15);
-        DebugKeys();
-        if (MousePresent)
-            Mouse_ResetDelta(); // Clear accumulated mouse movement
-        lasttimecount = TimeCount;
-        return;
-    }
+    //if (Keyboard[sc_Tab] && DebugOk)
+    //{
+    //    CA_CacheGrChunk(STARTFONT);
+    //    fontnumber = 0;
+    //    SETFONTCOLOR(0, 15);
+    //    DebugKeys();
+    //    if (MousePresent)
+    //        Mouse_ResetDelta(); // Clear accumulated mouse movement
+    //    lasttimecount = TimeCount;
+    //    return;
+    //}
 
 }
 

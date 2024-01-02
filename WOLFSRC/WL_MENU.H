@@ -126,6 +126,7 @@ void TicDelay(uint32_t count);
 void CacheLump(int16_t lumpstart, int16_t lumpend);
 void UnCacheLump(int16_t lumpstart, int16_t lumpend);
 void StartCPMusic(int16_t song);
+void FreeMusic(void);
 int16_t Confirm(char* string);
 void Message(char* string);
 void CheckPause(void);
