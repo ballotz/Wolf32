@@ -626,7 +626,7 @@ void BossKey(void)
     while (!Keyboard[sc_Escape])
     {
         IN_ClearKeysDown();
-        Update_Key();
+        Keyboard_Update();
     }
 
     SD_MusicOn();

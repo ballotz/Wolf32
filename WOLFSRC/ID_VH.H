@@ -62,6 +62,7 @@ extern int16_t px, py;
 
 int16_t VW_MarkUpdateBlock(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
 void VW_UpdateScreen(void);
+void VL_MungePic(byte* source, uint16_t width, uint16_t height);
 
 //
 // mode independant routines

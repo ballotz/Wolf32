@@ -709,6 +709,8 @@ void FinishSignon(void)
 
 #endif
 
+    VL_Refresh();
+
     if (!NoWait)
         IN_Ack();
 
@@ -731,6 +733,8 @@ void FinishSignon(void)
     if (!NoWait)
         VW_WaitVBL(3 * 70);
 #endif
+
+    VL_Refresh();
 }
 
 //===========================================================================
@@ -1258,7 +1262,7 @@ void NewViewSize(int16_t width)
 
 void Quit(char* error)
 {
-    //uint16_t        finscreen;
+    //uint16_t	finscreen;
     //memptr	screen;
 
     //if (virtualreality)
@@ -1280,6 +1284,8 @@ void Quit(char* error)
     }
 
     ShutdownId();
+
+    QuitHook();
 
     if (error && *error)
     {
@@ -1496,7 +1502,7 @@ void    DemoLoop()
 
 char* nosprtxt[] = { "nospr",nil };
 
-int main(int argc, char* argv[])
+int Main(int argc, char* argv[])
 {
     //int16_t     i;
 
@@ -1525,5 +1531,7 @@ int main(int argc, char* argv[])
     DemoLoop();
 
     Quit("Demo loop exited???");
+
+    return 0;
 }
 

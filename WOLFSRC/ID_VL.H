@@ -108,17 +108,17 @@ void VL_Startup(void);
 void VL_Shutdown(void);
 
 void VL_SetVGAPlaneMode(void);
-void VL_ClearVideo(byte color);
+void VL_ClearVideo(byte color); // trigger VL_Refresh()
 
 void VL_SetLineWidth(uint16_t width);
 void VL_WaitVBL(int16_t vbls);
-void VL_SetCRTC(int16_t crtc);
-void VL_SetScreen(int16_t crtc, int16_t pelpan);
+void VL_SetScreen(uint16_t crtc, uint16_t pelpan); // trigger VL_Refresh()
+void VL_Refresh();
 
-void VL_FillPalette(int16_t red, int16_t green, int16_t blue);
+void VL_FillPalette(int16_t red, int16_t green, int16_t blue); // trigger VL_Refresh()
 void VL_SetColor(int16_t color, int16_t red, int16_t green, int16_t blue);
 void VL_GetColor(int16_t color, int16_t* red, int16_t* green, int16_t* blue);
-void VL_SetPalette(byte* palette);
+void VL_SetPalette(byte* palette); // trigger VL_Refresh()
 void VL_GetPalette(byte* palette);
 void VL_FadeOut(int16_t start, int16_t end, int16_t red, int16_t green, int16_t blue, int16_t steps);
 void VL_FadeIn(int16_t start, int16_t end, byte* palette, int16_t steps);

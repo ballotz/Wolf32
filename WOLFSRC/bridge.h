@@ -1,15 +1,29 @@
 #pragma once
 #include <stdint.h>
 
+extern int Main(int argc, char* argv[]);
+extern void Quit(char* error);
+
+void QuitHook();
+
+//------------------------------------------------------------------------------
+// VGA
+//------------------------------------------------------------------------------
+
+void VGA_Update(
+    uint8_t* frame,
+    int16_t width,
+    int16_t height,
+    uint8_t* palette);
+
 //------------------------------------------------------------------------------
 // Keyboard
 //------------------------------------------------------------------------------
 
-// keyboard event (key up/down)
-void INL_KeyService_ISR(uint8_t key);
+extern void INL_KeyService_ISR(uint8_t key);
 
 // request keyboard update trough INL_KeyService_ISR()
-void Update_Key();
+void Keyboard_Update();
 
 //------------------------------------------------------------------------------
 // Mouse

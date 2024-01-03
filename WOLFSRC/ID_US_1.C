@@ -458,7 +458,8 @@ US_CPrint(char* s)
         se = s;
         while ((c = *se) && (c != '\n'))
             se++;
-        *se = '\0';
+        if (*se)
+            *se = '\0';
 
         US_CPrintLine(s);
 
@@ -649,7 +650,7 @@ US_LineInput(int16_t x, int16_t y, char* buf, char* def, boolean escok,
         //asm	pushf
         //asm	cli
 
-        Update_Key();
+        Keyboard_Update();
 
         sc = LastScan;
         LastScan = sc_None;

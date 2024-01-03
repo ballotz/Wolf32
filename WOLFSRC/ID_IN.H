@@ -146,8 +146,8 @@ typedef	struct {
 } JoystickDef;
 // Global variables
 extern	boolean		Keyboard[],
-MousePresent,
-JoysPresent[];
+					MousePresent,
+					JoysPresent[];
 extern	boolean		Paused;
 extern	char		LastASCII;
 extern	ScanCode	LastScan;
@@ -165,15 +165,15 @@ extern	word        DemoOffset, DemoSize;
 							if (code == LastScan) LastScan = sc_None;}
 
 // DEBUG - put names in prototypes
-extern void IN_Startup(void), IN_Shutdown(void),
-IN_Default(boolean gotit, ControlType in),
-IN_ClearKeysDown(void),
-IN_ReadCursor(CursorInfo*),
-IN_ReadControl(int16_t, ControlInfo*),
-IN_SetControlType(int16_t, ControlType),
-IN_SetupJoy(word joy, word minx, word maxx,
-    word miny, word maxy),
-IN_Ack(void);
+extern void 		IN_Startup(void), IN_Shutdown(void),
+					IN_Default(boolean gotit, ControlType in),
+					IN_ClearKeysDown(void),
+					IN_ReadCursor(CursorInfo*),
+					IN_ReadControl(int16_t, ControlInfo*),
+					IN_SetControlType(int16_t, ControlType),
+					IN_SetupJoy(word joy, word minx, word maxx,
+						word miny, word maxy),
+					IN_Ack(void);
 extern	boolean     IN_UserInput(longword delay);
 extern	char        IN_WaitForASCII(void);
 extern	ScanCode    IN_WaitForKey(void);
@@ -183,6 +183,7 @@ extern	byte*       IN_GetScanName(ScanCode);
 byte IN_MouseButtons(void);
 byte IN_JoyButtons(void);
 
+void INL_KeyService_ISR(byte key);
 void INL_GetJoyDelta(word joy, int16_t* dx, int16_t* dy);
 void IN_StartAck(void);
 boolean IN_CheckAck(void);

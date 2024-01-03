@@ -12,6 +12,7 @@
 
 uint8_t vgadata[VGA_PLANES][VGA_PLANE_SIZE];
 uint8_t vgapal[256][3];
+uint16_t vgawidth, vgaheight, vgastart;
 
 //===========================================================================
 
@@ -47,25 +48,19 @@ void VL_WaitVBL(int16_t vbls)
 /*
 ;==============
 ;
-; VL_SetCRTC
-;
-;==============
-*/
-void VL_SetCRTC(int16_t crtc)
-{
-
-}
-
-/*
-;==============
-;
 ; VL_SetScreen
 ;
 ;==============
 */
-void VL_SetScreen(int16_t crtc, int16_t pelpan)
+void VL_SetScreen(uint16_t crtc, uint16_t pelpan)
 {
+    vgastart = crtc;
+    VL_Refresh();
+}
 
+void VL_Refresh()
+{
+    VGA_Update((uint8_t*)vgadata + vgastart, vgawidth, vgaheight, vgapal);
 }
 
 //===========================================================================
@@ -121,6 +116,8 @@ void VL_Shutdown(void)
 
 void VL_SetVGAPlaneMode(void)
 {
+    vgawidth = 320;
+    vgaheight = 200;
     VL_ClearVideo(0);
     VL_SetLineWidth(40);
 }
@@ -140,6 +137,7 @@ void VL_SetVGAPlaneMode(void)
 void VL_ClearVideo(byte color)
 {
     memset(vgadata, color, sizeof(vgadata));
+    VL_Refresh();
 }
 
 
@@ -201,6 +199,8 @@ void VL_FillPalette(int16_t red, int16_t green, int16_t blue)
         vgapal[i][1] = (uint8_t)green;
         vgapal[i][2] = (uint8_t)blue;
     }
+
+    VL_Refresh();
 }
 
 //===========================================================================
@@ -250,6 +250,7 @@ void VL_GetColor(int16_t color, int16_t* red, int16_t* green, int16_t* blue)
 void VL_SetPalette(byte* palette)
 {
     memcpy(vgapal, palette, sizeof(vgapal));
+    VL_Refresh();
 }
 
 

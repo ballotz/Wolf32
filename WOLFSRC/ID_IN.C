@@ -641,7 +641,7 @@ IN_WaitForKey(void)
     ScanCode result;
 
     while (!(result = LastScan))
-        Update_Key();
+        Keyboard_Update();
     LastScan = 0;
     return(result);
 }
@@ -658,7 +658,7 @@ IN_WaitForASCII(void)
     char result;
 
     while (!(result = LastASCII))
-        Update_Key();
+        Keyboard_Update();
     LastASCII = '\0';
     return(result);
 }
@@ -724,7 +724,7 @@ void IN_Ack(void)
     IN_StartAck();
 
     while (!IN_CheckAck())
-        Update_Key();
+        Keyboard_Update();
 }
 
 

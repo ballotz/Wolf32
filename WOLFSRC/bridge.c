@@ -1,18 +1,212 @@
 #include "bridge.h"
+#include <SDL.h>
+
+SDL_Window* window;
+SDL_Renderer* renderer;
+SDL_Texture* frame_texture;
+
+int width = 320;
+int height = 200;
+
+uint8_t keyboard_map[SDL_NUM_SCANCODES];
+
+void InitKeyMap()
+{
+    keyboard_map[SDL_SCANCODE_ESCAPE] = 0x01;
+    keyboard_map[SDL_SCANCODE_LCTRL] = 0x1D;
+    keyboard_map[SDL_SCANCODE_RCTRL] = 0x1D;
+    keyboard_map[SDL_SCANCODE_SPACE] = 0x39;
+    keyboard_map[SDL_SCANCODE_F1] = 0x3B;
+    keyboard_map[SDL_SCANCODE_F2] = 0x3C;
+    keyboard_map[SDL_SCANCODE_F3] = 0x3D;
+    keyboard_map[SDL_SCANCODE_F4] = 0x3E;
+    keyboard_map[SDL_SCANCODE_F5] = 0x3F;
+    keyboard_map[SDL_SCANCODE_F6] = 0x40;
+    keyboard_map[SDL_SCANCODE_F7] = 0x41;
+    keyboard_map[SDL_SCANCODE_F8] = 0x42;
+    keyboard_map[SDL_SCANCODE_F9] = 0x43;
+    keyboard_map[SDL_SCANCODE_F10] = 0x44;
+    keyboard_map[SDL_SCANCODE_UP] = 0x48;
+    keyboard_map[SDL_SCANCODE_LEFT] = 0xCB;
+    keyboard_map[SDL_SCANCODE_UP] = 0x48;
+    keyboard_map[SDL_SCANCODE_RIGHT] = 0x4D;
+    keyboard_map[SDL_SCANCODE_DOWN] = 0x50;
+    keyboard_map[SDL_SCANCODE_RETURN] = 0x1C;
+}
+
+void Initialize()
+{
+    // attempt to initialize SDL
+    if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
+        return 1; // SDL init fail
+
+    SDL_DisplayMode mode;
+    if (SDL_GetDesktopDisplayMode(0, &mode) != 0)
+        return 1;
+
+    // init the window
+    window = SDL_CreateWindow("Wolf3D",
+        SDL_WINDOWPOS_CENTERED,
+        SDL_WINDOWPOS_CENTERED,
+        width,
+        height,
+        SDL_WINDOW_SHOWN
+        //SDL_WINDOW_FULLSCREEN_DESKTOP
+        //SDL_WINDOW_FULLSCREEN
+    );
+    if (window == 0)
+        return 1; // window init fail
+
+    renderer = SDL_CreateRenderer(
+        window,
+        -1,
+        0
+        //SDL_RENDERER_PRESENTVSYNC
+    );
+    if (renderer == 0)
+        return 1; // renderer init fail
+
+    frame_texture = SDL_CreateTexture(renderer,
+        SDL_PIXELFORMAT_ARGB8888,
+        SDL_TEXTUREACCESS_STREAMING,
+        width,
+        height);
+    if (frame_texture == 0)
+        return 1;
+
+    void* pixels;
+    int pitch;
+    SDL_LockTexture(frame_texture, 0, &pixels, &pitch);
+    SDL_UnlockTexture(frame_texture);
+
+    //SDL_SetRelativeMouseMode(SDL_TRUE);
+    //SDL_GetRelativeMouseState(0, 0); // flush first
+
+    //SDL_ShowCursor(SDL_DISABLE);
+
+    InitKeyMap();
+}
+
+void Deinitialize()
+{
+    //SDL_ShowCursor(SDL_ENABLE);
+
+    // clean up SDL
+    SDL_DestroyWindow(window);
+    SDL_DestroyRenderer(renderer);
+    SDL_Quit();
+
+    return 0;
+}
+
+int SDL_main(int argc, char* argv[])
+{
+    Initialize();
+    Main(argc, argv);
+}
+
+//------------------------------------------------------------------------------
+
+void QuitHook()
+{
+    Deinitialize();
+}
 
 //------------------------------------------------------------------------------
 // VGA
 //------------------------------------------------------------------------------
 
+void VGA_Update(
+    uint8_t* frame,
+    int16_t width,
+    int16_t height,
+    uint8_t* palette)
+{
+    uint32_t* pixels;
+    int vgastride;
+    int pitch, x, y, color;
 
+    SDL_LockTexture(frame_texture, 0, &pixels, &pitch);
+    pitch /= sizeof(*pixels);
+
+    vgastride = width >> 2;
+    for (y = 0; y < height; ++y)
+    {
+        for (x = 0; x < width; ++x)
+        {
+            // addressing the vga memory
+            color = frame[(x >> 2) + y * vgastride + (x & 3) * 0x10000];
+            // extend vga palette from 6 to 8 bit
+            pixels[x + y * pitch] =
+                (palette[color * 3 + 0] << 18) +
+                (palette[color * 3 + 1] << 10) +
+                (palette[color * 3 + 2] <<  2);
+        }
+    }
+
+    SDL_UnlockTexture(frame_texture);
+
+    SDL_RenderCopy(renderer, frame_texture, NULL, NULL);
+    SDL_RenderPresent(renderer); // draw to the screen
+}
 
 //------------------------------------------------------------------------------
 // Keyboard
 //------------------------------------------------------------------------------
 
-void Update_Key()
+void Keyboard_Update()
 {
+    SDL_Event event;
+    SDL_Scancode code;
+    uint8_t key;
 
+    while (1)
+    {
+        SDL_PumpEvents();
+        if (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_KEYDOWN, SDL_KEYUP))
+        {
+            code = event.key.keysym.scancode;
+
+            if (code == SDL_SCANCODE_PAUSE)
+            {
+                INL_KeyService_ISR(0xE1);
+                INL_KeyService_ISR(0x1D);
+                INL_KeyService_ISR(0x45);
+                INL_KeyService_ISR(0xE1);
+                INL_KeyService_ISR(0x9D);
+                INL_KeyService_ISR(0xC5);
+            }
+            else
+            {
+                if (code == SDL_SCANCODE_SLASH ||
+                    code == SDL_SCANCODE_RETURN ||
+                    code == SDL_SCANCODE_INSERT ||
+                    code == SDL_SCANCODE_DELETE ||
+                    code == SDL_SCANCODE_HOME ||
+                    code == SDL_SCANCODE_END ||
+                    code == SDL_SCANCODE_PAGEUP ||
+                    code == SDL_SCANCODE_PAGEDOWN ||
+                    code == SDL_SCANCODE_LEFT ||
+                    code == SDL_SCANCODE_RIGHT ||
+                    code == SDL_SCANCODE_UP ||
+                    code == SDL_SCANCODE_DOWN ||
+                    code == SDL_SCANCODE_RALT ||
+                    code == SDL_SCANCODE_RCTRL)
+                {
+                    INL_KeyService_ISR(0xE0);
+                }
+            }
+
+            key = keyboard_map[code];
+
+            if (event.key.type == SDL_KEYUP)
+                key &= 0x80;
+
+            INL_KeyService_ISR(key);
+        }
+        else
+            break;
+    }
 }
 
 //------------------------------------------------------------------------------
@@ -209,16 +403,3 @@ void SoundBlaster_StopSample()
 
 }
 
-//------------------------------------------------------------------------------
-
-#include <windows.h>
-
-int __stdcall WinMain(
-    HINSTANCE hInstance,
-    HINSTANCE hPrevInstance,
-    LPSTR     lpCmdLine,
-    int       nShowCmd
-)
-{
-    main(0, "");
-}

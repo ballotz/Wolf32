@@ -1910,7 +1910,7 @@ void	ThreeDRefresh(void)
     //asm	mov	al, ch
     //asm	out	dx, al   	// set the high byte
     //asm	sti
-    VL_SetCRTC(displayofs);
+    VW_SetScreen(displayofs, pelpan);
 
     bufferofs += SCREENSIZE;
     if (bufferofs > PAGE3START)
