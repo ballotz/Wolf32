@@ -651,7 +651,7 @@ US_LineInput(int16_t x, int16_t y, char* buf, char* def, boolean escok,
     cursormoved = redraw = true;
 
     cursorvis = done = false;
-    lasttime = TimeCount;
+    lasttime = TimeCount_Get();
     LastASCII = key_None;
     LastScan = sc_None;
 
@@ -782,13 +782,13 @@ US_LineInput(int16_t x, int16_t y, char* buf, char* def, boolean escok,
         if (cursormoved)
         {
             cursorvis = false;
-            lasttime = TimeCount - TickBase;
+            lasttime = TimeCount_Get() - TickBase;
 
             cursormoved = false;
         }
-        if (TimeCount - lasttime > TickBase / 2)
+        if (TimeCount_Get() - lasttime > TickBase / 2)
         {
-            lasttime = TimeCount;
+            lasttime = TimeCount_Get();
 
             cursorvis ^= true;
         }

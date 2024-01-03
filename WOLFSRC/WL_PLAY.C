@@ -460,9 +460,9 @@ void PollControls(void)
     //
     if (demoplayback)
     {
-        while (TimeCount < lasttimecount + DEMOTICS)
+        while (TimeCount_Get() < lasttimecount + DEMOTICS)
             ;
-        TimeCount = lasttimecount + DEMOTICS;
+        TimeCount_Set(lasttimecount + DEMOTICS);
         lasttimecount += DEMOTICS;
         tics = DEMOTICS;
     }
@@ -471,9 +471,9 @@ void PollControls(void)
 //
 // take DEMOTICS or more tics, and modify Timecount to reflect time taken
 //
-        while (TimeCount < lasttimecount + DEMOTICS)
+        while (TimeCount_Get() < lasttimecount + DEMOTICS)
             ;
-        TimeCount = lasttimecount + DEMOTICS;
+        TimeCount_Set(lasttimecount + DEMOTICS);
         lasttimecount += DEMOTICS;
         tics = DEMOTICS;
     }
@@ -806,7 +806,7 @@ void CheckKeys(void)
         }
         if (loadedgame)
             playstate = ex_abort;
-        lasttimecount = TimeCount;
+        lasttimecount = TimeCount_Get();
         if (MousePresent)
             Mouse_ResetDelta(); // Clear accumulated mouse movement
         PM_CheckMainMem();
@@ -1364,7 +1364,8 @@ void PlayLoop(void)
 {
     int16_t	helmetangle;
 
-    playstate = TimeCount = lasttimecount = 0;
+    TimeCount_Set(0);
+    playstate = lasttimecount = 0;
     frameon = 0;
     running = false;
     anglefrac = 0;
@@ -1436,7 +1437,7 @@ void PlayLoop(void)
         if (singlestep)
         {
             VW_WaitVBL(14);
-            lasttimecount = TimeCount;
+            lasttimecount = TimeCount_Get();
         }
         if (extravbls)
             VW_WaitVBL(extravbls);

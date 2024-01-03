@@ -164,8 +164,8 @@ void	TimedPicCommand (void)
 //
 // wait for time
 //
-	TimeCount = 0;
-	while (TimeCount < picdelay)
+    TimeCount_Set(0);
+	while (TimeCount_Get() < picdelay)
 	;
 
 //

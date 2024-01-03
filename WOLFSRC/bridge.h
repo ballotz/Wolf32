@@ -63,13 +63,12 @@ uint16_t INL_GetJoyButtons(uint16_t joy);
 int16_t VR_GetAngle();
 
 //------------------------------------------------------------------------------
-// TimeCount
+// TimeCount (70Hz)
 //------------------------------------------------------------------------------
 
-extern uint32_t TimeCount;
+uint32_t TimeCount_Get();
 
-// request time update (TimeCount)
-void Update_Time();
+void TimeCount_Set(uint32_t value);
 
 //------------------------------------------------------------------------------
 // AdLib

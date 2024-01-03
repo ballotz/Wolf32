@@ -714,7 +714,7 @@ int16_t CP_CheckQuick(uint16_t scancode)
 
             if (loadedgame)
                 playstate = ex_abort;
-            lasttimecount = TimeCount;
+            lasttimecount = TimeCount_Get();
 
             if (MousePresent)
                 Mouse_ResetDelta(); // Clear accumulated mouse movement
@@ -788,7 +788,7 @@ int16_t CP_CheckQuick(uint16_t scancode)
             if (loadedgame)
                 playstate = ex_abort;
 
-            lasttimecount = TimeCount;
+            lasttimecount = TimeCount_Get();
 
             if (MousePresent)
                 Mouse_ResetDelta(); // Clear accumulated mouse movement
@@ -2176,7 +2176,8 @@ void EnterCtrlData(int16_t index, CustomCtrls* cust, void (*DrawRtn)(int16_t), v
         if ((ci.button0 | ci.button1 | ci.button2 | ci.button3) ||
             ((type == KEYBOARDBTNS || type == KEYBOARDMOVE) && LastScan == sc_Enter))
         {
-            tick = TimeCount = picked = 0;
+            TimeCount_Set(0);
+            tick = picked = 0;
             SETFONTCOLOR(0, TEXTCOLOR);
 
             do
@@ -2190,7 +2191,7 @@ void EnterCtrlData(int16_t index, CustomCtrls* cust, void (*DrawRtn)(int16_t), v
                 //
                 // FLASH CURSOR
                 //
-                if (TimeCount > 10)
+                if (TimeCount_Get() > 10)
                 {
                     switch (tick)
                     {
@@ -2203,7 +2204,7 @@ void EnterCtrlData(int16_t index, CustomCtrls* cust, void (*DrawRtn)(int16_t), v
                         SD_PlaySound(HITWALLSND);
                     }
                     tick ^= 1;
-                    TimeCount = 0;
+                    TimeCount_Set(0);
                     VW_UpdateScreen();
                 }
 
@@ -3120,7 +3121,7 @@ int16_t HandleMenu(CP_iteminfo* item_i, CP_itemtype* items, void (*routine)(int1
     shape = C_CURSOR1PIC;
     timer = 8;
     exit = 0;
-    TimeCount = 0;
+    TimeCount_Set(0);
     IN_ClearKeysDown();
 
 
@@ -3129,9 +3130,9 @@ int16_t HandleMenu(CP_iteminfo* item_i, CP_itemtype* items, void (*routine)(int1
         //
         // CHANGE GUN SHAPE
         //
-        if (TimeCount > timer)
+        if (TimeCount_Get() > timer)
         {
-            TimeCount = 0;
+            TimeCount_Set(0);
             if (shape == C_CURSOR1PIC)
             {
                 shape = C_CURSOR2PIC;
@@ -3355,8 +3356,8 @@ void DrawHalfStep(int16_t x, int16_t y)
     VWB_DrawPic(x, y, C_CURSOR1PIC);
     VW_UpdateScreen();
     SD_PlaySound(MOVEGUN1SND);
-    TimeCount = 0;
-    while (TimeCount < 8);
+    TimeCount_Set(0);
+    while (TimeCount_Get() < 8);
 }
 
 
@@ -3392,12 +3393,11 @@ void TicDelay(uint32_t count)
 {
     ControlInfo ci;
 
-    TimeCount = 0;
+    TimeCount_Set(0);
     do
     {
         ReadAnyControl(&ci);
-        Update_Time();
-    } while (TimeCount < count && ci.dir != dir_None);
+    } while (TimeCount_Get() < count && ci.dir != dir_None);
 }
 
 
@@ -3586,11 +3586,11 @@ int16_t Confirm(char* string)
     //
     x = PrintX;
     y = PrintY;
-    TimeCount = 0;
+    TimeCount_Set(0);
 
     do
     {
-        if (TimeCount >= 10)
+        if (TimeCount_Get() >= 10)
         {
             switch (tick)
             {
@@ -3604,7 +3604,7 @@ int16_t Confirm(char* string)
             }
             VW_UpdateScreen();
             tick ^= 1;
-            TimeCount = 0;
+            TimeCount_Set(0);
         }
 
 #ifndef SPEAR

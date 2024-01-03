@@ -485,7 +485,8 @@ boolean FizzleFade(uint16_t source, uint16_t dest,
 
     IN_StartAck();
 
-    TimeCount = frame = 0;
+    frame = 0;
+    TimeCount_Set(0);
     do // while (1)
     {
         if (abortable && IN_CheckAck())
@@ -527,7 +528,7 @@ boolean FizzleFade(uint16_t source, uint16_t dest,
                 return false;
         }
         frame++;
-        while (TimeCount < frame)  // don't go too fast
+        while (TimeCount_Get() < frame)  // don't go too fast
             ;
     } while (1);
 

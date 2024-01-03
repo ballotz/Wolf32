@@ -244,7 +244,7 @@ void INL_GetJoyDelta(word joy, int16_t* dx, int16_t* dy)
     else
         *dy = 0;
 
-    lasttime = TimeCount;
+    lasttime = TimeCount_Get();
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -262,9 +262,9 @@ IN_GetJoyButtonsDB(word joy)
     do
     {
         result1 = INL_GetJoyButtons(joy);
-        lasttime = TimeCount;
-        while (TimeCount == lasttime)
-            Update_Time();
+        lasttime = TimeCount_Get();
+        while (TimeCount_Get() == lasttime)
+            ;
         result2 = INL_GetJoyButtons(joy);
     } while (result1 != result2);
     return(result1);
@@ -740,14 +740,13 @@ boolean IN_UserInput(longword delay)
 {
     longword lasttime;
 
-    lasttime = TimeCount;
+    lasttime = TimeCount_Get();
     IN_StartAck();
     do
     {
         if (IN_CheckAck())
             return true;
-        Update_Time();
-    } while (TimeCount - lasttime < delay);
+    } while (TimeCount_Get() - lasttime < delay);
     return(false);
 }
 

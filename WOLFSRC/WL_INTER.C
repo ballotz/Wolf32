@@ -395,12 +395,12 @@ void BJ_Breathe(void)
 	int16_t pics[2]={L_GUYPIC,L_GUY2PIC};
 
 
-	if (TimeCount>max)
+	if (TimeCount_Get()>max)
 	{
 		which^=1;
 		VWB_DrawPic(0,16,pics[which]);
 		VW_UpdateScreen();
-		TimeCount=0;
+        TimeCount_Set(0);
 		max=35;
 	}
 }
@@ -895,7 +895,7 @@ void LevelCompleted (void)
 	DrawScore();
 	VW_UpdateScreen();
 
-	TimeCount=0;
+    TimeCount_Set(0);
 	IN_StartAck();
 	while(!IN_CheckAck())
 	  BJ_Breathe();

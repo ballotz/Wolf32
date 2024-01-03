@@ -1573,7 +1573,7 @@ SD_Startup(void)
 
     //SoundUserHook = 0;
 
-    TimeCount = 0;
+    TimeCount_Set(0);
 
     SD_SetSoundMode(sdm_Off);
     SD_SetMusicMode(smm_Off);

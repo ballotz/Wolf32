@@ -1731,7 +1731,7 @@ void DrawPlayerWeapon(void)
 #ifndef SPEAR
     if (gamestate.victoryflag)
     {
-        if (player->state == &s_deathcam && (TimeCount & 32))
+        if (player->state == &s_deathcam && (TimeCount_Get() & 32))
             SimpleScaleShape(viewwidth / 2, SPR_DEATHCAM, viewheight + 1);
         return;
     }
@@ -1766,12 +1766,12 @@ void CalcTics(void)
     //
     // calculate tics since last refresh for adaptive timing
     //
-    if (lasttimecount > TimeCount)
-        TimeCount = lasttimecount;		// if the game was paused a LONG time
+    if (lasttimecount > TimeCount_Get())
+        TimeCount_Set(lasttimecount);	// if the game was paused a LONG time
 
     do
     {
-        newtime = TimeCount;
+        newtime = TimeCount_Get();
         tics = newtime - lasttimecount;
     } while (!tics);			// make sure at least one tic passes
 
@@ -1787,7 +1787,7 @@ void CalcTics(void)
 
     if (tics > MAXTICS)
     {
-        TimeCount -= (tics - MAXTICS);
+        TimeCount_Set(TimeCount_Get() - (tics - MAXTICS));
         tics = MAXTICS;
     }
 }
@@ -1894,7 +1894,8 @@ void	ThreeDRefresh(void)
         FizzleFade(bufferofs, displayofs + screenofs, viewwidth, viewheight, 20, false);
         fizzlein = false;
 
-        lasttimecount = TimeCount = 0;		// don't make a big tic count
+        TimeCount_Set(0);		// don't make a big tic count
+        lasttimecount = 0;
 
     }
 

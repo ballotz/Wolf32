@@ -10,6 +10,8 @@ int height = 200;
 
 uint8_t keyboard_map[SDL_NUM_SCANCODES];
 
+Uint64 time_count;
+
 void InitKeyMap()
 {
     keyboard_map[SDL_SCANCODE_ESCAPE] = 0x01;
@@ -85,6 +87,8 @@ void Initialize()
     //SDL_ShowCursor(SDL_DISABLE);
 
     InitKeyMap();
+
+    time_count = SDL_GetPerformanceCounter();
 }
 
 void Deinitialize()
@@ -270,11 +274,22 @@ int16_t VR_GetAngle()
 // TimeCount
 //------------------------------------------------------------------------------
 
-uint32_t TimeCount;
+Uint64 timer70hz_offset;
 
-void Update_Time()
+Uint64 Timer70Hz()
 {
+    Uint64 counter = SDL_GetPerformanceCounter();
+    return counter / (SDL_GetPerformanceFrequency() / 70);
+}
 
+uint32_t TimeCount_Get()
+{
+    return (uint32_t)(Timer70Hz() - timer70hz_offset);
+}
+
+void TimeCount_Set(uint32_t value)
+{
+    timer70hz_offset = Timer70Hz() + value;
 }
 
 //------------------------------------------------------------------------------
