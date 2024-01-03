@@ -59,7 +59,7 @@ CP_iteminfo
     NewItems = { NM_X,NM_Y,4,2,24 };
 
 CP_itemtype
-MainMenu[] =
+MainMenu[10] =
 {
 #ifdef JAPAN
     {1,"",CP_NewGame},
