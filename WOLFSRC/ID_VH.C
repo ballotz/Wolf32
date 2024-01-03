@@ -51,8 +51,8 @@ void VH_UpdateScreen(void)
         if (updateptr[i] & 1)
         {
             updateptr[i] = 0;
-            int16_t source = blockstarts[i];
-            int16_t dest = source + displayofs - bufferofs;
+            int16_t source = blockstarts[i] + bufferofs;
+            int16_t dest = blockstarts[i] + displayofs;
             VL_ScreenToScreen(source, dest, 16 / 4, 16);
         }
     }
