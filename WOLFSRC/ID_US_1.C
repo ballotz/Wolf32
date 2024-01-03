@@ -328,8 +328,15 @@ US_SetPrintRoutines(void (*measure)(char*, word*, word*), void (*print)(char*))
 void
 US_Print(char* s)
 {
+    char	buffer[64];
     char	c, *se;
     word	w, h;
+
+    // copy string to prevent inplace modification of argument
+    // that could be in a read only memory
+    strncpy(buffer, s, sizeof(buffer));
+    buffer[sizeof(buffer) - 1] = '\0';
+    s = buffer;
 
     while (*s)
     {
@@ -451,15 +458,21 @@ US_CPrintLine(char* s)
 void
 US_CPrint(char* s)
 {
+    char	buffer[64];
     char	c, *se;
+
+    // copy string to prevent inplace modification of argument
+    // that could be in a read only memory
+    strncpy(buffer, s, sizeof(buffer));
+    buffer[sizeof(buffer) - 1] = '\0';
+    s = buffer;
 
     while (*s)
     {
         se = s;
         while ((c = *se) && (c != '\n'))
             se++;
-        if (*se)
-            *se = '\0';
+        *se = '\0';
 
         US_CPrintLine(s);
 
