@@ -349,15 +349,18 @@ boolean CA_LoadFile(char* filename, memptr* ptr)
 void CAL_HuffExpand(byte* source, byte* dest,
     int32_t length, huffnode* hufftable, boolean screenhack)
 {
-    uint8_t bit, byte, * end;
+    uint8_t bit, byte, *end;
     uint16_t code;
-    huffnode* nodeon, * headptr;
+    huffnode *nodeon, *headptr;
     uint16_t vgaplane;
 
     headptr = hufftable + 254;  // head node is always node 254
 
     if (screenhack)
+    {
         vgaplane = 0;
+        length >>= 2;
+    }
 
     end = dest + length;
 
