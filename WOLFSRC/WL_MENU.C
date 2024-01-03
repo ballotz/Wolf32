@@ -2735,6 +2735,8 @@ void CP_ChangeView(int16_t unused)
 
     do
     {
+        Keyboard_Update();
+
         CheckPause();
         ReadAnyControl(&ci);
         switch (ci.dir)
@@ -3148,6 +3150,8 @@ int16_t HandleMenu(CP_iteminfo* item_i, CP_itemtype* items, void (*routine)(int1
                 routine(which);
             VW_UpdateScreen();
         }
+
+        Keyboard_Update();
 
         CheckPause();
 
@@ -3607,6 +3611,8 @@ int16_t Confirm(char* string)
             TimeCount_Set(0);
         }
 
+        Keyboard_Update();
+
 #ifndef SPEAR
         //if (Keyboard[sc_Tab] && Keyboard[sc_P] && MS_CheckParm("goobers"))
         //    PicturePause();
@@ -3625,7 +3631,8 @@ int16_t Confirm(char* string)
         ShootSnd();
     }
 
-    while (Keyboard[sc_S] || Keyboard[sc_N] || Keyboard[sc_Escape]);
+    while (Keyboard[sc_S] || Keyboard[sc_N] || Keyboard[sc_Escape])
+        Keyboard_Update();
 
 #else
 
@@ -3635,7 +3642,8 @@ int16_t Confirm(char* string)
         ShootSnd();
     }
 
-    while (Keyboard[sc_Y] || Keyboard[sc_N] || Keyboard[sc_Escape]);
+    while (Keyboard[sc_Y] || Keyboard[sc_N] || Keyboard[sc_Escape])
+        Keyboard_Update();
 #endif
 
     IN_ClearKeysDown();

@@ -699,6 +699,7 @@ boolean IN_CheckAck(void)
     //
     // see if something has been pressed
     //
+    Keyboard_Update();
     if (LastScan)
         return true;
 
@@ -724,7 +725,7 @@ void IN_Ack(void)
     IN_StartAck();
 
     while (!IN_CheckAck())
-        Keyboard_Update();
+        ;
 }
 
 

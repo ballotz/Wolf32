@@ -15,8 +15,10 @@ Uint64 time_count;
 void InitKeyMap()
 {
     keyboard_map[SDL_SCANCODE_ESCAPE] = 0x01;
+    keyboard_map[SDL_SCANCODE_Y] = 0x15;
     keyboard_map[SDL_SCANCODE_LCTRL] = 0x1D;
     keyboard_map[SDL_SCANCODE_RCTRL] = 0x1D;
+    keyboard_map[SDL_SCANCODE_N] = 0x31;
     keyboard_map[SDL_SCANCODE_SPACE] = 0x39;
     keyboard_map[SDL_SCANCODE_F1] = 0x3B;
     keyboard_map[SDL_SCANCODE_F2] = 0x3C;
@@ -164,23 +166,25 @@ void Keyboard_Update()
     SDL_Scancode code;
     uint8_t key;
 
-    while (1)
+    SDL_PumpEvents();
+    if (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_KEYDOWN, SDL_KEYUP))
     {
-        SDL_PumpEvents();
-        if (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_KEYDOWN, SDL_KEYUP))
-        {
-            code = event.key.keysym.scancode;
+        code = event.key.keysym.scancode;
 
-            if (code == SDL_SCANCODE_PAUSE)
-            {
-                INL_KeyService_ISR(0xE1);
-                INL_KeyService_ISR(0x1D);
-                INL_KeyService_ISR(0x45);
-                INL_KeyService_ISR(0xE1);
-                INL_KeyService_ISR(0x9D);
-                INL_KeyService_ISR(0xC5);
-            }
-            else
+        if (code == SDL_SCANCODE_PAUSE)
+        {
+            INL_KeyService_ISR(0xE1);
+            INL_KeyService_ISR(0x1D);
+            INL_KeyService_ISR(0x45);
+            INL_KeyService_ISR(0xE1);
+            INL_KeyService_ISR(0x9D);
+            INL_KeyService_ISR(0xC5);
+        }
+        else
+        {
+            key = keyboard_map[code];
+
+            if (key)
             {
                 if (code == SDL_SCANCODE_SLASH ||
                     code == SDL_SCANCODE_RETURN ||
@@ -199,17 +203,13 @@ void Keyboard_Update()
                 {
                     INL_KeyService_ISR(0xE0);
                 }
+
+                if (event.key.type == SDL_KEYUP)
+                    key |= 0x80;
+
+                INL_KeyService_ISR(key);
             }
-
-            key = keyboard_map[code];
-
-            if (event.key.type == SDL_KEYUP)
-                key &= 0x80;
-
-            INL_KeyService_ISR(key);
         }
-        else
-            break;
     }
 }
 
