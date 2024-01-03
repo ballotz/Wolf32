@@ -1269,7 +1269,7 @@ void Quit(char* error)
     //    geninterrupt(0x61);
 
     ClearMemory();
-    if (!*error)
+    if (error && !*error)
     {
 #ifndef JAPAN
         //CA_CacheGrChunk(ORDERSCREEN);
@@ -1285,7 +1285,6 @@ void Quit(char* error)
 
     ShutdownId();
 
-    QuitHook();
 
     if (error && *error)
     {
@@ -1293,7 +1292,8 @@ void Quit(char* error)
         //gotoxy(10, 4);
         puts(error);
         //gotoxy(1, 8);
-        exit(1);
+        //exit(1);
+        Exit(1);
     }
     else
         if (!error || !(*error))
@@ -1310,7 +1310,8 @@ void Quit(char* error)
             //asm	int	0x10
         }
 
-    exit(0);
+    //exit(0);
+    Exit(0);
 }
 
 //===========================================================================

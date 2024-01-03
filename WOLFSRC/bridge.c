@@ -109,13 +109,17 @@ int SDL_main(int argc, char* argv[])
 {
     Initialize();
     Main(argc, argv);
+    return 0;
 }
 
 //------------------------------------------------------------------------------
+// System
+//------------------------------------------------------------------------------
 
-void QuitHook()
+void Exit(int code)
 {
     Deinitialize();
+    exit(code);
 }
 
 //------------------------------------------------------------------------------
@@ -367,7 +371,7 @@ void PCSpeaker_PlaySample(uint8_t* data, uint32_t length)
 
 uint8_t PCSpeaker_SoundPlaying()
 {
-
+    return 0;
 }
 
 //------------------------------------------------------------------------------
