@@ -42,7 +42,9 @@ byte    palette1[256][3], palette2[256][3];
 */
 void VL_WaitVBL(int16_t vbls)
 {
-
+    int32_t stoptime = TimeCount_Get() + vbls;
+    while (TimeCount_Get() < stoptime)
+        ;
 }
 
 /*
