@@ -56,6 +56,8 @@ void VH_UpdateScreen(void)
             VL_ScreenToScreen(source, dest, 16 / 4, 16);
         }
     }
+
+    VL_Refresh();
 }
 
 //==========================================================================
