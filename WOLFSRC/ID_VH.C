@@ -320,10 +320,8 @@ void VWB_DrawPic(int16_t x, int16_t y, int16_t chunknum)
 
 void VWB_DrawPropString(char* string)
 {
-    int16_t x;
-    x = px;
     VW_DrawPropString(string);
-    VW_MarkUpdateBlock(x, py, px - 1, py + bufferheight - 1);
+    VW_MarkUpdateBlock(px, py, px + bufferwidth - 1, py + bufferheight - 1);
 }
 
 
