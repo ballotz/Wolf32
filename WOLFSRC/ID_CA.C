@@ -390,11 +390,12 @@ void CAL_HuffExpand(byte* source, byte* dest,
             nodeon = headptr;           // back to the head node for next bit
             if (dest == end)            // done?
             {
-                if (screenhack && vgaplane < VGA_PLANES)
+                if (screenhack)
                 {
                     dest += VGA_PLANE_SIZE - length;    // next vga plane
                     end = dest + length;
-                    vgaplane++;
+                    if (++vgaplane == 4)
+                        break;
                 }
                 else
                     break;
