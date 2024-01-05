@@ -309,6 +309,43 @@ PML_GiveLRUPage()
 }
 
 //
+//	PML_TransferPageSpace() - A page is being replaced, so give the new page
+//		the old one's address space. Returns the address of the new page.
+//
+memptr
+PML_TransferPageSpace(int orig, int new)
+{
+    memptr			addr;
+    PageListStruct	*origpage, *newpage;
+
+    if (orig == new)
+        Quit("PML_TransferPageSpace: Identity replacement");
+
+    origpage = &PMPages[orig];
+    newpage = &PMPages[new];
+
+    if (origpage->locked != pml_Unlocked)
+        Quit("PML_TransferPageSpace: Killing locked page");
+
+    if (origpage->mainPage == -1)
+        Quit("PML_TransferPageSpace: Reusing non-existent page");
+
+    // Get the address
+    addr = PM_GetPageAddress(orig);
+
+    // Steal the address
+    newpage->mainPage = origpage->mainPage;
+
+    // Mark replaced page as purged
+    origpage->mainPage = -1;
+
+    if (!addr)
+        Quit("PML_TransferPageSpace: Zero replacement");
+
+    return(addr);
+}
+
+//
 //	PML_GetAPageBuffer() - A page buffer is needed. Either get it from the
 //		main free pool, or use PML_GiveLRUPage() to find which page to
 //		steal the buffer from. Returns a pointer to the page buffer, and
@@ -343,6 +380,8 @@ PML_GetAPageBuffer(int16_t pagenum)
         page->mainPage = n;
         MainPagesUsed++;
     }
+    else
+        addr = PML_TransferPageSpace(PML_GiveLRUPage(), pagenum);
 
     if (!addr)
         Quit("PML_GetPageBuffer: Search failed");
