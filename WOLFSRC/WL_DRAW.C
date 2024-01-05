@@ -90,7 +90,7 @@ int16_t     focaltx, focalty, viewtx, viewty;
 int16_t     midangle, angle;
 uint16_t    xpartial, ypartial;
 uint16_t    xpartialup, xpartialdown, ypartialup, ypartialdown;
-uint16_t    xinttile, yinttile;
+//uint16_t    xinttile, yinttile;
 
 uint16_t    tilehit;
 uint16_t    pixx;
@@ -121,6 +121,7 @@ int16_t     horizwall[MAXWALLTILES], vertwall[MAXWALLTILES];
 #define OP_JLE  0x7e
 #define OP_JGE  0x7d
 
+fixed FixedMul(fixed a, word b);
 void HitVertWall(void);
 void HitHorizWall(void);
 void HitHorizDoor(void);
@@ -130,29 +131,25 @@ void HitVertPWall(void);
 
 int32_t xpartialbyystep(word xpartial)
 {
-    int32_t ystephi = ystep >> 16;
-    int32_t ysteplo = ystep & 0xFFFF;
-    int32_t xpartiallo = xpartial;
-
-    return ystephi * xpartiallo +
-        (ysteplo * xpartiallo >> 16);
+    if (ystep >= 0)
+        return FixedMul(ystep, xpartial);
+    else
+        return -FixedMul(-ystep, xpartial);
 }
 
 int32_t ypartialbyxstep(word ypartial)
 {
-    int32_t xstephi = xstep >> 16;
-    int32_t xsteplo = xstep & 0xFFFF;
-    int32_t ypartiallo = ypartial;
-
-    return xstephi * ypartiallo +
-        (xsteplo * ypartiallo >> 16);
+    if (xstep >= 0)
+        return FixedMul(xstep, ypartial);
+    else
+        return -FixedMul(-xstep, ypartial);
 }
 
 void AsmRefresh()
 {
     int16_t angle; // angle of the ray through pixx
-    int16_t xspot; // xspot (yinttile<<6)+xtile (index into tilemap and spotvis)
-    int16_t yspot; // yspot (xinttile<<6)+ytile (index into tilemap and spotvis)
+    int16_t xspot; // (index into tilemap and spotvis)
+    int16_t yspot; // (index into tilemap and spotvis)
 
     byte horizop, vertop;
     int16_t temp16;
@@ -225,21 +222,21 @@ void AsmRefresh()
             ypartial = ypartialup;
             goto initvars;
         }
-        angle -= FINEANGLES;
+        // 360-449 degree arc
+        angle -= FINEANGLES; // -449 is the same as 89
         goto entry90;
 
         // initialise variables for intersection testing
     initvars:
-        yintercept = xpartialbyystep(xpartial);
-        yintercept += viewy;
+        yintercept = xpartialbyystep(xpartial) + viewy;
         xtile = focaltx + xtilestep;
-        xspot = (xtile << 6) + yinttile;
-        xintercept = ypartialbyxstep(ypartial);
-        xintercept += viewx;
+        xspot = (xtile << 6) + (yintercept >> 16);
+        xintercept = ypartialbyxstep(ypartial) + viewx;
         ytile = focalty + ytilestep;
-        yspot = (xinttile << 6) + ytile;
+        yspot = (xintercept >> 16 << 6) + ytile;
 
         // trace along this angle until we hit a wall
+
         // CORE LOOP!
 
         // check intersections with vertical walls
@@ -251,21 +248,20 @@ void AsmRefresh()
             if ((yintercept >> 16) >= ytile) // (ytilestep==1)
                 goto horizentry;
     vertentry:
-        if (*((byte*)tilemap + xspot) == 0)
-        {
-        passvert:
-            *((byte*)spotvis + xspot) = true;
-            xtile += xtilestep;
-            yintercept += ystep;
-            xspot = (xtile << 6) + yinttile;
-            goto vertcheck;
-        }
-
+        if (*((byte*)tilemap + xspot))
+            goto hitvert;
+    passvert:
+        *((byte*)spotvis + xspot) = true;
+        xtile += xtilestep;
+        yintercept += ystep;
+        xspot = (xtile << 6) + (yintercept >> 16);
+        goto vertcheck;
+    hitvert:
         tilehit = *((byte*)tilemap + xspot);
-        if (tilehit < 0)
+        if (tilehit & 0x80)
             goto vertdoor;
         xintercept = xtile << 16;
-        yintercept = (ytile << 16) + (yintercept & 0xFFFF);
+        ytile = yintercept >> 16;
         HitVertWall();
         continue;
 
@@ -278,20 +274,19 @@ void AsmRefresh()
             if ((xintercept >> 16) >= xtile) // (xtilestep==1)
                 goto vertentry;
     horizentry:
-        if (*((byte*)tilemap + yspot) == 0)
-        {
-        passhoriz:
-            *((byte*)spotvis + yspot) = true;
-            ytile += ytilestep;
-            xintercept += xstep;
-            yspot = (xinttile << 6) + ytile;
-            goto horizcheck;
-        }
-
+        if (*((byte*)tilemap + yspot))
+            goto hithoriz;
+    passhoriz:
+        *((byte*)spotvis + yspot) = true;
+        ytile += ytilestep;
+        xintercept += xstep;
+        yspot = (xintercept >> 16 << 6) + ytile;
+        goto horizcheck;
+    hithoriz:
         tilehit = *((byte*)tilemap + yspot);
-        if (tilehit < 0)
+        if (tilehit & 0x80)
             goto horizdoor;
-        xintercept = (xtile << 16) + (xintercept & 0xFFFF);
+        xtile = xintercept >> 16;
         yintercept = ytile << 16;
         HitHorizWall();
         continue;
@@ -383,6 +378,25 @@ void AsmRefresh()
 
 //==========================================================================
 
+//fixed FixedMul(fixed a, fixed b)
+//{
+//    int32_t ah = (uint32_t)a >> 16u;
+//    int32_t al = a & 0xFFFF;
+//    int32_t bh = (uint32_t)b >> 16u;
+//    int32_t bl = b & 0xFFFF;
+//    return
+//        (ah * bh << 16) +
+//        ah * bl +
+//        al * bh +
+//        ((uint32_t)(al * bl) >> 16u);
+//}
+
+fixed FixedMul(fixed a, word b)
+{
+    return
+        ((uint32_t)a >> 16u) * (uint32_t)b +
+        ((uint32_t)((a & 0xFFFF) * (uint32_t)b) >> 16u);
+}
 
 /*
 ========================
@@ -397,24 +411,14 @@ void AsmRefresh()
 
 fixed FixedByFrac(fixed a, fixed b)
 {
-    // ((ah << 16) + al) * ((bh << 16) + bl) >> 16 =
-    // ((ah << 16) * (bh << 16) >> 16) +
-    // ((ah << 16) * bl >> 16) +
-    // (al * (bh << 16) >> 16) +
-    // (al * bl >> 16) =
-    // (ah * bh << 16) +
-    // ah * bl +
-    // al * bh +
-    // (al * bl >> 16)
-    int32_t ah = a >> 16;
-    int32_t al = a & 0xFFFF;
-    int32_t bh = b >> 16;
-    int32_t bl = b & 0xFFFF;
-    return
-        (ah * bh << 16) +
-        ah * bl +
-        al * bh +
-        (al * bl >> 16);
+    boolean aneg = (a >> 31) & 1;
+    boolean bneg = (b >> 31) & 1;
+    if (aneg)
+        a = -a;
+    fixed r = FixedMul(a, b & 0xFFFF);
+    if (aneg ^ bneg)
+        r = -r;
+    return r;
 }
 
 
