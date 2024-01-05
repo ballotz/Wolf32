@@ -32,14 +32,14 @@ typedef struct
     uint16_t bit0, bit1; // 0-255 is a character, > is a pointer to a node
 } huffnode;
 
-
+#pragma pack(push, 1)
 typedef struct
 {
     uint16_t RLEWtag;
     int32_t headeroffsets[100];
     byte tileinfo[];
 } mapfiletype;
-
+#pragma pack(pop)
 
 /*
 =============================================================================
