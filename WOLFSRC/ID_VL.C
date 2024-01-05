@@ -1,11 +1,12 @@
 // ID_VL.C
 
-#include <dos.h>
+//#include <dos.h>
 //#include <alloc.h>
 //#include <mem.h>
 #include <string.h>
 #include "ID_HEAD.H"
 #include "ID_VL.H"
+#include "bridge.h"
 #pragma hdrstop
 
 //===========================================================================
@@ -40,7 +41,7 @@ byte    palette1[256][3], palette2[256][3];
 ;
 ;==============
 */
-void VL_WaitVBL(int16_t vbls)
+void VL_WaitVBL(uint16_t vbls)
 {
     int32_t stoptime = TimeCount_Get() + vbls;
     while (TimeCount_Get() < stoptime)
@@ -62,12 +63,12 @@ void VL_SetScreen(uint16_t crtc, uint16_t pelpan)
 
 void VL_Refresh()
 {
-    VGA_Update((uint8_t*)vgadata + vgastart, vgawidth, vgaheight, vgapal);
+    VGA_Update((uint8_t*)vgadata + vgastart, vgawidth, vgaheight, &vgapal[0][0]);
 }
 
 //===========================================================================
 
-void VGA_Write(int16_t mask, int16_t addr, int16_t color)
+void VGA_Write(uint16_t mask, uint16_t addr, uint16_t color)
 {
     if (mask & 1)
         vgadata[0][addr] = (uint8_t)color;
@@ -566,7 +567,7 @@ void VL_MemToLatch(byte* source, int16_t width, int16_t height, uint16_t dest)
 void VL_MemToScreen(byte* source, int16_t width, int16_t height, int16_t x, int16_t y)
 {
     byte* screen;
-    int16_t dest, plane, i;
+    uint16_t dest, plane, i;
 
     width >>= 2;
     dest = bufferofs + ylookup[y] + (x >> 2);
@@ -594,7 +595,7 @@ void VL_MemToScreen(byte* source, int16_t width, int16_t height, int16_t x, int1
 
 void VL_LatchToScreen(uint16_t source, int16_t width, int16_t height, int16_t x, int16_t y)
 {
-    int16_t dest, i;
+    uint16_t dest, i;
 
     dest = bufferofs + ylookup[y] + (x >> 2);
 
