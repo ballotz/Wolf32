@@ -30,8 +30,7 @@ void InitKeyMap()
     keyboard_map[SDL_SCANCODE_F8] = 0x42;
     keyboard_map[SDL_SCANCODE_F9] = 0x43;
     keyboard_map[SDL_SCANCODE_F10] = 0x44;
-    keyboard_map[SDL_SCANCODE_UP] = 0x48;
-    keyboard_map[SDL_SCANCODE_LEFT] = 0xCB;
+    keyboard_map[SDL_SCANCODE_LEFT] = 0x4B;
     keyboard_map[SDL_SCANCODE_UP] = 0x48;
     keyboard_map[SDL_SCANCODE_RIGHT] = 0x4D;
     keyboard_map[SDL_SCANCODE_DOWN] = 0x50;
@@ -42,11 +41,11 @@ void Initialize()
 {
     // attempt to initialize SDL
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
-        return 1; // SDL init fail
+        exit(1); // SDL init fail
 
     SDL_DisplayMode mode;
     if (SDL_GetDesktopDisplayMode(0, &mode) != 0)
-        return 1;
+        exit(1);
 
     // init the window
     window = SDL_CreateWindow("Wolf3D",
@@ -59,7 +58,7 @@ void Initialize()
         //SDL_WINDOW_FULLSCREEN
     );
     if (window == 0)
-        return 1; // window init fail
+        exit(1); // window init fail
 
     renderer = SDL_CreateRenderer(
         window,
@@ -68,7 +67,7 @@ void Initialize()
         //SDL_RENDERER_PRESENTVSYNC
     );
     if (renderer == 0)
-        return 1; // renderer init fail
+        exit(1); // renderer init fail
 
     frame_texture = SDL_CreateTexture(renderer,
         SDL_PIXELFORMAT_ARGB8888,
@@ -76,7 +75,7 @@ void Initialize()
         width,
         height);
     if (frame_texture == 0)
-        return 1;
+        exit(1);
 
     void* pixels;
     int pitch;
@@ -101,8 +100,6 @@ void Deinitialize()
     SDL_DestroyWindow(window);
     SDL_DestroyRenderer(renderer);
     SDL_Quit();
-
-    return 0;
 }
 
 int SDL_main(int argc, char* argv[])
@@ -293,7 +290,7 @@ uint32_t TimeCount_Get()
 
 void TimeCount_Set(uint32_t value)
 {
-    timer70hz_offset = Timer70Hz() + value;
+    timer70hz_offset = Timer70Hz() - value;
 }
 
 //------------------------------------------------------------------------------
