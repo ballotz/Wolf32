@@ -42,7 +42,7 @@ int16_t bufferwidth, bufferheight;
 */
 void VH_UpdateScreen(void)
 {
-    int16_t i;
+    uint16_t i, source, dest;
     byte* updateptr = &update[0][0];
 
     // Check each tile and copy if needed
@@ -51,8 +51,8 @@ void VH_UpdateScreen(void)
         if (updateptr[i] & 1)
         {
             updateptr[i] = 0;
-            int16_t source = blockstarts[i] + bufferofs;
-            int16_t dest = blockstarts[i] + displayofs;
+            source = blockstarts[i] + bufferofs;
+            dest = blockstarts[i] + displayofs;
             VL_ScreenToScreen(source, dest, 16 / 4, 16);
         }
     }
@@ -67,7 +67,7 @@ void VW_DrawPropString(char* string)
     fontstruct *font;
     int16_t width, step, height, count;
     byte *source, *loopsource;
-    int16_t dest, origdest;
+    uint16_t dest, origdest;
     int32_t loopdest, vgaplane;
     byte ch;
 
@@ -115,7 +115,7 @@ void VW_DrawColorPropString(char* string)
     fontstruct *font;
     int16_t width, step, height, count;
     byte *source, *loopsource;
-    int16_t dest, origdest;
+    uint16_t dest, origdest;
     int32_t loopdest, vgaplane;
     byte ch, color;
 
