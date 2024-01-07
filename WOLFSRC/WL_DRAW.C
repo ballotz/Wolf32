@@ -698,87 +698,35 @@ void ScalePost(void)		// VGA version
     int16_t     maskindex;
     byte        mask;
 
-    //asm	mov	ax, SCREENSEG
-    //asm	mov	es, ax
-
-    //asm	mov	bx, [postx]
-    //asm	shl	bx, 1
-    //asm	mov	bp, WORD PTR[wallheight + bx]		// fractional height (low 3 bits frac)
-    height = wallheight[postx];
-
-    //asm	and bp, 0xfff8				// bp = heightscaler*4
-    //asm	shr	bp, 1
-    height = (height & 0xfff8) >> 1;
-
-    //asm	cmp	bp, [maxscaleshl2]
-    //asm	jle	heightok
-    //asm	mov	bp, [maxscaleshl2]
-    //heightok:
-    //if (height > maxscaleshl2)
-    //    height = maxscaleshl2;
-
-    //asm	add	bp, OFFSET fullscalefarcall
+    height = wallheight[postx] >> 2;
+    dest = (postx >> 2) + bufferofs;
+    maskindex = -1 + ((postx & 3) << 3) + postwidth;    // -1 because no widths of 0
 
     //
     // scale a byte wide strip of wall
     //
-    //asm	mov	bx, [postx]
-    //asm	mov	di, bx
-    //asm	shr	di, 2						// X in bytes
-    //asm	add	di, [bufferofs]
-    dest = (postx >> 2) + bufferofs;
-
-    //asm	and bx, 3
-    //asm	shl	bx, 3						// bx = pixel*8+pixwidth
-    //asm	add	bx, [postwidth]
-    //asm	mov	al, BYTE PTR[mapmasks1 - 1 + bx]	// -1 because no widths of 0
-    maskindex = -1 + ((postx & 3) << 3) + postwidth;
     mask = *((byte*)mapmasks1 + maskindex);
-
-    //asm	mov	dx, SC_INDEX + 1
-    //asm	out	dx, al						// set bit mask register
-    //asm	lds	si, DWORD PTR[postsource]
-    //asm	call DWORD PTR[bp]				// scale the line of pixels
     ScaleWallLine(mask, dest, postsourceaddress + postsourceoffset, height);
 
-    //asm	mov	al, BYTE PTR[ss:mapmasks2 - 1 + bx]   // -1 because no widths of 0
-    //asm	or al, al
-    //asm	jz	nomore
     mask = *((byte*)mapmasks2 + maskindex);
     if (mask == 0)
-        goto nomore;
+        return;
 
     //
     // draw a second byte for vertical strips that cross two bytes
     //
-    //asm	inc	di
     ++dest;
-
-    //asm	out	dx, al						// set bit mask register
-    //asm	call DWORD PTR[bp]				// scale the line of pixels
     ScaleWallLine(mask, dest, postsourceaddress + postsourceoffset, height);
 
-    //asm	mov	al, BYTE PTR[ss:mapmasks3 - 1 + bx]	// -1 because no widths of 0
-    //asm	or al, al
-    //asm	jz	nomore
     mask = *((byte*)mapmasks3 + maskindex);
     if (mask == 0)
-        goto nomore;
+        return;
 
     //
     // draw a third byte for vertical strips that cross three bytes
     //
-    //asm	inc	di
     ++dest;
-
-    //asm	out	dx, al						// set bit mask register
-    //asm	call DWORD PTR[bp]				// scale the line of pixels
     ScaleWallLine(mask, dest, postsourceaddress + postsourceoffset, height);
-
-nomore:
-    //asm	mov	ax, ss
-    //asm	mov	ds, ax
-    ;
 }
 
 void  FarScalePost(void)				// just so other files can call
@@ -1199,74 +1147,6 @@ void HitVertPWall(void)
 
 //==========================================================================
 
-//==========================================================================
-
-#if 0
-/*
-=====================
-=
-= ClearScreen
-=
-=====================
-*/
-
-void ClearScreen(void)
-{
-    uint16_t floor = egaFloor[gamestate.episode * 10 + mapon],
-        ceiling = egaCeiling[gamestate.episode * 10 + mapon];
-
-    //
-    // clear the screen
-    //
-    asm	mov	dx, GC_INDEX
-    asm	mov	ax, GC_MODE + 256 * 2		// read mode 0, write mode 2
-    asm	out	dx, ax
-    asm	mov	ax, GC_BITMASK + 255 * 256
-    asm	out	dx, ax
-
-    asm	mov	dx, 40
-    asm	mov	ax, [viewwidth]
-    asm	shr	ax, 3
-    asm	sub	dx, ax					// dx = 40-viewwidth/8
-
-    asm	mov	bx, [viewwidth]
-    asm	shr	bx, 4					// bl = viewwidth/16
-    asm	mov	bh, BYTE PTR[viewheight]
-    asm	shr	bh, 1					// half height
-
-    asm	mov	ax, [ceiling]
-    asm	mov	es, [screenseg]
-    asm	mov	di, [bufferofs]
-
-    toploop:
-    asm	mov	cl, bl
-    asm	rep	stosw
-    asm	add	di, dx
-    asm	dec	bh
-    asm	jnz	toploop
-
-    asm	mov	bh, BYTE PTR[viewheight]
-    asm	shr	bh, 1					// half height
-    asm	mov	ax, [floor]
-
-    bottomloop:
-    asm	mov	cl, bl
-    asm	rep	stosw
-    asm	add	di, dx
-    asm	dec	bh
-    asm	jnz	bottomloop
-
-
-    asm	mov	dx, GC_INDEX
-    asm	mov	ax, GC_MODE + 256 * 10		// read mode 1, write mode 2
-    asm	out	dx, ax
-    asm	mov	al, GC_BITMASK
-    asm	out	dx, al
-
-}
-#endif
-//==========================================================================
-
 uint16_t vgaCeiling[] =
 {
 #ifndef SPEAR
@@ -1314,45 +1194,6 @@ void VGAClearScreen(void)
             VGA_Write(0xF, dest + j, 0x1919);
         dest += SCREENBWIDE;
     }
-
-    //
-    // clear the screen
-    //
-    //asm	mov	dx, SC_INDEX
-    //asm	mov	ax, SC_MAPMASK + 15 * 256	// write through all planes
-    //asm	out	dx, ax
-
-    //asm	mov	dx, 80
-    //asm	mov	ax, [viewwidth]
-    //asm	shr	ax, 2
-    //asm	sub	dx, ax					// dx = 40-viewwidth/2
-
-    //asm	mov	bx, [viewwidth]
-    //asm	shr	bx, 3					// bl = viewwidth/8
-    //asm	mov	bh, BYTE PTR[viewheight]
-    //asm	shr	bh, 1					// half height
-
-    //asm	mov	es, [screenseg]
-    //asm	mov	di, [bufferofs]
-    //asm	mov	ax, [ceiling]
-
-    //toploop:
-    //asm	mov	cl, bl
-    //asm	rep	stosw
-    //asm	add	di, dx
-    //asm	dec	bh
-    //asm	jnz	toploop
-
-    //asm	mov	bh, BYTE PTR[viewheight]
-    //asm	shr	bh, 1					// half height
-    //asm	mov	ax, 0x1919
-
-    //bottomloop:
-    //asm	mov	cl, bl
-    //asm	rep	stosw
-    //asm	add	di, dx
-    //asm	dec	bh
-    //asm	jnz	bottomloop
 }
 
 //==========================================================================
@@ -1391,35 +1232,41 @@ int16_t	CalcRotate(objtype* ob)
     return angle / (ANGLES / 8);
 }
 
+//==========================================================================
+
 typedef struct
 {
-    byte offset;
-    byte length;
+    word ystop;
+    word dataofs;
+    word ystart;
 } linecmd_t;
 
-void DecodeSpriteLine(byte* linecmds, byte line[64])
+void DecodeSpriteLine(byte* data, linecmd_t* linecmds, byte line[64])
 {
-    linecmd_t*  command;
-    int16_t     count, i;
+    uint16_t count, i, stop, offset, start;
 
     count = 0;
-    while (1)
+    for (;;)
     {
-        command = (linecmd_t*)linecmds;
-        if (command->length == 0)
+        if (linecmds->ystop == 0)
             break;
         else
         {
-            for (i = 0; i < command->offset; ++i)
+            stop = linecmds->ystop >> 1;
+            start = linecmds->ystart >> 1;
+            offset = linecmds->dataofs + start;
+            // fill previous gap with transparent color
+            for (i = count; i < start; ++i)
                 line[count++] = 0xFF;
-            for (i = 0; i < command->length; ++i)
-                line[count++] = linecmds[sizeof(linecmd_t) + i];
+            // fill block with color data
+            for (i = start; i < stop; ++i)
+                line[count++] = data[offset++];
         }
-        linecmds += sizeof(linecmd_t) + command->length;
+        linecmds++;
     }
-
+    // fill ending gap with transparent color
     for (i = count; i < 64; ++i)
-        line[count++] = 0xFF;
+        line[i] = 0xFF;
 }
 
 /*
@@ -1435,15 +1282,13 @@ void ScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
     t_compshape *shape;
     int32_t     step, texu0, texv0, texu, texv;
     int16_t     scale, x0, x1, x, y0, y1, y, u, lastu;
-    byte        *linecmds;
+    linecmd_t   *linecmds;
     byte        spriteline[64], texel;
     uint16_t    mask, dest;
 
     shape = PM_GetSpritePage(shapenum);
 
-    scale = height >> 3;    // low three bits are fractional
-    //if (!scale || scale > maxscale)
-    //    return;				// too close or far away
+    scale = height >> 2;
     if (!scale)
         return;				// too far away
 
@@ -1459,8 +1304,8 @@ void ScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
         texu0 += step * -x0;
         x0 = 0;
     }
-    if (x1 > viewwidth - 1)
-        x1 = viewwidth - 1;
+    if (x1 > viewwidth)
+        x1 = viewwidth;
 
     // view area - clipping - y
     y0 = (viewheight - scale) >> 1;
@@ -1469,19 +1314,19 @@ void ScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
     {
         texv0 += step * (scale - viewheight) >> 1;
         y0 = 0;
-        y1 = viewheight - 1;
+        y1 = viewheight;
     }
 
     lastu = -1;
 
     texu = texu0;
-    for (x = x0; x <= x1; ++x)
+    for (x = x0; x < x1; ++x)
     {
+        u = texu >> 16;
+        texu += step;
+
         if (wallheight[x] >= height)
             continue;       // obscured by closer wall
-
-        u = texu >> 16;
-
         if (u < shape->leftpix)
             continue;       // left limit of sprite
         if (u > shape->rightpix)
@@ -1492,23 +1337,21 @@ void ScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
         {
             lastu = u;
             // decode the sprite commands into a column of texels
-            linecmds = (byte*)shape + shape->dataofs[u - shape->leftpix];
-            DecodeSpriteLine(linecmds, spriteline);
+            linecmds = (linecmd_t*)((byte*)shape + shape->dataofs[u - shape->leftpix]);
+            DecodeSpriteLine((byte*)shape, linecmds, spriteline);
         }
 
         mask = 1 << (x & 3);
         dest = bufferofs + (x >> 2) + y0 * SCREENBWIDE;
         texv = texv0;
-        for (y = y0; y <= y1; ++y)
+        for (y = y0; y < y1; ++y)
         {
             texel = spriteline[texv >> 16];
+            texv += step;
             if (texel != 0xFF)
                 VGA_Write(mask, dest, texel);
             dest += SCREENBWIDE;
-            texv += step;
         }
-
-        texu += step;
     }
 }
 
@@ -1526,13 +1369,13 @@ void SimpleScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
     t_compshape *shape;
     int32_t     step, texu, texv;
     int16_t     scale, x0, x1, x, y0, y1, y, u, lastu;
-    byte        *linecmds;
+    linecmd_t   *linecmds;
     byte        spriteline[64], texel;
     uint16_t    mask, dest;
 
     shape = PM_GetSpritePage(shapenum);
 
-    scale = height >> 1;
+    scale = height;
 
     step = (64 << 16) / scale;
 
@@ -1544,9 +1387,10 @@ void SimpleScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
     lastu = -1;
 
     texu = 0;
-    for (x = x0; x <= x1; ++x)
+    for (x = x0; x < x1; ++x)
     {
         u = texu >> 16;
+        texu += step;
 
         if (u < shape->leftpix)
             continue;       // left limit of sprite
@@ -1558,23 +1402,21 @@ void SimpleScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
         {
             lastu = u;
             // decode the sprite commands into a column of texels
-            linecmds = (byte*)shape + shape->dataofs[u - shape->leftpix];
-            DecodeSpriteLine(linecmds, spriteline);
+            linecmds = (linecmd_t*)((byte*)shape + shape->dataofs[u - shape->leftpix]);
+            DecodeSpriteLine((byte*)shape, linecmds, spriteline);
         }
 
         mask = 1 << (x & 3);
         dest = bufferofs + (x >> 2) + y0 * SCREENBWIDE;
         texv = 0;
-        for (y = y0; y <= y1; ++y)
+        for (y = y0; y < y1; ++y)
         {
             texel = spriteline[texv >> 16];
+            texv += step;
             if (texel != 0xFF)
                 VGA_Write(mask, dest, texel);
             dest += SCREENBWIDE;
-            texv += step;
         }
-
-        texu += step;
     }
 }
 
@@ -1601,10 +1443,8 @@ visobj_t	vislist[MAXVISABLE], *visptr, *visstep, *farthest;
 
 void DrawScaleds(void)
 {
-    int16_t     i, /*j,*/ least, numvisable, height;
-    //memptr      shape;
+    int16_t     i, least, numvisable, height;
     byte        *tilespot, *visspot;
-    //int16_t     shapenum;
     uint16_t    spotloc;
 
     statobj_t   *statptr;
@@ -1765,7 +1605,7 @@ void DrawPlayerWeapon(void)
 
 void CalcTics(void)
 {
-    int32_t	newtime/*, oldtimecount*/;
+    int32_t	newtime;
 
     //
     // calculate tics since last refresh for adaptive timing
@@ -1865,11 +1705,6 @@ void WallRefresh(void)
 
 void	ThreeDRefresh(void)
 {
-    //int16_t tracedir;
-
-    // this wouldn't need to be done except for my debugger/video wierdness
-    //outportb(SC_INDEX, SC_MAPMASK);
-
     //
     // clear out the traced array
     //
@@ -1906,16 +1741,7 @@ void	ThreeDRefresh(void)
     bufferofs -= screenofs;
     displayofs = bufferofs;
 
-    //asm	cli
-    //asm	mov	cx, [displayofs]
-    //asm	mov	dx, 3d4h		// CRTC address register
-    //asm	mov	al, 0ch		// start address high register
-    //asm	out	dx, al
-    //asm	inc	dx
-    //asm	mov	al, ch
-    //asm	out	dx, al   	// set the high byte
-    //asm	sti
-    VW_SetScreen(displayofs, pelpan);
+    VW_SetScreen(displayofs, 0);
 
     bufferofs += SCREENSIZE;
     if (bufferofs > PAGE3START)
