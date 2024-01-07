@@ -5,8 +5,10 @@ SDL_Window* window;
 SDL_Renderer* renderer;
 SDL_Texture* frame_texture;
 
-int width = 320;
-int height = 200;
+int src_width = 320;
+int src_height = 200;
+int dst_width = 800;
+int dst_height = 600;
 
 uint8_t keyboard_map[SDL_NUM_SCANCODES];
 
@@ -18,7 +20,11 @@ void InitKeyMap()
     keyboard_map[SDL_SCANCODE_Y] = 0x15;
     keyboard_map[SDL_SCANCODE_LCTRL] = 0x1D;
     keyboard_map[SDL_SCANCODE_RCTRL] = 0x1D;
+    keyboard_map[SDL_SCANCODE_LSHIFT] = 0x2A;
     keyboard_map[SDL_SCANCODE_N] = 0x31;
+    keyboard_map[SDL_SCANCODE_RSHIFT] = 0x36;
+    keyboard_map[SDL_SCANCODE_LALT] = 0x38;
+    keyboard_map[SDL_SCANCODE_RALT] = 0x38;
     keyboard_map[SDL_SCANCODE_SPACE] = 0x39;
     keyboard_map[SDL_SCANCODE_F1] = 0x3B;
     keyboard_map[SDL_SCANCODE_F2] = 0x3C;
@@ -51,8 +57,8 @@ void Initialize()
     window = SDL_CreateWindow("Wolf3D",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
-        width,
-        height,
+        dst_width,
+        dst_height,
         SDL_WINDOW_SHOWN
         //SDL_WINDOW_FULLSCREEN_DESKTOP
         //SDL_WINDOW_FULLSCREEN
@@ -65,6 +71,7 @@ void Initialize()
         -1,
         0
         //SDL_RENDERER_PRESENTVSYNC
+        //SDL_RENDERER_ACCELERATED
     );
     if (renderer == 0)
         exit(1); // renderer init fail
@@ -72,10 +79,12 @@ void Initialize()
     frame_texture = SDL_CreateTexture(renderer,
         SDL_PIXELFORMAT_ARGB8888,
         SDL_TEXTUREACCESS_STREAMING,
-        width,
-        height);
+        src_width,
+        src_height);
     if (frame_texture == 0)
         exit(1);
+
+    SDL_SetTextureScaleMode(frame_texture, SDL_ScaleModeLinear);
 
     void* pixels;
     int pitch;
