@@ -64,10 +64,11 @@ void VH_UpdateScreen(void)
 
 void VW_DrawPropString(char* string)
 {
-    fontstruct* font;
+    fontstruct *font;
     int16_t width, step, height, count;
-    byte* source, * loopsource;
-    int16_t dest, origdest, loopdest, vgaplane;
+    byte *source, *loopsource;
+    int16_t dest, origdest;
+    int32_t loopdest, vgaplane;
     byte ch;
 
     font = (fontstruct*)grsegs[STARTFONT + fontnumber];
@@ -111,10 +112,11 @@ void VW_DrawPropString(char* string)
 
 void VW_DrawColorPropString(char* string)
 {
-    fontstruct* font;
+    fontstruct *font;
     int16_t width, step, height, count;
-    byte* source, * loopsource;
-    int16_t dest, origdest, loopdest, vgaplane;
+    byte *source, *loopsource;
+    int16_t dest, origdest;
+    int32_t loopdest, vgaplane;
     byte ch, color;
 
     font = (fontstruct*)grsegs[STARTFONT + fontnumber];
@@ -473,8 +475,7 @@ boolean FizzleFade(uint16_t source, uint16_t dest,
     uint16_t width, uint16_t height, uint16_t frames, boolean abortable)
 {
     int16_t pixperframe;
-    uint16_t drawofs, pagedelta;
-    uint16_t vgaplane;
+    int32_t drawofs, pagedelta, vgaplane;
     uint16_t x, y, p, frame;
     int32_t rndval;
 
@@ -491,8 +492,6 @@ boolean FizzleFade(uint16_t source, uint16_t dest,
     {
         if (abortable && IN_CheckAck())
             return true;
-
-        //asm mov es, [screenseg]
 
         for (p = 0; p < pixperframe; p++)
         {
@@ -525,9 +524,13 @@ boolean FizzleFade(uint16_t source, uint16_t dest,
                 screenseg[drawofs + vgaplane * VGA_PLANE_SIZE];
 
             if (rndval == 1)  // entire sequence has been completed
+            {
+                VL_Refresh();
                 return false;
+            }
         }
         frame++;
+        VL_Refresh();
         while (TimeCount_Get() < frame)  // don't go too fast
             ;
     } while (1);
