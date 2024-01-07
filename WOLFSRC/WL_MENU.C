@@ -1893,7 +1893,8 @@ void MouseSensitivity(int16_t unused)
                 VWB_Bar(61 + 20 * mouseadjustment, 98, 19, 9, READHCOLOR);
                 VW_UpdateScreen();
                 SD_PlaySound(MOVEGUN1SND);
-                while (Keyboard[sc_LeftArrow]);
+                while (Keyboard[sc_LeftArrow])
+                    Keyboard_Update();
                 WaitKeyUp();
             }
             break;
@@ -1909,7 +1910,8 @@ void MouseSensitivity(int16_t unused)
                 VWB_Bar(61 + 20 * mouseadjustment, 98, 19, 9, READHCOLOR);
                 VW_UpdateScreen();
                 SD_PlaySound(MOVEGUN1SND);
-                while (Keyboard[sc_RightArrow]);
+                while (Keyboard[sc_RightArrow])
+                    Keyboard_Update();
                 WaitKeyUp();
             }
             break;
@@ -2214,7 +2216,7 @@ void EnterCtrlData(int16_t index, CustomCtrls* cust, void (*DrawRtn)(int16_t), v
                 switch (type)
                 {
                 case MOUSE:
-                    button = INL_GetMouseButtons();
+                    button = Mouse_GetButtons();
                     switch (button)
                     {
                     case 1: result = 1; break;
@@ -2735,8 +2737,6 @@ void CP_ChangeView(int16_t unused)
 
     do
     {
-        Keyboard_Update();
-
         CheckPause();
         ReadAnyControl(&ci);
         switch (ci.dir)
@@ -3150,8 +3150,6 @@ int16_t HandleMenu(CP_iteminfo* item_i, CP_itemtype* items, void (*routine)(int1
                 routine(which);
             VW_UpdateScreen();
         }
-
-        Keyboard_Update();
 
         CheckPause();
 

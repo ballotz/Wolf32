@@ -377,7 +377,7 @@ void PollMouseMove(void)
 {
     int16_t	mousexmove, mouseymove;
 
-    INL_GetMouseDelta(&mousexmove, &mouseymove);
+    Mouse_GetDelta(&mousexmove, &mouseymove);
 
     controlx += mousexmove * 10 / (13 - mouseadjustment);
     controly += mouseymove * 20 / (13 - mouseadjustment);
@@ -509,6 +509,7 @@ void PollControls(void)
         return;
     }
 
+    Keyboard_Update();
 
     //
     // get button states

@@ -34,17 +34,17 @@ void Keyboard_Update();
 //------------------------------------------------------------------------------
 
 // Gets the amount that the mouse has moved
-void INL_GetMouseDelta(int16_t* dx, int16_t* dy);
+void Mouse_GetDelta(int16_t* dx, int16_t* dy);
 
 // Reset the amount that the mouse has moved
 void Mouse_ResetDelta();
 
 // Gets the status of the mouse buttons
-uint16_t INL_GetMouseButtons(void);
+uint16_t Mouse_GetButtons(void);
 
 // 0, no mouse
 // 1, mouse available
-uint8_t IN_HasMouse();
+uint8_t Mouse_Detect();
 
 void Mouse_SetPos(int16_t x, int16_t y);
 

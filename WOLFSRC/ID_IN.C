@@ -299,7 +299,7 @@ INL_ShutKbd(void)
 static boolean
 INL_StartMouse(void)
 {
-    return IN_HasMouse();
+    return Mouse_Detect();
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -530,6 +530,8 @@ IN_ReadControl(int16_t player, ControlInfo* info)
         switch (type = Controls[player])
         {
         case ctrl_Keyboard:
+            Keyboard_Update();
+
             def = &KbdDefs;
 
             if (Keyboard[def->upleft])
@@ -564,8 +566,8 @@ IN_ReadControl(int16_t player, ControlInfo* info)
             realdelta = true;
             break;
         case ctrl_Mouse:
-            INL_GetMouseDelta(&dx, &dy);
-            buttons = INL_GetMouseButtons();
+            Mouse_GetDelta(&dx, &dy);
+            buttons = Mouse_GetButtons();
             realdelta = true;
             break;
         }
@@ -764,7 +766,7 @@ boolean IN_UserInput(longword delay)
 byte	IN_MouseButtons(void)
 {
     if (MousePresent)
-        return (byte)INL_GetMouseButtons();
+        return (byte)Mouse_GetButtons();
     else
         return 0;
 }

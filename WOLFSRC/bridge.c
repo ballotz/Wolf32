@@ -227,7 +227,7 @@ void Keyboard_Update()
 // Mouse
 //------------------------------------------------------------------------------
 
-void INL_GetMouseDelta(int16_t* dx, int16_t* dy)
+void Mouse_GetDelta(int16_t* dx, int16_t* dy)
 {
     int mx, my;
     SDL_GetMouseState(&mx, &my);
@@ -241,18 +241,17 @@ void Mouse_ResetDelta()
     SDL_WarpMouseInWindow(window, dst_width / 2, dst_height / 2);
 }
 
-uint16_t INL_GetMouseButtons(void)
+uint16_t Mouse_GetButtons(void)
 {
     int mx, my;
     Uint32 buttons = SDL_GetMouseState(&mx, &my);
-    SDL_BUTTON(1);
 
     return
-        (1 << 0) & ~(((buttons & SDL_BUTTON_LEFT) != 0) - 1) +
-        (1 << 1) & ~(((buttons & SDL_BUTTON_RIGHT) != 0) - 1);
+        ((1 << 0) & ~(((buttons & SDL_BUTTON_LMASK) != 0) - 1)) +
+        ((1 << 1) & ~(((buttons & SDL_BUTTON_RMASK) != 0) - 1));
 }
 
-uint8_t IN_HasMouse()
+uint8_t Mouse_Detect()
 {
     return 1;
 }

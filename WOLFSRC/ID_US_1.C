@@ -660,17 +660,12 @@ US_LineInput(int16_t x, int16_t y, char* buf, char* def, boolean escok,
         if (cursorvis)
             USL_XORICursor(x, y, s, cursor);
 
-        //asm	pushf
-        //asm	cli
-
         Keyboard_Update();
 
         sc = LastScan;
         LastScan = sc_None;
         c = LastASCII;
         LastASCII = key_None;
-
-        //asm	popf
 
         switch (sc)
         {
