@@ -94,7 +94,7 @@ void Initialize()
     //SDL_SetRelativeMouseMode(SDL_TRUE);
     //SDL_GetRelativeMouseState(0, 0); // flush first
 
-    //SDL_ShowCursor(SDL_DISABLE);
+    SDL_ShowCursor(SDL_DISABLE);
 
     InitKeyMap();
 
@@ -103,7 +103,7 @@ void Initialize()
 
 void Deinitialize()
 {
-    //SDL_ShowCursor(SDL_ENABLE);
+    SDL_ShowCursor(SDL_ENABLE);
 
     // clean up SDL
     SDL_DestroyWindow(window);
@@ -229,32 +229,48 @@ void Keyboard_Update()
 
 void INL_GetMouseDelta(int16_t* dx, int16_t* dy)
 {
-
+    int mx, my;
+    SDL_GetMouseState(&mx, &my);
+    SDL_WarpMouseInWindow(window, dst_width / 2, dst_height / 2);
+    *dx = mx - dst_width / 2;
+    *dy = my - dst_height / 2;
 }
 
 void Mouse_ResetDelta()
 {
-
+    SDL_WarpMouseInWindow(window, dst_width / 2, dst_height / 2);
 }
 
 uint16_t INL_GetMouseButtons(void)
 {
+    int mx, my;
+    Uint32 buttons = SDL_GetMouseState(&mx, &my);
+    SDL_BUTTON(1);
 
+    return
+        (1 << 0) & ~(((buttons & SDL_BUTTON_LEFT) != 0) - 1) +
+        (1 << 1) & ~(((buttons & SDL_BUTTON_RIGHT) != 0) - 1);
 }
 
 uint8_t IN_HasMouse()
 {
-    return 0;
+    return 1;
 }
 
 void Mouse_SetPos(int16_t x, int16_t y)
 {
-
+    SDL_WarpMouseInWindow(
+        window,
+        (int)((float)x / 240 * dst_width),
+        (int)((float)y / 240 * dst_height));
 }
 
 void Mouse_GetPos(int16_t* x, int16_t* y)
 {
-
+    int mx, my;
+    SDL_GetMouseState(&mx, &my);
+    *x = (int16_t)((float)mx / dst_width * 240);
+    *y = (int16_t)((float)my / dst_height * 240);
 }
 
 //------------------------------------------------------------------------------
@@ -263,12 +279,13 @@ void Mouse_GetPos(int16_t* x, int16_t* y)
 
 void IN_GetJoyAbs(uint16_t joy, uint16_t* xp, uint16_t* yp)
 {
-
+    *xp = 0;
+    *yp = 0;
 }
 
 uint16_t INL_GetJoyButtons(uint16_t joy)
 {
-
+    return 0;   
 }
 
 //------------------------------------------------------------------------------
@@ -277,7 +294,7 @@ uint16_t INL_GetJoyButtons(uint16_t joy)
 
 int16_t VR_GetAngle()
 {
-
+    return 0;
 }
 
 //------------------------------------------------------------------------------
@@ -343,7 +360,7 @@ void AdLib_StopSound()
 
 uint8_t AdLib_SoundPlaying()
 {
-
+    return 0;
 }
 
 //------------------------------------------------------------------------------
