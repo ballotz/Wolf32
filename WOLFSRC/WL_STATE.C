@@ -80,6 +80,8 @@ boolean	CheckSight (objtype *ob);
 
 void SpawnNewObj (uint16_t tilex, uint16_t tiley, statetype *state)
 {
+    int16_t actorindex;
+
 	GetNewActor ();
 	new->state = state;
 	if (state->tictime)
@@ -93,7 +95,11 @@ void SpawnNewObj (uint16_t tilex, uint16_t tiley, statetype *state)
 	new->y = ((int32_t)tiley<<TILESHIFT)+TILEGLOBAL/2;
 	new->dir = nodir;
 
-	actorat[tilex][tiley] = new;
+    actorindex = new - objlist;
+    if (actorindex < 0 || actorindex >= MAXACTORS)
+        Quit("SpawnNewObj: Bad actor index");
+
+	actorat[tilex][tiley] = ACTORID(actorindex);
 	new->areanumber =
 		*(mapsegs[0] + farmapylookup[new->tiley]+new->tilex) - AREATILE;
 }
@@ -153,26 +159,26 @@ void NewState (objtype *ob, statetype *state)
 
 #define CHECKDIAG(x,y)								\
 {                                                   \
-	temp=(uint16_t)actorat[x][y];                   \
+	temp=actorat[x][y];                             \
 	if (temp)                                       \
 	{                                               \
 		if (temp<256)                               \
 			return false;                           \
-		if (((objtype *)temp)->flags&FL_SHOOTABLE)  \
+		if (GETACTOR(temp).flags&FL_SHOOTABLE)      \
 			return false;                           \
 	}                                               \
 }
 
 #define CHECKSIDE(x,y)								\
 {                                                   \
-	temp=(uint16_t)actorat[x][y];                   \
+	temp=actorat[x][y];                             \
 	if (temp)                                       \
 	{                                               \
 		if (temp<128)                               \
 			return false;                           \
 		if (temp<256)                               \
 			doornum = temp&63;                      \
-		else if (((objtype *)temp)->flags&FL_SHOOTABLE)\
+		else if (GETACTOR(temp).flags&FL_SHOOTABLE) \
 			return false;                           \
 	}                                               \
 }
@@ -942,7 +948,7 @@ void KillActor (objtype *ob)
 
 	gamestate.killcount++;
 	ob->flags &= ~FL_SHOOTABLE;
-	actorat[ob->tilex][ob->tiley] = NULL;
+	actorat[ob->tilex][ob->tiley] = 0;
 	ob->flags |= FL_NONMARK;
 }
 

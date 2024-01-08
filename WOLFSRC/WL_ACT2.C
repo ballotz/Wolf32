@@ -266,7 +266,7 @@ void A_Smoke (objtype *ob)
 boolean ProjectileTryMove (objtype *ob)
 {
 	int16_t		xl,yl,xh,yh,x,y;
-	objtype		*check;
+	uint16_t	check;
 
 	xl = (ob->x-PROJSIZE) >>TILESHIFT;
 	yl = (ob->y-PROJSIZE) >>TILESHIFT;
@@ -281,7 +281,7 @@ boolean ProjectileTryMove (objtype *ob)
 		for (x=xl;x<=xh;x++)
 		{
 			check = actorat[x][y];
-			if (check && check<objlist)
+			if (check && check<256)
 				return false;
 		}
 
@@ -977,6 +977,8 @@ void SpawnGretel (int16_t tilex, int16_t tiley)
 
 void SpawnPatrol (enemy_t which, int16_t tilex, int16_t tiley, int16_t dir)
 {
+    int16_t actorindex;
+
 	switch (which)
 	{
 	case en_guard:
@@ -1022,7 +1024,7 @@ void SpawnPatrol (enemy_t which, int16_t tilex, int16_t tiley, int16_t dir)
 	new->flags |= FL_SHOOTABLE;
 	new->active = true;
 
-	actorat[new->tilex][new->tiley] = NULL;		// don't use original spot
+	actorat[new->tilex][new->tiley] = 0;		// don't use original spot
 
 	switch (dir)
 	{
@@ -1040,7 +1042,11 @@ void SpawnPatrol (enemy_t which, int16_t tilex, int16_t tiley, int16_t dir)
 		break;
 	}
 
-	actorat[new->tilex][new->tiley] = new;
+    actorindex = new - objlist;
+    if (actorindex < 0 || actorindex >= MAXACTORS)
+        Quit("SpawnPatrol: Bad actor index");
+
+    actorat[new->tilex][new->tiley] = ACTORID(actorindex);
 }
 
 
@@ -3704,7 +3710,7 @@ void T_BJDone (objtype *ob)
 boolean	CheckPosition (objtype *ob)
 {
 	int16_t	x,y,xl,yl,xh,yh;
-	objtype *check;
+	uint16_t check;
 
 	xl = (ob->x-PLAYERSIZE) >>TILESHIFT;
 	yl = (ob->y-PLAYERSIZE) >>TILESHIFT;
@@ -3719,7 +3725,7 @@ boolean	CheckPosition (objtype *ob)
 		for (x=xl;x<=xh;x++)
 		{
 			check = actorat[x][y];
-			if (check && check<objlist)
+			if (check && check<256)
 				return false;
 		}
 

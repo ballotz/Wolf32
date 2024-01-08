@@ -603,10 +603,10 @@ typedef enum {
 typedef struct	statestruct
 {
     boolean	rotate;
-    int16_t		shapenum;			// a shapenum of -1 means get from ob->temp1
-    int16_t		tictime;
-    void	(*think) (), (*action) ();
-    struct	statestruct* next;
+    int16_t	shapenum;			// a shapenum of -1 means get from ob->temp1
+    int16_t	tictime;
+    void	(*think) (memptr), (*action) (memptr);
+    struct	statestruct *next;
 } statetype;
 
 
@@ -700,7 +700,7 @@ typedef enum {
 } weapontype;
 
 
-typedef enum {
+enum {
     gd_baby,
     gd_easy,
     gd_medium,
@@ -880,7 +880,10 @@ extern	byte        *nearmapylookup[MAPSIZE];
 
 extern	byte		tilemap[MAPSIZE][MAPSIZE];	// wall values only
 extern	byte		spotvis[MAPSIZE][MAPSIZE];
-extern	objtype     *actorat[MAPSIZE][MAPSIZE];
+extern	uint16_t	actorat[MAPSIZE][MAPSIZE];
+#define ISACTOR(x)  (x>=256)
+#define GETACTOR(x) objlist[x-256]
+#define ACTORID(x)  (x+256)
 
 #define UPDATESIZE	(UPDATEWIDE*UPDATEHIGH)
 extern	byte		update[UPDATESIZE];
@@ -1265,6 +1268,9 @@ void SpawnGift(int16_t tilex, int16_t tiley);
 void SpawnFat(int16_t tilex, int16_t tiley);
 void SpawnFakeHitler(int16_t tilex, int16_t tiley);
 void SpawnHitler(int16_t tilex, int16_t tiley);
+void SpawnBJVictory(void);
+
+void A_DeathScream(objtype* ob);
 
 /*
 =============================================================================

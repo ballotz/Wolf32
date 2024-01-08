@@ -39,7 +39,7 @@ int16_t     extravbls;
 
 byte        tilemap[MAPSIZE][MAPSIZE];	// wall values only
 byte        spotvis[MAPSIZE][MAPSIZE];
-objtype*    actorat[MAPSIZE][MAPSIZE];
+uint16_t    actorat[MAPSIZE][MAPSIZE];
 
 //
 // replacing refresh manager
@@ -1254,14 +1254,14 @@ void FinishPaletteShifts(void)
 
 void DoActor(objtype* ob)
 {
-    //void (*think)(objtype*);
-    void (*think)();
+    void (*think)(objtype*);
+    int16_t actorindex;
 
     if (!ob->active && !areabyplayer[ob->areanumber])
         return;
 
     if (!(ob->flags & (FL_NONMARK | FL_NEVERMARK)))
-        actorat[ob->tilex][ob->tiley] = NULL;
+        actorat[ob->tilex][ob->tiley] = 0;
 
     //
     // non transitional object
@@ -1286,7 +1286,11 @@ void DoActor(objtype* ob)
         if ((ob->flags & FL_NONMARK) && actorat[ob->tilex][ob->tiley])
             return;
 
-        actorat[ob->tilex][ob->tiley] = ob;
+        actorindex = ob - objlist;
+        if (actorindex < 0 || actorindex >= MAXACTORS)
+            Quit("DoActor: Bad actor index");
+
+        actorat[ob->tilex][ob->tiley] = ACTORID(actorindex);
         return;
     }
 
@@ -1345,7 +1349,11 @@ think:
     if ((ob->flags & FL_NONMARK) && actorat[ob->tilex][ob->tiley])
         return;
 
-    actorat[ob->tilex][ob->tiley] = ob;
+    actorindex = ob - objlist;
+    if (actorindex < 0 || actorindex >= MAXACTORS)
+        Quit("DoActor: Bad actor index");
+
+    actorat[ob->tilex][ob->tiley] = ACTORID(actorindex);
 }
 
 //==========================================================================

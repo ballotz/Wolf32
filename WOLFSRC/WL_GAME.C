@@ -71,7 +71,7 @@ void GameLoop(void);
 */
 
 fixed	globalsoundx, globalsoundy;
-int16_t		leftchannel, rightchannel;
+int16_t	leftchannel, rightchannel;
 #define ATABLEMAX 15
 byte righttable[ATABLEMAX][ATABLEMAX * 2] = {
 { 8, 8, 8, 8, 8, 8, 8, 7, 7, 7, 7, 7, 7, 6, 0, 0, 0, 0, 0, 1, 3, 5, 8, 8, 8, 8, 8, 8, 8, 8},
@@ -670,13 +670,13 @@ void SetupGameLevel(void)
             {
                 // solid wall
                 tilemap[x][y] = (byte)tile;
-                (uint16_t)actorat[x][y] = tile;
+                actorat[x][y] = tile;
             }
             else
             {
                 // area floor
                 tilemap[x][y] = 0;
-                (uint16_t)actorat[x][y] = 0;
+                actorat[x][y] = 0;
             }
         }
 
@@ -733,8 +733,8 @@ void SetupGameLevel(void)
             if (tile == AMBUSHTILE)
             {
                 tilemap[x][y] = 0;
-                if ((uint16_t)actorat[x][y] == AMBUSHTILE)
-                    actorat[x][y] = NULL;
+                if (actorat[x][y] == AMBUSHTILE)
+                    actorat[x][y] = 0;
 
                 if (*map >= AREATILE)
                     tile = *map;

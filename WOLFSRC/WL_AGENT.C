@@ -799,8 +799,8 @@ void GetBonus (statobj_t *check)
 
 boolean TryMove (objtype *ob)
 {
-	int16_t			xl,yl,xh,yh,x,y;
-	objtype		*check;
+	int16_t		xl,yl,xh,yh,x,y;
+	uint16_t	check;
 	int32_t		deltax,deltay;
 
 	xl = (ob->x-PLAYERSIZE) >>TILESHIFT;
@@ -816,7 +816,7 @@ boolean TryMove (objtype *ob)
 		for (x=xl;x<=xh;x++)
 		{
 			check = actorat[x][y];
-			if (check && check<objlist)
+			if (check && check<256)
 				return false;
 		}
 
@@ -836,13 +836,13 @@ boolean TryMove (objtype *ob)
 		for (x=xl;x<=xh;x++)
 		{
 			check = actorat[x][y];
-			if (check > objlist
-			&& (check->flags & FL_SHOOTABLE) )
+			if (ISACTOR(check)
+			&& (GETACTOR(check).flags & FL_SHOOTABLE) )
 			{
-				deltax = ob->x - check->x;
+				deltax = ob->x - GETACTOR(check).x;
 				if (deltax < -MINACTORDIST || deltax > MINACTORDIST)
 					continue;
-				deltay = ob->y - check->y;
+				deltay = ob->y - GETACTOR(check).y;
 				if (deltay < -MINACTORDIST || deltay > MINACTORDIST)
 					continue;
 
