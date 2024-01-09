@@ -1016,7 +1016,6 @@ extern	uint16_t	pwallpos;
 fixed	    FixedByFrac(fixed a, fixed b);
 void	    TransformActor(objtype* ob);
 void	    BuildTables(void);
-void	    ClearScreen(void);
 int16_t		CalcRotate(objtype* ob);
 void	    DrawScaleds(void);
 void	    CalcTics(void);

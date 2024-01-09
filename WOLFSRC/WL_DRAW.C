@@ -65,7 +65,6 @@ fixed       viewsin, viewcos;
 fixed       FixedByFrac(fixed a, fixed b);
 void        TransformActor(objtype* ob);
 void        BuildTables(void);
-void        ClearScreen(void);
 int16_t     CalcRotate(objtype* ob);
 void        DrawScaleds(void);
 void        CalcTics(void);
@@ -491,11 +490,6 @@ void TransformActor(objtype* ob)
     //
     // calculate height (heightnumerator/(nx>>8))
     //
-    //asm	mov	ax, [WORD PTR heightnumerator]
-    //asm	mov	dx, [WORD PTR heightnumerator + 2]
-    //asm	idiv[WORD PTR nx + 1]			// nx>>8
-    //asm	mov[WORD PTR temp], ax
-    //asm	mov[WORD PTR temp + 2], dx
     temp = heightnumerator / (nx >> 8);
 
     ob->viewheight = temp;
@@ -564,11 +558,6 @@ boolean TransformTile(int16_t tx, int16_t ty, int16_t* dispx, int16_t* dispheigh
     //
     // calculate height (heightnumerator/(nx>>8))
     //
-    //asm	mov	ax, [WORD PTR heightnumerator]
-    //asm	mov	dx, [WORD PTR heightnumerator + 2]
-    //asm	idiv[WORD PTR nx + 1]			// nx>>8
-    //asm	mov[WORD PTR temp], ax
-    //asm	mov[WORD PTR temp + 2], dx
     temp = heightnumerator / (nx >> 8);
 
     *dispheight = temp;
@@ -615,9 +604,6 @@ int16_t	CalcHeight(void)
     if (nx < mindist)
         nx = mindist;			// don't let divide overflow
 
-    //asm	mov	ax, [WORD PTR heightnumerator]
-    //asm	mov	dx, [WORD PTR heightnumerator + 2]
-    //asm	idiv[WORD PTR nx + 1]			// nx>>8
     return heightnumerator / (nx >> 8);
 }
 
@@ -1243,29 +1229,29 @@ typedef struct
 
 void DecodeSpriteLine(byte* data, linecmd_t* linecmds, byte line[64])
 {
-    uint16_t count, i, stop, offset, start;
+    uint16_t i, stop, offset, start;
 
-    count = 0;
+    stop = 0;
     for (;;)
     {
         if (linecmds->ystop == 0)
             break;
         else
         {
-            stop = linecmds->ystop >> 1;
             start = linecmds->ystart >> 1;
-            offset = linecmds->dataofs + start;
             // fill previous gap with transparent color
-            for (i = count; i < start; ++i)
-                line[count++] = 0xFF;
+            for (i = stop; i < start; ++i)
+                line[i] = 0xFF;
+            offset = linecmds->dataofs + start;
+            stop = linecmds->ystop >> 1;
             // fill block with color data
             for (i = start; i < stop; ++i)
-                line[count++] = data[offset++];
+                line[i] = data[offset++];
         }
         linecmds++;
     }
     // fill ending gap with transparent color
-    for (i = count; i < 64; ++i)
+    for (i = stop; i < 64; ++i)
         line[i] = 0xFF;
 }
 
@@ -1332,7 +1318,7 @@ void ScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
         if (u > shape->rightpix)
             continue;       // right limit of sprite
 
-        // do in only once for column
+        // do it only once for column
         if (lastu != u)
         {
             lastu = u;
@@ -1397,7 +1383,7 @@ void SimpleScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height)
         if (u > shape->rightpix)
             continue;       // right limit of sprite
 
-        // do in only once for column
+        // do it only once for column
         if (lastu != u)
         {
             lastu = u;
@@ -1735,7 +1721,6 @@ void	ThreeDRefresh(void)
 
         TimeCount_Set(0);		// don't make a big tic count
         lasttimecount = 0;
-
     }
 
     bufferofs -= screenofs;
