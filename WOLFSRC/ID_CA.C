@@ -60,7 +60,7 @@ void* grsegs[NUMCHUNKS];
 byte grneeded[NUMCHUNKS];
 byte ca_levelbit, ca_levelnum;
 
-int16_t profilehandle, debughandle;
+FileSystemHandle profilehandle, debughandle;
 
 char audioname[13] = "AUDIO.";
 
@@ -109,9 +109,9 @@ huffnode audiohuffman[255];
 #endif
 
 
-int16_t grhandle;       // handle to EGAGRAPH
-int16_t maphandle;      // handle to MAPTEMP / GAMEMAPS
-int16_t audiohandle;    // handle to AUDIOT / AUDIO
+FileSystemHandle grhandle;       // handle to EGAGRAPH
+FileSystemHandle maphandle;      // handle to MAPTEMP / GAMEMAPS
+FileSystemHandle audiohandle;    // handle to AUDIOT / AUDIO
 
 int32_t chunkcomplen, chunkexplen;
 
@@ -167,13 +167,13 @@ int32_t GRFILEPOS(int16_t c)
 
 void CA_OpenDebug(void)
 {
-    unlink("DEBUG.TXT");
-    debughandle = open("DEBUG.TXT", O_CREAT | O_WRONLY | O_TEXT);
+    FileSystem_Remove("DEBUG.TXT");
+    debughandle = FileSystem_Open("DEBUG.TXT", FileSystemCreate | FileSystemWrite | FileSystemText);
 }
 
 void CA_CloseDebug(void)
 {
-    close(debughandle);
+    FileSystem_Close(debughandle);
 }
 
 
@@ -191,8 +191,8 @@ void CA_CloseDebug(void)
 
 void CAL_GetGrChunkLength(int16_t chunk)
 {
-    lseek(grhandle, GRFILEPOS(chunk), SEEK_SET);
-    read(grhandle, &chunkexplen, sizeof(chunkexplen));
+    FileSystem_Seek(grhandle, GRFILEPOS(chunk));
+    FileSystem_Read(grhandle, &chunkexplen, sizeof(chunkexplen));
     chunkcomplen = GRFILEPOS(chunk + 1) - GRFILEPOS(chunk) - 4;
 }
 
@@ -207,9 +207,9 @@ void CAL_GetGrChunkLength(int16_t chunk)
 ==========================
 */
 
-boolean CA_FarRead(int16_t handle, byte* dest, int32_t length)
+boolean CA_FarRead(FileSystemHandle handle, byte* dest, int32_t length)
 {
-    if (read(handle, dest, length) != length)
+    if (FileSystem_Read(handle, dest, length) != length)
         return false;
 
     return true;
@@ -226,9 +226,9 @@ boolean CA_FarRead(int16_t handle, byte* dest, int32_t length)
 ==========================
 */
 
-boolean CA_FarWrite(int16_t handle, byte* source, int32_t length)
+boolean CA_FarWrite(FileSystemHandle handle, byte* source, int32_t length)
 {
-    if (write(handle, source, length) != length)
+    if (FileSystem_Write(handle, source, length) != length)
         return false;
 
     return true;
@@ -247,19 +247,19 @@ boolean CA_FarWrite(int16_t handle, byte* source, int32_t length)
 
 boolean CA_ReadFile(char* filename, memptr* ptr)
 {
-    int16_t handle;
+    FileSystemHandle handle;
     int32_t size;
 
-    if ((handle = open(filename, O_RDONLY | O_BINARY, S_IREAD)) == -1)
+    if (FileSystem_ValidHandle(handle = FileSystem_Open(filename, FileSystemRead | FileSystemBinary)) == false)
         return false;
 
-    size = filelength(handle);
+    size = FileSystem_FileLength(handle);
     if (!CA_FarRead(handle, *ptr, size))
     {
-        close(handle);
+        FileSystem_Close(handle);
         return false;
     }
-    close(handle);
+    FileSystem_Close(handle);
     return true;
 }
 
@@ -276,20 +276,19 @@ boolean CA_ReadFile(char* filename, memptr* ptr)
 
 boolean CA_WriteFile(char* filename, void* ptr, int32_t length)
 {
-    int16_t handle;
+    FileSystemHandle handle;
 
-    handle = open(filename, O_CREAT | O_BINARY | O_WRONLY,
-        S_IREAD | S_IWRITE | S_IFREG);
+    handle = FileSystem_Open(filename, FileSystemCreate | FileSystemBinary | FileSystemWrite);
 
-    if (handle == -1)
+    if (FileSystem_ValidHandle(handle) == false)
         return false;
 
     if (!CA_FarWrite(handle, ptr, length))
     {
-        close(handle);
+        FileSystem_Close(handle);
         return false;
     }
-    close(handle);
+    FileSystem_Close(handle);
     return true;
 }
 
@@ -307,20 +306,20 @@ boolean CA_WriteFile(char* filename, void* ptr, int32_t length)
 
 boolean CA_LoadFile(char* filename, memptr* ptr)
 {
-    int16_t handle;
+    FileSystemHandle handle;
     int32_t size;
 
-    if ((handle = open(filename, O_RDONLY | O_BINARY, S_IREAD)) == -1)
+    if (FileSystem_ValidHandle(handle = FileSystem_Open(filename, FileSystemRead | FileSystemBinary)) == false)
         return false;
 
-    size = filelength(handle);
+    size = FileSystem_FileLength(handle);
     MM_GetPtr(ptr, size);
     if (!CA_FarRead(handle, *ptr, size))
     {
-        close(handle);
+        FileSystem_Close(handle);
         return false;
     }
-    close(handle);
+    FileSystem_Close(handle);
     return true;
 }
 
@@ -599,7 +598,7 @@ void CA_RLEWexpand(uint16_t* source, uint16_t* dest, int32_t length,
 void CAL_SetupGrFile(void)
 {
     char fname[13];
-    int16_t handle;
+    FileSystemHandle handle;
     memptr compseg;
 
 #ifdef GRHEADERLINKED
@@ -616,12 +615,12 @@ void CAL_SetupGrFile(void)
     strcpy(fname, gdictname);
     strcat(fname, extension);
 
-    if ((handle = open(fname,
-        O_RDONLY | O_BINARY, S_IREAD)) == -1)
+    if (FileSystem_ValidHandle(handle = FileSystem_Open(fname,
+        FileSystemRead | FileSystemBinary)) == false)
         CA_CannotOpen(fname);
 
-    read(handle, &grhuffman, sizeof(grhuffman));
-    close(handle);
+    FileSystem_Read(handle, &grhuffman, sizeof(grhuffman));
+    FileSystem_Close(handle);
     //
     // load the data offsets from ???head.ext
     //
@@ -630,13 +629,13 @@ void CAL_SetupGrFile(void)
     strcpy(fname, gheadname);
     strcat(fname, extension);
 
-    if ((handle = open(fname,
-        O_RDONLY | O_BINARY, S_IREAD)) == -1)
+    if (FileSystem_ValidHandle(handle = FileSystem_Open(fname,
+        FileSystemRead | FileSystemBinary)) == false)
         CA_CannotOpen(fname);
 
     CA_FarRead(handle, (memptr)grstarts, (NUMCHUNKS + 1) * FILEPOSSIZE);
 
-    close(handle);
+    FileSystem_Close(handle);
 
 
 #endif
@@ -647,8 +646,8 @@ void CAL_SetupGrFile(void)
     strcpy(fname, gfilename);
     strcat(fname, extension);
 
-    grhandle = open(fname, O_RDONLY | O_BINARY);
-    if (grhandle == -1)
+    grhandle = FileSystem_Open(fname, FileSystemRead | FileSystemBinary);
+    if (FileSystem_ValidHandle(grhandle) == false)
         CA_CannotOpen(fname);
 
 
@@ -677,7 +676,7 @@ void CAL_SetupGrFile(void)
 void CAL_SetupMapFile(void)
 {
     int16_t i;
-    int16_t handle;
+    FileSystemHandle handle;
     int32_t length, pos;
     char fname[13];
 
@@ -688,14 +687,14 @@ void CAL_SetupMapFile(void)
     strcpy(fname, mheadname);
     strcat(fname, extension);
 
-    if ((handle = open(fname,
-        O_RDONLY | O_BINARY, S_IREAD)) == -1)
+    if (FileSystem_ValidHandle(handle = FileSystem_Open(fname,
+        FileSystemRead | FileSystemBinary)) == false)
         CA_CannotOpen(fname);
 
-    length = filelength(handle);
+    length = FileSystem_FileLength(handle);
     MM_GetPtr(&(memptr)tinf, length);
     CA_FarRead(handle, tinf, length);
-    close(handle);
+    FileSystem_Close(handle);
 #else
 
     tinf = (byte _seg*)FP_SEG(&maphead);
@@ -709,8 +708,8 @@ void CAL_SetupMapFile(void)
     strcpy(fname, "GAMEMAPS.");
     strcat(fname, extension);
 
-    if ((maphandle = open(fname,
-        O_RDONLY | O_BINARY, S_IREAD)) == -1)
+    if (FileSystem_ValidHandle(maphandle = FileSystem_Open(fname,
+        FileSystemRead | FileSystemBinary)) == false)
         CA_CannotOpen(fname);
 #else
     strcpy(fname, mfilename);
@@ -732,7 +731,7 @@ void CAL_SetupMapFile(void)
 
         MM_GetPtr(&(memptr)mapheaderseg[i], sizeof(maptype));
         MM_SetLock(&(memptr)mapheaderseg[i], true);
-        lseek(maphandle, pos, SEEK_SET);
+        FileSystem_Seek(maphandle, pos);
         CA_FarRead(maphandle, (memptr)mapheaderseg[i], sizeof(maptype));
     }
 
@@ -760,7 +759,7 @@ void CAL_SetupMapFile(void)
 
 void CAL_SetupAudioFile(void)
 {
-    int16_t handle;
+    FileSystemHandle handle;
     int32_t length;
     char fname[13];
 
@@ -771,14 +770,14 @@ void CAL_SetupAudioFile(void)
     strcpy(fname, aheadname);
     strcat(fname, extension);
 
-    if ((handle = open(fname,
-        O_RDONLY | O_BINARY, S_IREAD)) == -1)
+    if (FileSystem_ValidHandle(handle = FileSystem_Open(fname,
+        FileSystemRead | FileSystemBinary)) == false)
         CA_CannotOpen(fname);
 
-    length = filelength(handle);
+    length = FileSystem_FileLength(handle);
     MM_GetPtr(&(memptr)audiostarts, length);
     CA_FarRead(handle, (byte*)audiostarts, length);
-    close(handle);
+    FileSystem_Close(handle);
 #else
     audiohuffman = (huffnode*)&audiodict;
     audiostarts = (int32_t*)FP_SEG(&audiohead);
@@ -791,8 +790,8 @@ void CAL_SetupAudioFile(void)
     strcpy(fname, afilename);
     strcat(fname, extension);
 
-    if ((audiohandle = open(fname,
-        O_RDONLY | O_BINARY, S_IREAD)) == -1)
+    if (FileSystem_ValidHandle(audiohandle = FileSystem_Open(fname,
+        FileSystemRead | FileSystemBinary)) == false)
         CA_CannotOpen(fname);
 #else
     if ((audiohandle = open("AUDIO."EXTENSION,
@@ -817,7 +816,7 @@ void CAL_SetupAudioFile(void)
 void CA_Startup(void)
 {
 #ifdef PROFILE
-    unlink("PROFILE.TXT");
+    FileSystem_Remove("PROFILE.TXT");
     profilehandle = open("PROFILE.TXT", O_CREAT | O_WRONLY | O_TEXT);
 #endif
 
@@ -850,12 +849,12 @@ void CA_Shutdown(void)
     close(profilehandle);
 #endif
 
-    if (maphandle)
-        close(maphandle);
-    if (grhandle)
-        close(grhandle);
-    if (audiohandle)
-        close(audiohandle);
+    if (FileSystem_ValidHandle(maphandle))
+        FileSystem_Close(maphandle);
+    if (FileSystem_ValidHandle(grhandle))
+        FileSystem_Close(grhandle);
+    if (FileSystem_ValidHandle(audiohandle))
+        FileSystem_Close(audiohandle);
 }
 
 //===========================================================================
@@ -890,7 +889,7 @@ void CA_CacheAudioChunk(int16_t chunk)
     pos = audiostarts[chunk];
     compressed = audiostarts[chunk + 1] - pos;
 
-    lseek(audiohandle, pos, SEEK_SET);
+    FileSystem_Seek(audiohandle, pos);
 
 #ifndef AUDIOHEADERLINKED
 
@@ -1080,7 +1079,7 @@ void CA_CacheGrChunk(int16_t chunk)
 
     compressed = GRFILEPOS(next) - pos;
 
-    lseek(grhandle, pos, SEEK_SET);
+    FileSystem_Seek(grhandle, pos);
 
     if (compressed <= BUFFERSIZE)
     {
@@ -1131,7 +1130,7 @@ void CA_CacheScreen(int16_t chunk)
         next++;
     compressed = GRFILEPOS(next) - pos;
 
-    lseek(grhandle, pos, SEEK_SET);
+    FileSystem_Seek(grhandle, pos);
 
     MM_GetPtr(&bigbufferseg, compressed);
     MM_SetLock(&bigbufferseg, true);
@@ -1188,7 +1187,7 @@ void CA_CacheMap(int16_t mapnum)
 
         dest = &(memptr)mapsegs[plane];
 
-        lseek(maphandle, pos, SEEK_SET);
+        FileSystem_Seek(maphandle, pos);
         if (compressed <= BUFFERSIZE)
             source = bufferseg;
         else
@@ -1465,7 +1464,7 @@ void CA_CacheMarks(void)
                             next = NUMCHUNKS;   // read pos to posend
                     }
 
-                    lseek(grhandle, pos, SEEK_SET);
+                    FileSystem_Seek(grhandle, pos);
                     CA_FarRead(grhandle, bufferseg, endpos - pos);
                     bufferstart = pos;
                     bufferend = endpos;
@@ -1479,7 +1478,7 @@ void CA_CacheMarks(void)
                 if (mmerror)
                     return;
                 MM_SetLock(&bigbufferseg, true);
-                lseek(grhandle, pos, SEEK_SET);
+                FileSystem_Seek(grhandle, pos);
                 CA_FarRead(grhandle, bigbufferseg, compressed);
                 source = bigbufferseg;
             }

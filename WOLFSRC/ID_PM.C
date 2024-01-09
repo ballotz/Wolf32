@@ -14,10 +14,10 @@ PMBlockAttr     MainMemUsed[PMMaxMainMem];
 int16_t         MainPagesAvail;
 
 //	File specific variables
-char            PageFileName[13] = { "VSWAP." };
-int16_t         PageFile = -1;
-word            ChunksInFile;
-word            PMSpriteStart, PMSoundStart;
+char                PageFileName[13] = { "VSWAP." };
+FileSystemHandle    PageFile;
+word                ChunksInFile;
+word                PMSpriteStart, PMSoundStart;
 
 //	General usage variables
 boolean         PMStarted, PMPanicMode, PMThrashing;
@@ -185,7 +185,7 @@ PML_ReadFromFile(byte* buf, int32_t offset, word length)
         Quit("PML_ReadFromFile: Null pointer");
     if (!offset)
         Quit("PML_ReadFromFile: Zero offset");
-    if (lseek(PageFile, offset, SEEK_SET) != offset)
+    if (FileSystem_Seek(PageFile, offset) != offset)
         Quit("PML_ReadFromFile: Seek failed");
     if (!CA_FarRead(PageFile, buf, length))
         Quit("PML_ReadFromFile: Read failed");
@@ -204,14 +204,14 @@ PML_OpenPageFile(void)
     word* lengthptr;
     PageListStruct* page;
 
-    PageFile = open(PageFileName, O_RDONLY + O_BINARY);
-    if (PageFile == -1)
+    PageFile = FileSystem_Open(PageFileName, FileSystemRead + FileSystemBinary);
+    if (FileSystem_ValidHandle(PageFile) == false)
         Quit("PML_OpenPageFile: Unable to open page file");
 
     // Read in header variables
-    read(PageFile, &ChunksInFile, sizeof(ChunksInFile));
-    read(PageFile, &PMSpriteStart, sizeof(PMSpriteStart));
-    read(PageFile, &PMSoundStart, sizeof(PMSoundStart));
+    FileSystem_Read(PageFile, &ChunksInFile, sizeof(ChunksInFile));
+    FileSystem_Read(PageFile, &PMSpriteStart, sizeof(PMSpriteStart));
+    FileSystem_Read(PageFile, &PMSoundStart, sizeof(PMSoundStart));
 
     // Allocate and clear the page list
     PMNumBlocks = ChunksInFile;
@@ -247,8 +247,8 @@ PML_OpenPageFile(void)
 void
 PML_ClosePageFile(void)
 {
-    if (PageFile != -1)
-        close(PageFile);
+    if (FileSystem_ValidHandle(PageFile))
+        FileSystem_Close(PageFile);
     if (PMSegPages)
     {
         MM_SetLock(&(memptr)PMSegPages, false);

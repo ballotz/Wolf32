@@ -92,38 +92,38 @@ char** _argv;
 
 void ReadConfig(void)
 {
-    int16_t                     file;
-    SDMode          sd;
-    SMMode          sm;
-    SDSMode         sds;
+    FileSystemHandle    file;
+    SDMode              sd;
+    SMMode              sm;
+    SDSMode             sds;
 
 
-    if ((file = open(configname, O_BINARY | O_RDONLY)) != -1)
+    if (FileSystem_ValidHandle(file = FileSystem_Open(configname, FileSystemBinary | FileSystemRead)))
     {
         //
         // valid config file
         //
-        read(file, Scores, sizeof(HighScore) * MaxScores);
+        FileSystem_Read(file, Scores, sizeof(HighScore) * MaxScores);
 
-        read(file, &sd, sizeof(sd));
-        read(file, &sm, sizeof(sm));
-        read(file, &sds, sizeof(sds));
+        FileSystem_Read(file, &sd, sizeof(sd));
+        FileSystem_Read(file, &sm, sizeof(sm));
+        FileSystem_Read(file, &sds, sizeof(sds));
 
-        read(file, &mouseenabled, sizeof(mouseenabled));
-        read(file, &joystickenabled, sizeof(joystickenabled));
-        read(file, &joypadenabled, sizeof(joypadenabled));
-        read(file, &joystickprogressive, sizeof(joystickprogressive));
-        read(file, &joystickport, sizeof(joystickport));
+        FileSystem_Read(file, &mouseenabled, sizeof(mouseenabled));
+        FileSystem_Read(file, &joystickenabled, sizeof(joystickenabled));
+        FileSystem_Read(file, &joypadenabled, sizeof(joypadenabled));
+        FileSystem_Read(file, &joystickprogressive, sizeof(joystickprogressive));
+        FileSystem_Read(file, &joystickport, sizeof(joystickport));
 
-        read(file, &dirscan, sizeof(dirscan));
-        read(file, &buttonscan, sizeof(buttonscan));
-        read(file, &buttonmouse, sizeof(buttonmouse));
-        read(file, &buttonjoy, sizeof(buttonjoy));
+        FileSystem_Read(file, &dirscan, sizeof(dirscan));
+        FileSystem_Read(file, &buttonscan, sizeof(buttonscan));
+        FileSystem_Read(file, &buttonmouse, sizeof(buttonmouse));
+        FileSystem_Read(file, &buttonjoy, sizeof(buttonjoy));
 
-        read(file, &viewsize, sizeof(viewsize));
-        read(file, &mouseadjustment, sizeof(mouseadjustment));
+        FileSystem_Read(file, &viewsize, sizeof(viewsize));
+        FileSystem_Read(file, &mouseadjustment, sizeof(mouseadjustment));
 
-        close(file);
+        FileSystem_Close(file);
 
         if (sd == sdm_AdLib && !AdLibPresent && !SoundBlasterPresent)
         {
@@ -195,34 +195,33 @@ void ReadConfig(void)
 
 void WriteConfig(void)
 {
-    int16_t                     file;
+    FileSystemHandle file;
 
-    file = open(configname, O_CREAT | O_BINARY | O_WRONLY,
-        S_IREAD | S_IWRITE | S_IFREG);
+    file = FileSystem_Open(configname, FileSystemCreate | FileSystemBinary | FileSystemWrite);
 
-    if (file != -1)
+    if (FileSystem_ValidHandle(file))
     {
-        write(file, Scores, sizeof(HighScore) * MaxScores);
+        FileSystem_Write(file, Scores, sizeof(HighScore) * MaxScores);
 
-        write(file, &SoundMode, sizeof(SoundMode));
-        write(file, &MusicMode, sizeof(MusicMode));
-        write(file, &DigiMode, sizeof(DigiMode));
+        FileSystem_Write(file, &SoundMode, sizeof(SoundMode));
+        FileSystem_Write(file, &MusicMode, sizeof(MusicMode));
+        FileSystem_Write(file, &DigiMode, sizeof(DigiMode));
 
-        write(file, &mouseenabled, sizeof(mouseenabled));
-        write(file, &joystickenabled, sizeof(joystickenabled));
-        write(file, &joypadenabled, sizeof(joypadenabled));
-        write(file, &joystickprogressive, sizeof(joystickprogressive));
-        write(file, &joystickport, sizeof(joystickport));
+        FileSystem_Write(file, &mouseenabled, sizeof(mouseenabled));
+        FileSystem_Write(file, &joystickenabled, sizeof(joystickenabled));
+        FileSystem_Write(file, &joypadenabled, sizeof(joypadenabled));
+        FileSystem_Write(file, &joystickprogressive, sizeof(joystickprogressive));
+        FileSystem_Write(file, &joystickport, sizeof(joystickport));
 
-        write(file, &dirscan, sizeof(dirscan));
-        write(file, &buttonscan, sizeof(buttonscan));
-        write(file, &buttonmouse, sizeof(buttonmouse));
-        write(file, &buttonjoy, sizeof(buttonjoy));
+        FileSystem_Write(file, &dirscan, sizeof(dirscan));
+        FileSystem_Write(file, &buttonscan, sizeof(buttonscan));
+        FileSystem_Write(file, &buttonmouse, sizeof(buttonmouse));
+        FileSystem_Write(file, &buttonjoy, sizeof(buttonjoy));
 
-        write(file, &viewsize, sizeof(viewsize));
-        write(file, &mouseadjustment, sizeof(mouseadjustment));
+        FileSystem_Write(file, &viewsize, sizeof(viewsize));
+        FileSystem_Write(file, &mouseadjustment, sizeof(mouseadjustment));
 
-        close(file);
+        FileSystem_Close(file);
     }
 }
 
@@ -286,7 +285,7 @@ int32_t DoChecksum(byte* source, uint16_t size, int32_t checksum)
 ==================
 */
 
-boolean SaveTheGame(int16_t file, int16_t x, int16_t y)
+boolean SaveTheGame(FileSystemHandle file, int16_t x, int16_t y)
 {
     int32_t checksum;
     objtype* ob, nullobj;
@@ -381,7 +380,7 @@ boolean SaveTheGame(int16_t file, int16_t x, int16_t y)
 ==================
 */
 
-boolean LoadTheGame(int16_t file, int16_t x, int16_t y)
+boolean LoadTheGame(FileSystemHandle file, int16_t x, int16_t y)
 {
     int32_t checksum, oldchecksum;
     objtype nullobj;

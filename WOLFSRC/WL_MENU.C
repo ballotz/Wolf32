@@ -1362,7 +1362,8 @@ void DrawLSAction(int16_t which)
 ////////////////////////////////////////////////////////////////////
 int16_t CP_LoadGame(int16_t quick)
 {
-    int16_t handle, which, exit = 0;
+    FileSystemHandle handle;
+    int16_t which, exit = 0;
     char name[13];
 
 
@@ -1378,12 +1379,12 @@ int16_t CP_LoadGame(int16_t quick)
         if (SaveGamesAvail[which])
         {
             name[7] = which + '0';
-            handle = open(name, O_BINARY);
-            lseek(handle, 32, SEEK_SET);
+            handle = FileSystem_Open(name, FileSystemBinary | FileSystemRead);
+            FileSystem_Seek(handle, 32);
             loadedgame = true;
             LoadTheGame(handle, 0, 0);
             loadedgame = false;
-            close(handle);
+            FileSystem_Close(handle);
 
             DrawFace();
             DrawHealth();
@@ -1413,14 +1414,14 @@ int16_t CP_LoadGame(int16_t quick)
             ShootSnd();
             name[7] = which + '0';
 
-            handle = open(name, O_BINARY);
-            lseek(handle, 32, SEEK_SET);
+            handle = FileSystem_Open(name, FileSystemBinary | FileSystemRead);
+            FileSystem_Seek(handle, 32);
 
             DrawLSAction(0);
             loadedgame = true;
 
             LoadTheGame(handle, LSA_X + 8, LSA_Y + 5);
-            close(handle);
+            FileSystem_Close(handle);
 
             StartGame = 1;
             ShootSnd();
@@ -1527,7 +1528,8 @@ void PrintLSEntry(int16_t w, int16_t color)
 ////////////////////////////////////////////////////////////////////
 int16_t CP_SaveGame(int16_t quick)
 {
-    int16_t handle, which, exit = 0;
+    FileSystemHandle handle;
+    int16_t which, exit = 0;
     char name[13], input[32];
 
 
@@ -1543,15 +1545,15 @@ int16_t CP_SaveGame(int16_t quick)
         if (SaveGamesAvail[which])
         {
             name[7] = which + '0';
-            unlink(name);
-            handle = creat(name, S_IREAD | S_IWRITE);
+            FileSystem_Remove(name);
+            handle = FileSystem_Open(name, FileSystemCreate | FileSystemBinary | FileSystemWrite);
 
             strcpy(input, &SaveGameNames[which][0]);
 
-            write(handle, (void*)input, 32);
-            lseek(handle, 32, SEEK_SET);
+            FileSystem_Write(handle, (void*)input, 32);
+            FileSystem_Seek(handle, 32);
             SaveTheGame(handle, 0, 0);
-            close(handle);
+            FileSystem_Close(handle);
 
             return 1;
         }
@@ -1605,15 +1607,15 @@ int16_t CP_SaveGame(int16_t quick)
                 SaveGamesAvail[which] = 1;
                 strcpy(&SaveGameNames[which][0], input);
 
-                unlink(name);
-                handle = creat(name, S_IREAD | S_IWRITE);
-                write(handle, (void*)input, 32);
-                lseek(handle, 32, SEEK_SET);
+                FileSystem_Remove(name);
+                handle = FileSystem_Open(name, FileSystemCreate | FileSystemBinary | FileSystemWrite);
+                FileSystem_Write(handle, (void*)input, 32);
+                FileSystem_Seek(handle, 32);
 
                 DrawLSAction(1);
                 SaveTheGame(handle, LSA_X + 8, LSA_Y + 5);
 
-                close(handle);
+                FileSystem_Close(handle);
 
                 ShootSnd();
                 exit = 1;
@@ -3014,7 +3016,6 @@ void DrawOutline(int16_t x, int16_t y, int16_t w, int16_t h, int16_t color1, int
 ////////////////////////////////////////////////////////////////////
 void SetupControlPanel(void)
 {
-    struct _finddata_t f;
     intptr_t h;
 
     char name[13];
@@ -3044,28 +3045,26 @@ void SetupControlPanel(void)
     // SEE WHICH SAVE GAME FILES ARE AVAILABLE & READ STRING IN
     //
     strcpy(name, SaveName);
-    if ((h = _findfirst(name, &f)) != -1L)
-        do
+    for (which = 0; which < 10; ++which)
+    {
+        name[7] = which + '0';
+        if (FileSystem_FileExisit(name))
         {
-            which = f.name[7] - '0';
-            if (which < 10)
-            {
-                int16_t handle;
-                char temp[32];
+            FileSystemHandle handle;
+            char temp[32];
 
-                SaveGamesAvail[which] = 1;
-                handle = open(f.name, O_BINARY);
-                read(handle, temp, 32);
-                close(handle);
-                strcpy(&SaveGameNames[which][0], temp);
-            }
-        } while (!_findnext(h, &f));
-        _findclose(h);
+            SaveGamesAvail[which] = 1;
+            handle = FileSystem_Open(name, FileSystemBinary | FileSystemRead);
+            FileSystem_Read(handle, temp, 32);
+            FileSystem_Close(handle);
+            strcpy(&SaveGameNames[which][0], temp);
+        }
+    }
 
-        //
-        // CENTER MOUSE
-        //
-        Mouse_SetPos(CENTER, CENTER);
+    //
+    // CENTER MOUSE
+    //
+    Mouse_SetPos(CENTER, CENTER);
 }
 
 
@@ -3864,22 +3863,6 @@ void ShootSnd(void)
 }
 
 
-static boolean FileExist(const char* name)
-{
-    struct _finddata_t f;
-    intptr_t h;
-
-    h = _findfirst(name, &f);
-    if (h != -1L)
-    {
-        _findclose(h);
-        return true;
-    }
-    else
-        return false;
-}
-
-
 ///////////////////////////////////////////////////////////////////////////
 //
 // CHECK FOR EPISODES
@@ -3892,11 +3875,11 @@ void CheckForEpisodes(void)
     //
 #ifdef JAPAN
 #ifdef JAPDEMO
-    if (FileExist("*.WJ1"))
+    if (FileSystem_FileExisit("VSWAP.WJ1"))
     {
         strcpy(extension, "WJ1");
 #else
-    if (FileExist("*.WJ6"))
+    if (FileSystem_FileExisit("VSWAP.WJ6"))
     {
         strcpy(extension, "WJ6");
 #endif
@@ -3920,7 +3903,7 @@ void CheckForEpisodes(void)
 //
 #ifndef UPLOAD
 #ifndef SPEAR
-    if (FileExist("*.WL6"))
+    if (FileSystem_FileExisit("VSWAP.WL6"))
     {
         strcpy(extension, "WL6");
         NewEmenu[2].active =
@@ -3935,7 +3918,7 @@ void CheckForEpisodes(void)
             EpisodeSelect[5] = 1;
     }
     else
-    if (FileExist("*.WL3"))
+    if (FileSystem_FileExisit("VSWAP.WL3"))
     {
         strcpy(extension, "WL3");
         NewEmenu[2].active =
@@ -3951,14 +3934,14 @@ void CheckForEpisodes(void)
 
 #ifdef SPEAR
 #ifndef SPEARDEMO
-    if (FileExist("*.SOD"))
+    if (FileSystem_FileExisit("VSWAP.SOD"))
     {
         strcpy(extension, "SOD");
     }
     else
         Quit("NO SPEAR OF DESTINY DATA FILES TO BE FOUND!");
 #else
-    if (FileExist("*.SDM"))
+    if (FileSystem_FileExisit("VSWAP.SDM"))
     {
         strcpy(extension, "SDM");
     }
@@ -3967,7 +3950,7 @@ void CheckForEpisodes(void)
 #endif
 
 #else
-    if (FileExist("*.WL1"))
+    if (FileSystem_FileExisit("VSWAP.WL1"))
     {
         strcpy(extension, "WL1");
     }

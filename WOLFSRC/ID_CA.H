@@ -33,7 +33,7 @@ extern byte ca_levelbit, ca_levelnum;
 
 extern char* titleptr[8];
 
-extern int16_t profilehandle, debughandle;
+extern FileSystemHandle profilehandle, debughandle;
 
 extern char extension[5],
 gheadname[10],
@@ -57,8 +57,8 @@ extern void (*finishcachebox) (void);
 
 void CA_OpenDebug(void);
 void CA_CloseDebug(void);
-boolean CA_FarRead(int16_t handle, byte* dest, int32_t length);
-boolean CA_FarWrite(int16_t handle, byte* source, int32_t length);
+boolean CA_FarRead(FileSystemHandle handle, byte* dest, int32_t length);
+boolean CA_FarWrite(FileSystemHandle handle, byte* source, int32_t length);
 boolean CA_ReadFile(char* filename, memptr* ptr);
 boolean CA_LoadFile(char* filename, memptr* ptr);
 boolean CA_WriteFile(char* filename, void* ptr, int32_t length);

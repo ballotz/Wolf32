@@ -657,11 +657,12 @@ void MM_DumpData(void)
     uintptr_t lowest, oldlowest;
     uintptr_t owner;
     char lock, purge;
-    FILE* dumpfile;
+    FileSystemHandle dumpfile;
+    char string[80];
 
 
-    dumpfile = fopen("MMDUMP.TXT", "w");
-    if (!dumpfile)
+    dumpfile = FileSystem_Open("MMDUMP.TXT", FileSystemWrite | FileSystemText);
+    if (!FileSystem_ValidHandle(dumpfile))
         Quit("MM_DumpData: Couldn't open MMDUMP.TXT!");
 
     lowest = UINTPTR_MAX;
@@ -695,13 +696,14 @@ void MM_DumpData(void)
                 lock = 'L';
             else
                 lock = '-';
-            fprintf(dumpfile, "0x%p (%c%c) = %u\n"
+            snprintf(string, sizeof(string), "0x%p (%c%c) = %u\n"
                 , (void*)lowest, lock, purge, best->length);
+            FileSystem_Write(dumpfile, string, strlen(string));
         }
 
     } while (lowest != UINTPTR_MAX);
 
-    fclose(dumpfile);
+    FileSystem_Close(dumpfile);
     Quit("MMDUMP.TXT created.");
 }
 

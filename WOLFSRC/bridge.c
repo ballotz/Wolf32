@@ -1,5 +1,6 @@
 #include "bridge.h"
 #include <SDL.h>
+#include <stdio.h>
 
 SDL_Window* window;
 SDL_Renderer* renderer;
@@ -126,6 +127,87 @@ void Exit(int code)
 {
     Deinitialize();
     exit(code);
+}
+
+//------------------------------------------------------------------------------
+// FileSystem
+//------------------------------------------------------------------------------
+
+void FileSystem_Remove(const char* name)
+{
+    remove(name);
+}
+
+void FileSystem_GetMode(int32_t options, char* mode)
+{
+    int index = 0;
+    if (options & FileSystemRead)
+        mode[index++] = 'r';
+    if (options & FileSystemWrite)
+        mode[index++] = 'w';
+    if (options & FileSystemBinary)
+        mode[index++] = 'b';
+    mode[index++] = '\0';
+}
+
+FileSystemHandle FileSystem_Open(const char* name, int32_t options)
+{
+    FileSystemHandle ret;
+    char mode[4];
+    FileSystem_GetMode(options, mode);
+    ret.internal = (uintptr_t)fopen(name, mode);
+    return ret;
+}
+
+void FileSystem_Close(FileSystemHandle handle)
+{
+    fclose((FILE*)handle.internal);
+}
+
+uint8_t FileSystem_ValidHandle(FileSystemHandle handle)
+{
+    return (handle.internal != 0);
+}
+
+int32_t FileSystem_Seek(FileSystemHandle handle, int32_t position)
+{
+    if (fseek((FILE*)handle.internal, position, SEEK_SET) == 0)
+        return position;
+    else
+        return -1;
+}
+
+size_t FileSystem_Read(FileSystemHandle handle, void* buffer, size_t size)
+{
+    return fread(buffer, size, 1, (FILE*)handle.internal) * size;
+}
+
+size_t FileSystem_Write(FileSystemHandle handle, void* buffer, size_t size)
+{
+    return fwrite(buffer, size, 1, (FILE*)handle.internal);
+}
+
+int32_t FileSystem_FileLength(FileSystemHandle handle)
+{
+    int32_t size;
+    if (fseek((FILE*)handle.internal, 0L, SEEK_END) != 0)
+        return 0;
+    size = ftell((FILE*)handle.internal);
+    if (fseek((FILE*)handle.internal, 0L, SEEK_SET) != 0)
+        return 0;
+    return size;
+}
+
+uint8_t FileSystem_FileExisit(const char* name)
+{
+    uint8_t exist = 0;
+    FILE* f = fopen(name, "rb");
+    if (f)
+    {
+        exist = 1;
+        fclose(f);
+    }
+    return exist;
 }
 
 //------------------------------------------------------------------------------

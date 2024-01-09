@@ -11,6 +11,42 @@ extern void Quit(char* error);
 void Exit(int code);
 
 //------------------------------------------------------------------------------
+// FileSystem
+//------------------------------------------------------------------------------
+
+typedef struct
+{
+    uintptr_t internal;
+} FileSystemHandle;
+
+enum
+{
+    FileSystemCreate = 1,
+    FileSystemRead = 2,
+    FileSystemWrite = 4,
+    FileSystemBinary = 8,
+    FileSystemText = 16,
+};
+
+void FileSystem_Remove(const char* name);
+
+FileSystemHandle FileSystem_Open(const char* name, int32_t options);
+
+void FileSystem_Close(FileSystemHandle handle);
+
+uint8_t FileSystem_ValidHandle(FileSystemHandle handle);
+
+int32_t FileSystem_Seek(FileSystemHandle handle, int32_t position);
+
+size_t FileSystem_Read(FileSystemHandle handle, void* buffer, size_t size);
+
+size_t FileSystem_Write(FileSystemHandle handle, void* buffer, size_t size);
+
+int32_t FileSystem_FileLength(FileSystemHandle handle);
+
+uint8_t FileSystem_FileExisit(const char* name);
+
+//------------------------------------------------------------------------------
 // VGA
 //------------------------------------------------------------------------------
 
