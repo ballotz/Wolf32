@@ -1284,7 +1284,6 @@ void Quit(char* error)
 
     ShutdownId();
 
-
     if (error && *error)
     {
         //movedata((uint16_t)screen, 7, 0xb800, 0, 7 * 160);
@@ -1294,20 +1293,19 @@ void Quit(char* error)
         //exit(1);
         Exit(1);
     }
-    else
-        if (!error || !(*error))
-        {
-            //clrscr();
+    else if (!error || !(*error))
+    {
+        //clrscr();
 #ifndef JAPAN
-            //movedata((uint16_t)screen, 7, 0xb800, 0, 4000);
-            //gotoxy(1, 24);
+        //movedata((uint16_t)screen, 7, 0xb800, 0, 4000);
+        //gotoxy(1, 24);
 #endif
-            //asm	mov	bh,0
-            //asm	mov	dh,23	// row
-            //asm	mov	dl,0	// collumn
-            //asm	mov ah,2
-            //asm	int	0x10
-        }
+        //asm	mov	bh,0
+        //asm	mov	dh,23	// row
+        //asm	mov	dl,0	// collumn
+        //asm	mov ah,2
+        //asm	int	0x10
+    }
 
     //exit(0);
     Exit(0);
@@ -1359,7 +1357,7 @@ void    DemoLoop()
         gamestate.mapon = tedlevelnum;
 #endif
         GameLoop();
-        Quit(NULL);
+        Quit("");
     }
 
 

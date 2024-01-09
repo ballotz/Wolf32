@@ -835,7 +835,7 @@ int16_t CP_CheckQuick(uint16_t scancode)
             // SHUT-UP THE ADLIB
             //
             AdLib_Clean();
-            Quit(NULL);
+            Quit("");
         }
 
         DrawAllPlayBorder();
@@ -2855,7 +2855,7 @@ void CP_Quit(void)
         // SHUT-UP THE ADLIB
         //
         AdLib_Clean();
-        Quit(NULL);
+        Quit("");
     }
 
     DrawMainMenu();
