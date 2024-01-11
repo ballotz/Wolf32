@@ -229,15 +229,15 @@ void Victory (void)
 	VWB_DrawPic(i,TIMEY*8,L_NUM0PIC+(sec%10));
 	VW_UpdateScreen ();
 
-	itoa(kr,tempstr,10);
+    snprintf(tempstr, sizeof(tempstr), "%i", kr);
 	x=RATIOX+24-(int16_t)strlen(tempstr)*2;
 	Write(x,RATIOY,tempstr);
 
-	itoa(sr,tempstr,10);
+    snprintf(tempstr, sizeof(tempstr), "%i", sr);
 	x=RATIOX+24-(int16_t)strlen(tempstr)*2;
 	Write(x,RATIOY+2,tempstr);
 
-	itoa(tr,tempstr,10);
+    snprintf(tempstr, sizeof(tempstr), "%i", tr);
 	x=RATIOX+24-(int16_t)strlen(tempstr)*2;
 	Write(x,RATIOY+4,tempstr);
 
@@ -603,7 +603,8 @@ void LevelCompleted (void)
 	 Write(1,18,STR_RAT2TREASURE);
 	 #endif
 
-	 Write(26,2,itoa(gamestate.mapon+1,tempstr,10));
+     snprintf(tempstr, sizeof(tempstr), "%i", gamestate.mapon+1);
+	 Write(26,2,tempstr);
 #endif
 
 	 #ifdef SPANISH
@@ -665,7 +666,7 @@ void LevelCompleted (void)
 	 {
 	  for (i=0;i<=timeleft;i++)
 	  {
-	   ltoa((int32_t)i*PAR_AMOUNT,tempstr,10);
+       snprintf(tempstr, sizeof(tempstr), "%i", (int32_t)i*PAR_AMOUNT);
 	   x=36-(int16_t)strlen(tempstr)*2;
 	   Write(x,7,tempstr);
 	   if (!(i%(PAR_AMOUNT/10)))
@@ -695,7 +696,7 @@ void LevelCompleted (void)
 	 ratio=kr;
 	 for (i=0;i<=ratio;i++)
 	 {
-	  itoa(i,tempstr,10);
+      snprintf(tempstr, sizeof(tempstr), "%i", i);
 	  x=RATIOXX-(int16_t)strlen(tempstr)*2;
 	  Write(x,14,tempstr);
 	  if (!(i%10))
@@ -712,7 +713,7 @@ void LevelCompleted (void)
 	   VW_WaitVBL(VBLWAIT);
 	   SD_StopSound();
 	   bonus+=PERCENT100AMT;
-	   ltoa(bonus,tempstr,10);
+       snprintf(tempstr, sizeof(tempstr), "%i", bonus);
 	   x=(RATIOXX-1)-(int16_t)strlen(tempstr)*2;
 	   Write(x,7,tempstr);
 	   VW_UpdateScreen();
@@ -739,7 +740,7 @@ void LevelCompleted (void)
 	 ratio=sr;
 	 for (i=0;i<=ratio;i++)
 	 {
-	  itoa(i,tempstr,10);
+      snprintf(tempstr, sizeof(tempstr), "%i", i);
 	  x=RATIOXX-(int16_t)strlen(tempstr)*2;
 	  Write(x,16,tempstr);
 	  if (!(i%10))
@@ -757,7 +758,7 @@ void LevelCompleted (void)
 	   VW_WaitVBL(VBLWAIT);
 	   SD_StopSound();
 	   bonus+=PERCENT100AMT;
-	   ltoa(bonus,tempstr,10);
+       snprintf(tempstr, sizeof(tempstr), "%i", bonus);
 	   x=(RATIOXX-1)-(int16_t)strlen(tempstr)*2;
 	   Write(x,7,tempstr);
 	   VW_UpdateScreen();
@@ -783,7 +784,7 @@ void LevelCompleted (void)
 	 ratio=tr;
 	 for (i=0;i<=ratio;i++)
 	 {
-	  itoa(i,tempstr,10);
+      snprintf(tempstr, sizeof(tempstr), "%i", i);
 	  x=RATIOXX-(int16_t)strlen(tempstr)*2;
 	  Write(x,18,tempstr);
 	  if (!(i%10))
@@ -799,7 +800,7 @@ void LevelCompleted (void)
 	   VW_WaitVBL(VBLWAIT);
 	   SD_StopSound();
 	   bonus+=PERCENT100AMT;
-	   ltoa(bonus,tempstr,10);
+       snprintf(tempstr, sizeof(tempstr), "%i", bonus);
 	   x=(RATIOXX-1)-(int16_t)strlen(tempstr)*2;
 	   Write(x,7,tempstr);
 	   VW_UpdateScreen();
@@ -824,15 +825,15 @@ void LevelCompleted (void)
 	 //
 	 done:
 
-	 itoa(kr,tempstr,10);
+     snprintf(tempstr, sizeof(tempstr), "%i", kr);
 	 x=RATIOXX-(int16_t)strlen(tempstr)*2;
 	 Write(x,14,tempstr);
 
-	 itoa(sr,tempstr,10);
+     snprintf(tempstr, sizeof(tempstr), "%i", sr);
 	 x=RATIOXX-(int16_t)strlen(tempstr)*2;
 	 Write(x,16,tempstr);
 
-	 itoa(tr,tempstr,10);
+     snprintf(tempstr, sizeof(tempstr), "%i", tr);
 	 x=RATIOXX-(int16_t)strlen(tempstr)*2;
 	 Write(x,18,tempstr);
 
@@ -842,7 +843,7 @@ void LevelCompleted (void)
 		   (PERCENT100AMT*(tr==100));
 
 	 GivePoints(bonus);
-	 ltoa(bonus,tempstr,10);
+     snprintf(tempstr, sizeof(tempstr), "%i", bonus);
 	 x=36-(int16_t)strlen(tempstr)*2;
 	 Write(x,7,tempstr);
 
@@ -1096,7 +1097,7 @@ void	DrawHighScores(void)
 		//
 		// level
 		//
-		ultoa(s->completed,buffer,10);
+        snprintf(buffer, sizeof(buffer), "%u", s->completed);
 #ifndef SPEAR
 		for (str = buffer;*str;str++)
 			*str = *str + (129 - '0');	// Used fixed-width numbers (129...)
@@ -1110,7 +1111,7 @@ void	DrawHighScores(void)
 #ifndef UPLOAD
 #ifndef SPEAR
 		PrintX -= 6;
-		itoa(s->episode+1,buffer1,10);
+        snprintf(buffer1, sizeof(buffer1), "%i", s->episode+1);
 		US_Print("E");
 		US_Print(buffer1);
 		US_Print("/L");
@@ -1127,7 +1128,7 @@ void	DrawHighScores(void)
 		//
 		// score
 		//
-		ultoa(s->score,buffer,10);
+        snprintf(buffer, sizeof(buffer), "%u", s->score);
 #ifndef SPEAR
 		for (str = buffer;*str;str++)
 			*str = *str + (129 - '0');	// Used fixed-width numbers (129...)

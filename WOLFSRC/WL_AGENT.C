@@ -338,7 +338,7 @@ void	LatchNumber (int16_t x, int16_t y, int16_t width, int32_t number)
 	uint16_t	length,c;
 	char		str[20];
 
-	ltoa (number,str,10);
+    snprintf(str, sizeof(str), "%i", number);
 
 	length = (uint16_t)strlen (str);
 

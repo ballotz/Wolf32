@@ -4,7 +4,7 @@
 #define DAY		30
 
 #include "ID_HEADS.H"
-#include <MATH.H>
+#include <math.h>
 //#include <VALUES.H>
 
 #include "WL_MENU.H"

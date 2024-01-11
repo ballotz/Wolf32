@@ -3770,7 +3770,7 @@ void StartCPMusic(int16_t song)
         mmerror = false;
     else
     {
-        MM_SetLock(&((memptr)audiosegs[STARTMUSIC + chunk]), true);
+        MM_SetLock(&audiosegs[STARTMUSIC + chunk], true);
         SD_StartMusic((MusicGroup*)audiosegs[STARTMUSIC + chunk]);
     }
 }

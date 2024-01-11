@@ -384,7 +384,7 @@ SDL_PositionSBP(int16_t leftpos, int16_t rightpos)
 //
 ///////////////////////////////////////////////////////////////////////////
 static boolean
-SDL_DetectSoundBlaster(int16_t port)
+SDL_DetectSoundBlaster()
 {
     return SoundBlaster_Detect();
 }
@@ -1585,62 +1585,7 @@ SD_Startup(void)
     {
         AdLibPresent = SDL_DetectAdLib();
         if (AdLibPresent && !sbNoCheck)
-        {
-            int16_t port = -1;
-            char* env = getenv("BLASTER");
-            if (env)
-            {
-                int32_t temp;
-                while (*env)
-                {
-                    while (isspace(*env))
-                        env++;
-
-                    switch (toupper(*env))
-                    {
-                    case 'A':
-                        temp = strtol(env + 1, &env, 16);
-                        if (
-                            (temp >= 0x210)
-                            && (temp <= 0x260)
-                            && (!(temp & 0x00f))
-                        )
-                            port = (temp - 0x200) >> 4;
-                        else
-                            Quit("SD_Startup: Unsupported address value in BLASTER");
-                        break;
-                    case 'I':
-                        //temp = strtol(env + 1, &env, 10);
-                        //if (
-                        //    (temp >= 0)
-                        //    && (temp <= 10)
-                        //    && (sbIntVectors[temp] != -1)
-                        //)
-                        //{
-                        //    sbInterrupt = temp;
-                        //    sbIntVec = sbIntVectors[sbInterrupt];
-                        //}
-                        //else
-                        //    Quit("SD_Startup: Unsupported interrupt value in BLASTER");
-                        break;
-                    case 'D':
-                        //temp = strtol(env + 1, &env, 10);
-                        //if ((temp == 0) || (temp == 1) || (temp == 3))
-                        //    SDL_SBSetDMA(temp);
-                        //else
-                        //    Quit("SD_Startup: Unsupported DMA value in BLASTER");
-                        break;
-                    default:
-                        while (isspace(*env))
-                            env++;
-                        while (*env && !isspace(*env))
-                            env++;
-                        break;
-                    }
-                }
-            }
-            SoundBlasterPresent = SDL_DetectSoundBlaster(port);
-        }
+            SoundBlasterPresent = SDL_DetectSoundBlaster();
     }
 
     //for (i = 0; i < 255; i++)

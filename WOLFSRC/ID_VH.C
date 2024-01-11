@@ -18,7 +18,7 @@
 
 #define UNCACHEGRCHUNK(chunk)   {MM_FreePtr(&grsegs[chunk]);grneeded[chunk]&=~ca_levelbit;}
 
-byte update[UPDATEHIGH][UPDATEWIDE];
+//byte update[UPDATEHIGH][UPDATEWIDE];
 
 //==========================================================================
 
@@ -43,7 +43,6 @@ int16_t bufferwidth, bufferheight;
 void VH_UpdateScreen(void)
 {
     uint16_t i, source, dest;
-    byte* updateptr = &update[0][0];
 
     // Check each tile and copy if needed
     for (i = 0; i < UPDATEWIDE * UPDATEHIGH; ++i)
@@ -185,7 +184,7 @@ void VL_MungePic(byte* source, uint16_t width, uint16_t height)
     //
     // copy the pic to a temp buffer
     //
-    MM_GetPtr(&(memptr)temp, size);
+    MM_GetPtr(&temp, size);
     memcpy(temp, source, size);
 
     //
@@ -205,7 +204,7 @@ void VL_MungePic(byte* source, uint16_t width, uint16_t height)
         }
     }
 
-    MM_FreePtr(&(memptr)temp);
+    MM_FreePtr(&temp);
 }
 
 void VWL_MeasureString(char* string, word* width, word* height

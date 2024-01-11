@@ -2,16 +2,16 @@
 
 #include <stdint.h>
 //#include <ALLOC.H>
-//#include <CTYPE.H>
+#include <ctype.h>
 //#include <DOS.H>
 //#include <ERRNO.H>
 //#include <FCNTL.H>
 //#include <IO.H>
 //#include <MEM.H>
 //#include <PROCESS.H>
-#include <STDIO.H>
-//#include <STDLIB.H>
-#include <STRING.H>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 //#include <SYS\STAT.H>
 //#include <VALUES.H>
 //#include <DIR.H>
@@ -114,7 +114,7 @@ void	Quit(char* error);		// defined in user program
 extern	uint16_t	mapwidth, mapheight, tics;
 extern	boolean		compatability;
 
-extern	byte* updateptr;
+extern	byte        *updateptr;
 extern	uint16_t	uwidthtable[UPDATEHIGH];
 extern	uint16_t	blockstarts[UPDATEWIDE * UPDATEHIGH];
 

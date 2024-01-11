@@ -42,12 +42,12 @@ word		WindowX, WindowY, WindowW, WindowH;
 //	Internal variables
 #define	ConfigVersion	1
 
-static	char    *ParmStrings[] = { "TEDLEVEL","NOWAIT" },
-                *ParmStrings2[] = { "COMP","NOCOMP" };
+static	char    *ParmStrings[] = { "TEDLEVEL","NOWAIT",nil },
+                *ParmStrings2[] = { "COMP","NOCOMP",nil };
 static	boolean US_Started;
 
-boolean     Button0, Button1,
-            CursorBad;
+boolean         Button0, Button1,
+                CursorBad;
 int16_t         CursorX, CursorY;
 
 void        (*USL_MeasureString)(char*, word*, word*) = VW_MeasurePropString,
@@ -374,7 +374,8 @@ US_PrintUnsigned(longword n)
 {
     char	buffer[32];
 
-    US_Print(ultoa(n, buffer, 10));
+    snprintf(buffer, sizeof(buffer), "%u", n);
+    US_Print(buffer);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -387,7 +388,8 @@ US_PrintSigned(int32_t n)
 {
     char	buffer[32];
 
-    US_Print(ltoa(n, buffer, 10));
+    snprintf(buffer, sizeof(buffer), "%i", n);
+    US_Print(buffer);
 }
 
 ///////////////////////////////////////////////////////////////////////////

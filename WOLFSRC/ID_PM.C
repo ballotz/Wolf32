@@ -23,7 +23,7 @@ word                PMSpriteStart, PMSoundStart;
 boolean         PMStarted, PMPanicMode, PMThrashing;
 word            MainPagesUsed, PMNumBlocks;
 int32_t         PMFrameCount;
-PageListStruct* PMPages, * PMSegPages;
+PageListStruct  *PMPages, *PMSegPages;
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -215,8 +215,8 @@ PML_OpenPageFile(void)
 
     // Allocate and clear the page list
     PMNumBlocks = ChunksInFile;
-    MM_GetPtr(&(memptr)PMSegPages, sizeof(PageListStruct) * PMNumBlocks);
-    MM_SetLock(&(memptr)PMSegPages, true);
+    MM_GetPtr(&PMSegPages, sizeof(PageListStruct) * PMNumBlocks);
+    MM_SetLock(&PMSegPages, true);
     PMPages = (PageListStruct*)PMSegPages;
     memset(PMPages, 0, sizeof(PageListStruct) * PMNumBlocks);
 
@@ -251,8 +251,8 @@ PML_ClosePageFile(void)
         FileSystem_Close(PageFile);
     if (PMSegPages)
     {
-        MM_SetLock(&(memptr)PMSegPages, false);
-        MM_FreePtr(&(void*)PMSegPages);
+        MM_SetLock(&PMSegPages, false);
+        MM_FreePtr(&PMSegPages);
     }
 }
 

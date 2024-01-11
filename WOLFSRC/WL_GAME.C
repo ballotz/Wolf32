@@ -1065,7 +1065,8 @@ void PlayDemo(int16_t demonumber)
     NewGame(1, 0);
     gamestate.mapon = *demoptr++;
     gamestate.difficulty = gd_hard;
-    length = *((uint16_t*)demoptr)++;
+    length = *(uint16_t*)demoptr;
+    demoptr += sizeof(uint16_t);
     demoptr++;
     lastdemoptr = demoptr - 4 + length;
 

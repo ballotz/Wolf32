@@ -1,5 +1,9 @@
 #include "bridge.h"
+#ifndef __APPLE__
 #include <SDL.h>
+#else
+#include <SDL2/SDL.h>
+#endif
 #include <stdio.h>
 
 SDL_Window* window;
@@ -112,12 +116,22 @@ void Deinitialize()
     SDL_Quit();
 }
 
+#ifndef __APPLE__
 int SDL_main(int argc, char* argv[])
 {
     Initialize();
     Main(argc, argv);
     return 0;
 }
+#else
+int main(int argc, const char *argv[])
+{
+    Initialize();
+    Main(argc, argv);
+    return 0;
+}
+#endif
+
 
 //------------------------------------------------------------------------------
 // System
@@ -200,14 +214,13 @@ int32_t FileSystem_FileLength(FileSystemHandle handle)
 
 uint8_t FileSystem_FileExisit(const char* name)
 {
-    uint8_t exist = 0;
-    FILE* f = fopen(name, "rb");
-    if (f)
+    FileSystemHandle h = FileSystem_Open(name, FileSystemRead);
+    if (FileSystem_ValidHandle(h))
     {
-        exist = 1;
-        fclose(f);
+        FileSystem_Close(h);
+        return 1;
     }
-    return exist;
+    return 0;
 }
 
 //------------------------------------------------------------------------------

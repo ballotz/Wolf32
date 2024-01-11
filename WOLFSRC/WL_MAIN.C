@@ -1,7 +1,5 @@
 // WL_MAIN.C
 
-#include <conio.h>
-#include <time.h> /* clock_t, clock, CLOCKS_PER_SEC */
 #include "WL_DEF.H"
 #pragma hdrstop
 
@@ -559,7 +557,7 @@ void BuildTables(void)
             sintable[i + ANGLES] =
             sintable[ANGLES / 2 - i] = value;
         sintable[ANGLES - i] =
-            sintable[ANGLES / 2 + i] = value | 0x80000000l;
+            sintable[ANGLES / 2 + i] = value | 0x80000000;
         angle += anglestep;
     }
 
@@ -759,7 +757,11 @@ boolean MS_CheckParm(char* check)
             if (!*parm++)
                 break;                          // hit end of string without an alphanum
 
+#ifndef __APPLE__
         if (!stricmp(check, parm))
+#else
+        if (!strcasecmp(check, parm))
+#endif
             return true;
     }
 
@@ -982,7 +984,7 @@ void DoJukebox(void)
     };
 
     //struct dostime_t time;
-    clock_t time;
+    uint32_t time;
 
 
     IN_ClearKeysDown();
@@ -996,8 +998,8 @@ void DoJukebox(void)
 #ifndef UPLOAD
     //_dos_gettime(&time);
     //start = (time.hsecond % 3) * 6;
-    time = clock();
-    start = ((time / (CLOCKS_PER_SEC / 100)) % 3) * 6;
+    time = TimeCount_Get();
+    start = ((time * 100 / 70) % 3) * 6;
 #else
     start = 0;
 #endif

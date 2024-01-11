@@ -487,13 +487,13 @@ void PageLayout (boolean shownumber)
 		px = 208;
 		#else
 		strcpy (str,"pg ");
-		itoa (pagenum,str2,10);
+        snprintf(str2, sizeof(str2), "%i", pagenum);
 		strcat (str,str2);
 		strcat (str," of ");
 		py = 183;
 		px = 213;
 		#endif
-		itoa (numpages,str2,10);
+        snprintf(str2, sizeof(str2), "%i", numpages);
 		strcat (str,str2);
 		fontcolor = 0x4f; 			   //12^BACKCOLOR;
 

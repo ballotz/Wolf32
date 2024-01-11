@@ -527,7 +527,7 @@ void MM_SortMem(void)
             playing += STARTADLIBSOUNDS;
             break;
         }
-        MM_SetLock(&(memptr)audiosegs[playing], true);
+        MM_SetLock(&audiosegs[playing], true);
     }
 
 
@@ -588,7 +588,7 @@ void MM_SortMem(void)
         aftersort();
 
     if (playing)
-        MM_SetLock(&(memptr)audiosegs[playing], false);
+        MM_SetLock(&audiosegs[playing], false);
 }
 
 
