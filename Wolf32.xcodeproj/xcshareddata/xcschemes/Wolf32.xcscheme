@@ -14,8 +14,8 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "6E40494D2B5075C3001E6ACA"
-               BuildableName = "Wolf32"
+               BlueprintIdentifier = "6E02200E2B51CD15007B31AA"
+               BuildableName = "Wolf32.app"
                BlueprintName = "Wolf32"
                ReferencedContainer = "container:Wolf32.xcodeproj">
             </BuildableReference>
@@ -45,8 +45,8 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "6E40494D2B5075C3001E6ACA"
-            BuildableName = "Wolf32"
+            BlueprintIdentifier = "6E02200E2B51CD15007B31AA"
+            BuildableName = "Wolf32.app"
             BlueprintName = "Wolf32"
             ReferencedContainer = "container:Wolf32.xcodeproj">
          </BuildableReference>
@@ -62,8 +62,8 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "6E40494D2B5075C3001E6ACA"
-            BuildableName = "Wolf32"
+            BlueprintIdentifier = "6E02200E2B51CD15007B31AA"
+            BuildableName = "Wolf32.app"
             BlueprintName = "Wolf32"
             ReferencedContainer = "container:Wolf32.xcodeproj">
          </BuildableReference>

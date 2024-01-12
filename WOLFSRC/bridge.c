@@ -1,9 +1,5 @@
 #include "bridge.h"
-#ifndef __APPLE__
 #include <SDL.h>
-#else
-#include <SDL2/SDL.h>
-#endif
 #include <stdio.h>
 
 SDL_Window* window;
@@ -164,12 +160,18 @@ void FileSystem_GetMode(int32_t options, char* mode)
     mode[index++] = '\0';
 }
 
+//char searchpath[] = "../../../";
+char searchpath[] = "./";
+
 FileSystemHandle FileSystem_Open(const char* name, int32_t options)
 {
     FileSystemHandle ret;
     char mode[4];
+    char path[256];
+    
+    snprintf(path, sizeof(path), "%s%s", searchpath, name);
     FileSystem_GetMode(options, mode);
-    ret.internal = (uintptr_t)fopen(name, mode);
+    ret.internal = (uintptr_t)fopen(path, mode);
     return ret;
 }
 
