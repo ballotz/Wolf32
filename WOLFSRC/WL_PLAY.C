@@ -926,7 +926,7 @@ void GetNewActor(void)
         lastobj->next = new;
     new->prev = lastobj;	// new->next is allready NULL from memset
 
-    new->active = false;
+    new->active = ac_no;
     lastobj = new;
 
     objcount++;

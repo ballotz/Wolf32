@@ -126,7 +126,7 @@ void ReadConfig(void)
         if (sd == sdm_AdLib && !AdLibPresent && !SoundBlasterPresent)
         {
             sd = sdm_PC;
-            sd = smm_Off;
+            sm = smm_Off;
         }
 
         if ((sds == sds_SoundBlaster && !SoundBlasterPresent) ||
@@ -1077,7 +1077,7 @@ void DoJukebox(void)
 ==========================
 */
 
-void InitGame()
+void InitGame(void)
 {
     int16_t     i, x, y;
     uint16_t    *blockstart;
@@ -1327,7 +1327,7 @@ void Quit(char* error)
 
 static  char* ParmStrings[] = { "baby","easy","normal","hard","" };
 
-void    DemoLoop()
+void    DemoLoop(void)
 {
     static int16_t LastDemo;
     int16_t     i, level;

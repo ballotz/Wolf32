@@ -15,7 +15,7 @@ uint8_t keyboard_map[SDL_NUM_SCANCODES];
 
 Uint64 time_count;
 
-void InitKeyMap()
+void InitKeyMap(void)
 {
     keyboard_map[SDL_SCANCODE_ESCAPE] = 0x01;
     keyboard_map[SDL_SCANCODE_Y] = 0x15;
@@ -44,7 +44,7 @@ void InitKeyMap()
     keyboard_map[SDL_SCANCODE_RETURN] = 0x1C;
 }
 
-void Initialize()
+void Initialize(void)
 {
     // attempt to initialize SDL
     if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
@@ -102,7 +102,7 @@ void Initialize()
     time_count = SDL_GetPerformanceCounter();
 }
 
-void Deinitialize()
+void Deinitialize(void)
 {
     SDL_ShowCursor(SDL_ENABLE);
 
@@ -267,7 +267,7 @@ void VGA_Update(
 // Keyboard
 //------------------------------------------------------------------------------
 
-void Keyboard_Update()
+void Keyboard_Update(void)
 {
     SDL_Event event;
     SDL_Scancode code;
@@ -333,7 +333,7 @@ void Mouse_GetDelta(int16_t* dx, int16_t* dy)
     *dy = my - dst_height / 2;
 }
 
-void Mouse_ResetDelta()
+void Mouse_ResetDelta(void)
 {
     SDL_WarpMouseInWindow(window, dst_width / 2, dst_height / 2);
 }
@@ -348,7 +348,7 @@ uint16_t Mouse_GetButtons(void)
         ((1 << 1) & ~(((buttons & SDL_BUTTON_RMASK) != 0) - 1));
 }
 
-uint8_t Mouse_Detect()
+uint8_t Mouse_Detect(void)
 {
     return 1;
 }
@@ -388,7 +388,7 @@ uint16_t INL_GetJoyButtons(uint16_t joy)
 // VR
 //------------------------------------------------------------------------------
 
-int16_t VR_GetAngle()
+int16_t VR_GetAngle(void)
 {
     return 0;
 }
@@ -399,13 +399,13 @@ int16_t VR_GetAngle()
 
 Uint64 timer70hz_offset;
 
-Uint64 Timer70Hz()
+Uint64 Timer70Hz(void)
 {
     Uint64 counter = SDL_GetPerformanceCounter();
     return counter / (SDL_GetPerformanceFrequency() / 70);
 }
 
-uint32_t TimeCount_Get()
+uint32_t TimeCount_Get(void)
 {
     return (uint32_t)(Timer70Hz() - timer70hz_offset);
 }
@@ -424,22 +424,22 @@ void AdLib_StartMusic(uint16_t* values, uint16_t length)
 
 }
 
-void AdLib_MusicOff()
+void AdLib_MusicOff(void)
 {
 
 }
 
-uint8_t AdLib_Detect()
+uint8_t AdLib_Detect(void)
 {
     return 0;
 }
 
-void AdLib_Clean()
+void AdLib_Clean(void)
 {
 
 }
 
-void AdLib_Shut()
+void AdLib_Shut(void)
 {
 
 }
@@ -449,12 +449,12 @@ void AdLib_PlaySound(BridgeAdLibSound* sound)
 
 }
 
-void AdLib_StopSound()
+void AdLib_StopSound(void)
 {
 
 }
 
-uint8_t AdLib_SoundPlaying()
+uint8_t AdLib_SoundPlaying(void)
 {
     return 0;
 }
@@ -463,12 +463,12 @@ uint8_t AdLib_SoundPlaying()
 // PC Speaker
 //------------------------------------------------------------------------------
 
-void PCSpeaker_Shut()
+void PCSpeaker_Shut(void)
 {
 
 }
 
-void PCSpeaker_StopSound()
+void PCSpeaker_StopSound(void)
 {
 
 }
@@ -478,7 +478,7 @@ void PCSpeaker_PlaySound(uint8_t* data, uint32_t length)
 
 }
 
-void PCSpeaker_StopSample()
+void PCSpeaker_StopSample(void)
 {
 
 }
@@ -488,7 +488,7 @@ void PCSpeaker_PlaySample(uint8_t* data, uint32_t length)
 
 }
 
-uint8_t PCSpeaker_SoundPlaying()
+uint8_t PCSpeaker_SoundPlaying(void)
 {
     return 0;
 }
@@ -497,12 +497,12 @@ uint8_t PCSpeaker_SoundPlaying()
 // SoundSource
 //------------------------------------------------------------------------------
 
-uint8_t SoundSource_Detect()
+uint8_t SoundSource_Detect(void)
 {
     return 0;
 }
 
-void SoundSource_Shut()
+void SoundSource_Shut(void)
 {
 
 }
@@ -512,7 +512,7 @@ void SoundSource_PlaySample(uint8_t* data, uint32_t length)
 
 }
 
-void SoundSource_StopSample()
+void SoundSource_StopSample(void)
 {
 
 }
@@ -521,7 +521,7 @@ void SoundSource_StopSample()
 // SoundBlaster
 //------------------------------------------------------------------------------
 
-uint8_t SoundBlaster_Detect()
+uint8_t SoundBlaster_Detect(void)
 {
     return 0;
 }
@@ -536,7 +536,7 @@ void SoundBlaster_PlaySample(uint8_t* data, uint32_t length)
 
 }
 
-void SoundBlaster_StopSample()
+void SoundBlaster_StopSample(void)
 {
 
 }

@@ -51,7 +51,7 @@ void VL_ClearVideo(byte color); // trigger VL_Refresh()
 void VL_SetLineWidth(uint16_t width);
 void VL_WaitVBL(uint16_t vbls);
 void VL_SetScreen(uint16_t crtc, uint16_t pelpan); // trigger VL_Refresh()
-void VL_Refresh();
+void VL_Refresh(void);
 
 void VL_FillPalette(int16_t red, int16_t green, int16_t blue); // trigger VL_Refresh()
 void VL_SetColor(int16_t color, int16_t red, int16_t green, int16_t blue);

@@ -144,7 +144,7 @@ int32_t ypartialbyxstep(word ypartial)
         return -FixedMul(-xstep, ypartial);
 }
 
-void AsmRefresh()
+void AsmRefresh(void)
 {
     int16_t angle; // angle of the ray through pixx
     int16_t xspot; // (index into tilemap and spotvis)
@@ -1488,7 +1488,7 @@ void DrawScaleds(void)
             || (*(visspot + 64) && !*(tilespot + 64))
             || (*(visspot + 63) && !*(tilespot + 63)))
         {
-            obj->active = true;
+            obj->active = ac_yes;
             TransformActor(obj);
             if (!obj->viewheight)
                 continue;						// too close or far away

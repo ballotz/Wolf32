@@ -63,7 +63,7 @@ void VGA_Update(
 extern void INL_KeyService_ISR(uint8_t key);
 
 // request keyboard update trough INL_KeyService_ISR()
-void Keyboard_Update();
+void Keyboard_Update(void);
 
 //------------------------------------------------------------------------------
 // Mouse
@@ -73,14 +73,14 @@ void Keyboard_Update();
 void Mouse_GetDelta(int16_t* dx, int16_t* dy);
 
 // Reset the amount that the mouse has moved
-void Mouse_ResetDelta();
+void Mouse_ResetDelta(void);
 
 // Gets the status of the mouse buttons
 uint16_t Mouse_GetButtons(void);
 
 // 0, no mouse
 // 1, mouse available
-uint8_t Mouse_Detect();
+uint8_t Mouse_Detect(void);
 
 void Mouse_SetPos(int16_t x, int16_t y);
 
@@ -100,13 +100,13 @@ uint16_t INL_GetJoyButtons(uint16_t joy);
 // VR
 //------------------------------------------------------------------------------
 
-int16_t VR_GetAngle();
+int16_t VR_GetAngle(void);
 
 //------------------------------------------------------------------------------
 // TimeCount (70Hz)
 //------------------------------------------------------------------------------
 
-uint32_t TimeCount_Get();
+uint32_t TimeCount_Get(void);
 
 void TimeCount_Set(uint32_t value);
 
@@ -118,16 +118,16 @@ void TimeCount_Set(uint32_t value);
 void AdLib_StartMusic(uint16_t* values, uint16_t length);
 
 // turns off the sequencer and any playing notes
-void AdLib_MusicOff();
+void AdLib_MusicOff(void);
 
 // Determines if there's an AdLib
-uint8_t AdLib_Detect();
+uint8_t AdLib_Detect(void);
 
 // Totally shuts down the AdLib card
-void AdLib_Clean();
+void AdLib_Clean(void);
 
 // Shuts down the AdLib card for sound effects
-void AdLib_Shut();
+void AdLib_Shut(void);
 
 typedef	struct
 {
@@ -163,63 +163,63 @@ typedef	struct
 void AdLib_PlaySound(BridgeAdLibSound* sound);
 
 // Turns off any sound effects playing through the AdLib card
-void AdLib_StopSound();
+void AdLib_StopSound(void);
 
 // Determines if an AdLib sound is playing
-uint8_t AdLib_SoundPlaying();
+uint8_t AdLib_SoundPlaying(void);
 
-void AdLib_SoundFinished();
+void AdLib_SoundFinished(void);
 
 //------------------------------------------------------------------------------
 // PC Speaker
 //------------------------------------------------------------------------------
 
 // Turns off the pc speaker
-void PCSpeaker_Shut();
+void PCSpeaker_Shut(void);
 
 // Stops the current sound playing on the PC Speaker
-void PCSpeaker_StopSound();
+void PCSpeaker_StopSound(void);
 
 // Plays the specified sound on the PC speaker
 // When finished must call PCSpeaker_SoundFinished()
 void PCSpeaker_PlaySound(uint8_t* data, uint32_t length);
 
 // Stops a sample playing on the PC speaker
-void PCSpeaker_StopSample();
+void PCSpeaker_StopSample(void);
 
 // Plays the specified sample on the PC speaker
 void PCSpeaker_PlaySample(uint8_t* data, uint32_t length);
 
 // Determines if a PC speaker sound is playing
-uint8_t PCSpeaker_SoundPlaying();
+uint8_t PCSpeaker_SoundPlaying(void);
 
-void PCSpeaker_SoundFinished();
+void PCSpeaker_SoundFinished(void);
 
 //------------------------------------------------------------------------------
 // SoundSource
 //------------------------------------------------------------------------------
 
 // Determines if there's a SoundSource
-uint8_t SoundSource_Detect();
+uint8_t SoundSource_Detect(void);
 
 // Turns off the Sound Source
-void SoundSource_Shut();
+void SoundSource_Shut(void);
 
 // Plays the specified sample on the Sound Source
 // When finished must call SoundSource_SoundFinished()
 void SoundSource_PlaySample(uint8_t* data, uint32_t length);
 
 // Stops a sample playing on the Sound Source
-void SoundSource_StopSample();
+void SoundSource_StopSample(void);
 
-void SoundSource_SoundFinished();
+void SoundSource_SoundFinished(void);
 
 //------------------------------------------------------------------------------
 // SoundBlaster
 //------------------------------------------------------------------------------
 
 // Determines if there's a SoundBlaster
-uint8_t SoundBlaster_Detect();
+uint8_t SoundBlaster_Detect(void);
 
 // Sets the attenuation levels for the left and right channels
 void SoundBlaster_Level(int16_t left, int16_t right);
@@ -229,7 +229,7 @@ void SoundBlaster_Level(int16_t left, int16_t right);
 void SoundBlaster_PlaySample(uint8_t* data, uint32_t length);
 
 // Stops any active sampled sound
-void SoundBlaster_StopSample();
+void SoundBlaster_StopSample(void);
 
-void SoundBlaster_SoundFinished();
+void SoundBlaster_SoundFinished(void);
 

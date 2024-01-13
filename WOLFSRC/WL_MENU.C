@@ -4,7 +4,7 @@
 // by John Romero (C) 1992 Id Software, Inc.
 //
 ////////////////////////////////////////////////////////////////////
-#include "wl_def.h"
+#include "WL_DEF.H"
 #pragma hdrstop
 
 //
@@ -1576,6 +1576,7 @@ int16_t CP_SaveGame(int16_t quick)
             // OVERWRITE EXISTING SAVEGAME?
             //
             if (SaveGamesAvail[which])
+            {
 #ifdef JAPAN
                 if (!GetYorN(7, 8, C_JAPSAVEOVERPIC))
 #else
@@ -1591,6 +1592,7 @@ int16_t CP_SaveGame(int16_t quick)
                     PrintLSEntry(which, HIGHLIGHT);
                     VW_UpdateScreen();
                 }
+            }
 
             ShootSnd();
 

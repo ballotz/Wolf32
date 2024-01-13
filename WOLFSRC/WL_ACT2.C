@@ -246,7 +246,7 @@ void A_Smoke (objtype *ob)
 	new->x = ob->x;
 	new->y = ob->y;
 	new->obclass = inertobj;
-	new->active = true;
+	new->active = ac_yes;
 
 	new->flags = FL_NEVERMARK;
 }
@@ -1022,7 +1022,7 @@ void SpawnPatrol (enemy_t which, int16_t tilex, int16_t tiley, int16_t dir)
 	new->hitpoints = starthitpoints[gamestate.difficulty][which];
 	new->distance = tileglobal;
 	new->flags |= FL_SHOOTABLE;
-	new->active = true;
+	new->active = ac_yes;
 
 	actorat[new->tilex][new->tiley] = 0;		// don't use original spot
 
@@ -2316,7 +2316,7 @@ void T_SchabbThrow (objtype *ob)
 	new->speed = 0x2000l;
 
 	new->flags = FL_NONMARK;
-	new->active = true;
+	new->active = ac_yes;
 
 	PlaySoundLocActor (SCHABBSTHROWSND,new);
 }
@@ -2355,7 +2355,7 @@ void T_GiftThrow (objtype *ob)
 	new->angle = iangle;
 	new->speed = 0x2000l;
 	new->flags = FL_NONMARK;
-	new->active = true;
+	new->active = ac_yes;
 
 	PlaySoundLocActor (MISSILEFIRESND,new);
 }
@@ -2943,7 +2943,7 @@ void T_FakeFire (objtype *ob)
 	new->obclass = fireobj;
 	new->speed = 0x1200l;
 	new->flags = FL_NEVERMARK;
-	new->active = true;
+	new->active = ac_yes;
 
 	PlaySoundLocActor (FLAMETHROWERSND,new);
 }
