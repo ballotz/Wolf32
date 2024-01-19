@@ -11,37 +11,80 @@ int src_height = 200;
 int dst_width = 800;
 int dst_height = 600;
 
-uint8_t keyboard_map[SDL_NUM_SCANCODES];
+uint8_t* keyboard_map[SDL_NUM_SCANCODES];
 
 Uint64 time_count;
 
 void InitKeyMap(void)
 {
-    keyboard_map[SDL_SCANCODE_ESCAPE] = 0x01;
-    keyboard_map[SDL_SCANCODE_Y] = 0x15;
-    keyboard_map[SDL_SCANCODE_LCTRL] = 0x1D;
-    keyboard_map[SDL_SCANCODE_RCTRL] = 0x1D;
-    keyboard_map[SDL_SCANCODE_LSHIFT] = 0x2A;
-    keyboard_map[SDL_SCANCODE_N] = 0x31;
-    keyboard_map[SDL_SCANCODE_RSHIFT] = 0x36;
-    keyboard_map[SDL_SCANCODE_LALT] = 0x38;
-    keyboard_map[SDL_SCANCODE_RALT] = 0x38;
-    keyboard_map[SDL_SCANCODE_SPACE] = 0x39;
-    keyboard_map[SDL_SCANCODE_F1] = 0x3B;
-    keyboard_map[SDL_SCANCODE_F2] = 0x3C;
-    keyboard_map[SDL_SCANCODE_F3] = 0x3D;
-    keyboard_map[SDL_SCANCODE_F4] = 0x3E;
-    keyboard_map[SDL_SCANCODE_F5] = 0x3F;
-    keyboard_map[SDL_SCANCODE_F6] = 0x40;
-    keyboard_map[SDL_SCANCODE_F7] = 0x41;
-    keyboard_map[SDL_SCANCODE_F8] = 0x42;
-    keyboard_map[SDL_SCANCODE_F9] = 0x43;
-    keyboard_map[SDL_SCANCODE_F10] = 0x44;
-    keyboard_map[SDL_SCANCODE_LEFT] = 0x4B;
-    keyboard_map[SDL_SCANCODE_UP] = 0x48;
-    keyboard_map[SDL_SCANCODE_RIGHT] = 0x4D;
-    keyboard_map[SDL_SCANCODE_DOWN] = 0x50;
-    keyboard_map[SDL_SCANCODE_RETURN] = 0x1C;
+    keyboard_map[SDL_SCANCODE_ESCAPE] = "\x01";
+    keyboard_map[SDL_SCANCODE_1] = "\x02";
+    keyboard_map[SDL_SCANCODE_2] = "\x03";
+    keyboard_map[SDL_SCANCODE_3] = "\x04";
+    keyboard_map[SDL_SCANCODE_4] = "\x05";
+    keyboard_map[SDL_SCANCODE_5] = "\x06";
+    keyboard_map[SDL_SCANCODE_6] = "\x07";
+    keyboard_map[SDL_SCANCODE_7] = "\x08";
+    keyboard_map[SDL_SCANCODE_8] = "\x09";
+    keyboard_map[SDL_SCANCODE_9] = "\x0A";
+    keyboard_map[SDL_SCANCODE_0] = "\x0B";
+    keyboard_map[SDL_SCANCODE_BACKSPACE] = "\x0E";
+    keyboard_map[SDL_SCANCODE_TAB] = "\x0F";
+    keyboard_map[SDL_SCANCODE_Q] = "\x10";
+    keyboard_map[SDL_SCANCODE_W] = "\x11";
+    keyboard_map[SDL_SCANCODE_E] = "\x12";
+    keyboard_map[SDL_SCANCODE_R] = "\x13";
+    keyboard_map[SDL_SCANCODE_T] = "\x14";
+    keyboard_map[SDL_SCANCODE_Y] = "\x15";
+    keyboard_map[SDL_SCANCODE_U] = "\x16";
+    keyboard_map[SDL_SCANCODE_I] = "\x17";
+    keyboard_map[SDL_SCANCODE_O] = "\x18";
+    keyboard_map[SDL_SCANCODE_P] = "\x19";
+    keyboard_map[SDL_SCANCODE_RETURN] = "\x1C";
+    keyboard_map[SDL_SCANCODE_LCTRL] = "\x1D";
+    keyboard_map[SDL_SCANCODE_A] = "\x1E";
+    keyboard_map[SDL_SCANCODE_S] = "\x1F";
+    keyboard_map[SDL_SCANCODE_D] = "\x20";
+    keyboard_map[SDL_SCANCODE_F] = "\x21";
+    keyboard_map[SDL_SCANCODE_G] = "\x22";
+    keyboard_map[SDL_SCANCODE_H] = "\x23";
+    keyboard_map[SDL_SCANCODE_J] = "\x24";
+    keyboard_map[SDL_SCANCODE_K] = "\x25";
+    keyboard_map[SDL_SCANCODE_L] = "\x26";
+    keyboard_map[SDL_SCANCODE_LSHIFT] = "\x2A";
+    keyboard_map[SDL_SCANCODE_Z] = "\x2C";
+    keyboard_map[SDL_SCANCODE_X] = "\x2D";
+    keyboard_map[SDL_SCANCODE_C] = "\x2E";
+    keyboard_map[SDL_SCANCODE_V] = "\x2F";
+    keyboard_map[SDL_SCANCODE_B] = "\x30";
+    keyboard_map[SDL_SCANCODE_N] = "\x31";
+    keyboard_map[SDL_SCANCODE_M] = "\x32";
+    keyboard_map[SDL_SCANCODE_RSHIFT] = "\x36";
+    keyboard_map[SDL_SCANCODE_LALT] = "\x38";
+    keyboard_map[SDL_SCANCODE_SPACE] = "\x39";
+    keyboard_map[SDL_SCANCODE_CAPSLOCK] = "\x3A";
+    keyboard_map[SDL_SCANCODE_F1] = "\x3B";
+    keyboard_map[SDL_SCANCODE_F2] = "\x3C";
+    keyboard_map[SDL_SCANCODE_F3] = "\x3D";
+    keyboard_map[SDL_SCANCODE_F4] = "\x3E";
+    keyboard_map[SDL_SCANCODE_F5] = "\x3F";
+    keyboard_map[SDL_SCANCODE_F6] = "\x40";
+    keyboard_map[SDL_SCANCODE_F7] = "\x41";
+    keyboard_map[SDL_SCANCODE_F8] = "\x42";
+    keyboard_map[SDL_SCANCODE_F9] = "\x43";
+    keyboard_map[SDL_SCANCODE_F10] = "\x44";
+    keyboard_map[SDL_SCANCODE_F11] = "\x57";
+    keyboard_map[SDL_SCANCODE_F12] = "\x58";
+    keyboard_map[SDL_SCANCODE_RCTRL] = "\xE0\x1D";
+    keyboard_map[SDL_SCANCODE_RALT] = "\xE0\x38";
+    keyboard_map[SDL_SCANCODE_UP] = "\xE0\x48";
+    keyboard_map[SDL_SCANCODE_LEFT] = "\xE0\x4B";
+    keyboard_map[SDL_SCANCODE_RIGHT] = "\xE0\x4D";
+    keyboard_map[SDL_SCANCODE_DOWN] = "\xE0\x50";
+    keyboard_map[SDL_SCANCODE_INSERT] = "\xE0\x52";
+    keyboard_map[SDL_SCANCODE_DELETE] = "\xE0\x53";
+    keyboard_map[SDL_SCANCODE_PAUSE] = "\xE1\x1D\x45\xE1\x9D\xC5";
+}
 }
 
 void Initialize(void)
@@ -271,6 +314,7 @@ void Keyboard_Update(void)
 {
     SDL_Event event;
     SDL_Scancode code;
+    uint8_t* sequence;
     uint8_t key;
 
     SDL_PumpEvents();
@@ -278,43 +322,25 @@ void Keyboard_Update(void)
     {
         code = event.key.keysym.scancode;
 
-        if (code == SDL_SCANCODE_PAUSE)
+        sequence = keyboard_map[code];
+        if (sequence)
         {
-            INL_KeyService_ISR(0xE1);
-            INL_KeyService_ISR(0x1D);
-            INL_KeyService_ISR(0x45);
-            INL_KeyService_ISR(0xE1);
-            INL_KeyService_ISR(0x9D);
-            INL_KeyService_ISR(0xC5);
-        }
-        else
-        {
-            key = keyboard_map[code];
-
-            if (key)
+            if (event.key.type == SDL_KEYDOWN)
             {
-                if (code == SDL_SCANCODE_SLASH ||
-                    code == SDL_SCANCODE_RETURN ||
-                    code == SDL_SCANCODE_INSERT ||
-                    code == SDL_SCANCODE_DELETE ||
-                    code == SDL_SCANCODE_HOME ||
-                    code == SDL_SCANCODE_END ||
-                    code == SDL_SCANCODE_PAGEUP ||
-                    code == SDL_SCANCODE_PAGEDOWN ||
-                    code == SDL_SCANCODE_LEFT ||
-                    code == SDL_SCANCODE_RIGHT ||
-                    code == SDL_SCANCODE_UP ||
-                    code == SDL_SCANCODE_DOWN ||
-                    code == SDL_SCANCODE_RALT ||
-                    code == SDL_SCANCODE_RCTRL)
+                while (key = *sequence++)
+                    INL_KeyService_ISR(key);
+            }
+            else
+            {
+                if (code == SDL_SCANCODE_PAUSE)
+                    return;
+                while (key = *sequence++)
                 {
-                    INL_KeyService_ISR(0xE0);
+                    if (key == 0xE0)
+                        INL_KeyService_ISR(key);
+                    else
+                        INL_KeyService_ISR(key | 0x80);
                 }
-
-                if (event.key.type == SDL_KEYUP)
-                    key |= 0x80;
-
-                INL_KeyService_ISR(key);
             }
         }
     }

@@ -751,6 +751,7 @@ void CheckKeys(void)
     {
         bufferofs = displayofs;
         LatchDrawPic(20 - 4, 80 - 2 * 8, PAUSEDPIC);
+        VL_Refresh();
         SD_MusicOff();
         IN_Ack();
         IN_ClearKeysDown();
