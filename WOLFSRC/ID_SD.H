@@ -26,11 +26,13 @@ typedef	enum {
 typedef	enum {
     sds_Off, sds_PC, sds_SoundSource, sds_SoundBlaster
 }	SDSMode;
+#pragma pack(push, 2)
 typedef	struct
 {
     longword	length;
     word		priority;
 } SoundCommon;
+#pragma pack(pop)
 
 typedef	struct
 {

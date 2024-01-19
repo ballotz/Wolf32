@@ -129,11 +129,13 @@ void AdLib_Clean(void);
 // Shuts down the AdLib card for sound effects
 void AdLib_Shut(void);
 
+#pragma pack(push, 2)
 typedef	struct
 {
     uint32_t    length;
     uint16_t    priority;
 } BridgeSoundCommon;
+#pragma pack(pop)
 
 typedef	struct
 {
