@@ -2192,7 +2192,10 @@ void EnterCtrlData(int16_t index, CustomCtrls* cust, void (*DrawRtn)(int16_t), v
 
 
                 if (type == KEYBOARDBTNS || type == KEYBOARDMOVE)
+                {
                     IN_ClearKeysDown();
+                    Keyboard_Update();
+                }
 
                 //
                 // FLASH CURSOR
@@ -2249,11 +2252,11 @@ void EnterCtrlData(int16_t index, CustomCtrls* cust, void (*DrawRtn)(int16_t), v
                 case JOYSTICK:
                     if (ci.button0) result = 1;
                     else
-                        if (ci.button1) result = 2;
-                        else
-                            if (ci.button2) result = 3;
-                            else
-                                if (ci.button3) result = 4;
+                    if (ci.button1) result = 2;
+                    else
+                    if (ci.button2) result = 3;
+                    else
+                    if (ci.button3) result = 4;
 
                     if (result)
                     {
