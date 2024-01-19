@@ -1122,14 +1122,21 @@ void Died(void)
     //
     // swing around to face attacker
     //
-    dx = killerobj->x - player->x;
-    dy = player->y - killerobj->y;
+    if (killerobj)
+    {
+        dx = killerobj->x - player->x;
+        dy = player->y - killerobj->y;
 
-    fangle = (float)atan2(dy, dx);			// returns -pi to pi
-    if (fangle < 0)
-        fangle = (float)(M_PI * 2 + fangle);
+        fangle = (float)atan2(dy, dx);			// returns -pi to pi
+        if (fangle < 0)
+            fangle = (float)(M_PI * 2 + fangle);
 
-    iangle = (int16_t)(fangle / (M_PI * 2) * ANGLES);
+        iangle = (int16_t)(fangle / (M_PI * 2) * ANGLES);
+    }
+    else
+    {
+        iangle = player->angle;
+    }
 
     if (player->angle > iangle)
     {
