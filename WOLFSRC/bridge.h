@@ -111,6 +111,31 @@ uint32_t TimeCount_Get(void);
 void TimeCount_Set(uint32_t value);
 
 //------------------------------------------------------------------------------
+// PC Speaker
+//------------------------------------------------------------------------------
+
+// Plays the specified sound on the PC speaker
+// When finished must call PCSpeaker_SoundFinished()
+void PCSpeaker_PlaySound(uint8_t* data, uint32_t length);
+
+// Stops the current sound playing on the PC Speaker
+void PCSpeaker_StopSound(void);
+
+// Determines if a PC speaker sound is playing
+uint8_t PCSpeaker_SoundPlaying(void);
+
+// Plays the specified sample on the PC speaker
+void PCSpeaker_PlaySample(uint8_t* data, uint32_t length);
+
+// Stops a sample playing on the PC speaker
+void PCSpeaker_StopSample(void);
+
+// Turns off the pc speaker
+void PCSpeaker_Shut(void);
+
+extern void PCSpeaker_SoundFinished(void);
+
+//------------------------------------------------------------------------------
 // AdLib
 //------------------------------------------------------------------------------
 
@@ -170,32 +195,7 @@ void AdLib_StopSound(void);
 // Determines if an AdLib sound is playing
 uint8_t AdLib_SoundPlaying(void);
 
-void AdLib_SoundFinished(void);
-
-//------------------------------------------------------------------------------
-// PC Speaker
-//------------------------------------------------------------------------------
-
-// Turns off the pc speaker
-void PCSpeaker_Shut(void);
-
-// Stops the current sound playing on the PC Speaker
-void PCSpeaker_StopSound(void);
-
-// Plays the specified sound on the PC speaker
-// When finished must call PCSpeaker_SoundFinished()
-void PCSpeaker_PlaySound(uint8_t* data, uint32_t length);
-
-// Stops a sample playing on the PC speaker
-void PCSpeaker_StopSample(void);
-
-// Plays the specified sample on the PC speaker
-void PCSpeaker_PlaySample(uint8_t* data, uint32_t length);
-
-// Determines if a PC speaker sound is playing
-uint8_t PCSpeaker_SoundPlaying(void);
-
-void PCSpeaker_SoundFinished(void);
+extern void AdLib_SoundFinished(void);
 
 //------------------------------------------------------------------------------
 // SoundSource
@@ -214,7 +214,7 @@ void SoundSource_PlaySample(uint8_t* data, uint32_t length);
 // Stops a sample playing on the Sound Source
 void SoundSource_StopSample(void);
 
-void SoundSource_SoundFinished(void);
+extern void SoundSource_SoundFinished(void);
 
 //------------------------------------------------------------------------------
 // SoundBlaster
@@ -233,5 +233,5 @@ void SoundBlaster_PlaySample(uint8_t* data, uint32_t length);
 // Stops any active sampled sound
 void SoundBlaster_StopSample(void);
 
-void SoundBlaster_SoundFinished(void);
+extern void SoundBlaster_SoundFinished(void);
 

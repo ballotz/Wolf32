@@ -15,6 +15,11 @@ uint8_t* keyboard_map[SDL_NUM_SCANCODES];
 
 Uint64 time_count;
 
+SDL_AudioDeviceID audio_device;
+SDL_AudioSpec audio_format;
+SDL_AudioStream *pc_sd_stream;
+uint8_t pc_sd_playing;
+
 void InitKeyMap(void)
 {
     keyboard_map[SDL_SCANCODE_ESCAPE] = "\x01";
@@ -85,6 +90,92 @@ void InitKeyMap(void)
     keyboard_map[SDL_SCANCODE_DELETE] = "\xE0\x53";
     keyboard_map[SDL_SCANCODE_PAUSE] = "\xE1\x1D\x45\xE1\x9D\xC5";
 }
+
+#define PC_SD_RATE          140
+#define PC_SQUARE_V         0.1f    // -20dB
+#define PC_SQUARE_CUTOFF    3500.f
+
+void SynthPCSpeakerSound(float* out_data, int out_samples)
+{
+    int             i, j;
+    int             in_read;
+    uint8_t         in_data;
+    float           out_sample;
+    int             in_trigger;
+    static int      in_count = 0;
+    static int      sqr_trigger = 0;
+    static int      sqr_count = 0;
+    static float    sqr_val = 0.f;
+    static float    lp_state[2] = { 0.f, 0.f };
+    float           lp_coeff, coswc;
+
+    in_trigger = audio_format.freq / PC_SD_RATE;
+
+    coswc = cosf(2.f * 3.1416f * (PC_SQUARE_CUTOFF / audio_format.freq));
+    lp_coeff = 1.f - (coswc - 1.f + sqrtf((coswc - 1.f) * (coswc - 3.f)));
+
+    for (i = 0, j = 0; i < out_samples; ++i, j += 2)
+    {
+        // do we need one more sample from input sound?
+        if (in_count > in_trigger)
+        {
+            in_count = 0;
+            sqr_trigger = 0;
+
+            in_read = SDL_AudioStreamGet(pc_sd_stream, &in_data, 1);
+            if (in_read == 0)
+            {
+                PCSpeaker_SoundFinished();
+                pc_sd_playing = 0;
+            }
+            else if (in_data != 0)
+            {
+                // start (or continue) oscillator, use half period
+                sqr_trigger = (int)(in_data * (60.f / 1193181.f) * audio_format.freq) >> 1;
+            }
+        }
+
+        // generate output
+        if (sqr_trigger == 0)
+        {
+            // off
+            out_sample = 0.f;
+        }
+        else
+        {
+            // on
+            if (sqr_count > sqr_trigger)
+            {
+                sqr_count = 0;
+                sqr_val = (sqr_val > 0.f) ? -PC_SQUARE_V : +PC_SQUARE_V;
+            }
+            out_sample = sqr_val;
+        }
+
+        // low pass
+        out_sample += lp_coeff * (lp_state[0] - out_sample);
+        lp_state[0] = out_sample;
+        out_sample += lp_coeff * (lp_state[1] - out_sample);
+        lp_state[1] = out_sample;
+
+        // add to output buffer
+        out_data[j + 0] += out_sample;
+        out_data[j + 1] += out_sample;
+
+        in_count++;
+        sqr_count++;
+    }
+}
+
+void AudioCallback(void* userdata, Uint8* stream, int len)
+{
+    float   *buffer = (float*)stream;
+    int     samples = len / (sizeof(float) * 2);
+
+    SDL_memset(stream, 0, len);
+
+    if (pc_sd_stream)
+        SynthPCSpeakerSound(buffer, samples);
 }
 
 void Initialize(void)
@@ -143,6 +234,34 @@ void Initialize(void)
     InitKeyMap();
 
     time_count = SDL_GetPerformanceCounter();
+
+    //const char* device_name;
+    //for (int i = 0; device_name = SDL_GetAudioDriver(i, 0); ++i)
+    //{
+    //}
+    //device_name = SDL_GetCurrentAudioDriver();
+
+    SDL_AudioSpec want_format;
+    SDL_memset(&want_format, 0, sizeof(want_format));
+    // require float format and 2 channels
+    want_format.freq = 48000;
+    want_format.format = AUDIO_F32;
+    want_format.channels = 2;
+    want_format.samples = 2048;
+    want_format.callback = AudioCallback;
+    audio_device = SDL_OpenAudioDevice(NULL, 0, &want_format, &audio_format,
+        SDL_AUDIO_ALLOW_FREQUENCY_CHANGE | SDL_AUDIO_ALLOW_SAMPLES_CHANGE);
+
+    if (audio_device)
+    {
+        SDL_PauseAudioDevice(audio_device, 0);
+
+        // keep the same input and output format
+        // using AudioStream as a threadsafe data queue
+        pc_sd_stream = SDL_NewAudioStream(
+            AUDIO_S8, 1, PC_SD_RATE,
+            AUDIO_S8, 1, PC_SD_RATE);
+    }
 }
 
 void Deinitialize(void)
@@ -150,8 +269,15 @@ void Deinitialize(void)
     SDL_ShowCursor(SDL_ENABLE);
 
     // clean up SDL
+
     SDL_DestroyWindow(window);
     SDL_DestroyRenderer(renderer);
+
+    if (audio_device)
+        SDL_CloseAudioDevice(audio_device);
+    if (pc_sd_stream)
+        SDL_FreeAudioStream(pc_sd_stream);
+
     SDL_Quit();
 }
 
@@ -442,6 +568,45 @@ void TimeCount_Set(uint32_t value)
 }
 
 //------------------------------------------------------------------------------
+// PC Speaker
+//------------------------------------------------------------------------------
+
+void PCSpeaker_Shut(void)
+{
+    SDL_AudioStreamClear(pc_sd_stream);
+}
+
+void PCSpeaker_PlaySound(uint8_t* data, uint32_t length)
+{
+    if (pc_sd_stream)
+    {
+        SDL_AudioStreamClear(pc_sd_stream);
+        pc_sd_playing = 1;
+        SDL_AudioStreamPut(pc_sd_stream, data, length);
+    }
+}
+
+void PCSpeaker_StopSound(void)
+{
+    SDL_AudioStreamClear(pc_sd_stream);
+}
+
+uint8_t PCSpeaker_SoundPlaying(void)
+{
+    return pc_sd_playing;
+}
+
+void PCSpeaker_PlaySample(uint8_t* data, uint32_t length)
+{
+
+}
+
+void PCSpeaker_StopSample(void)
+{
+
+}
+
+//------------------------------------------------------------------------------
 // AdLib
 //------------------------------------------------------------------------------
 
@@ -481,40 +646,6 @@ void AdLib_StopSound(void)
 }
 
 uint8_t AdLib_SoundPlaying(void)
-{
-    return 0;
-}
-
-//------------------------------------------------------------------------------
-// PC Speaker
-//------------------------------------------------------------------------------
-
-void PCSpeaker_Shut(void)
-{
-
-}
-
-void PCSpeaker_StopSound(void)
-{
-
-}
-
-void PCSpeaker_PlaySound(uint8_t* data, uint32_t length)
-{
-
-}
-
-void PCSpeaker_StopSample(void)
-{
-
-}
-
-void PCSpeaker_PlaySample(uint8_t* data, uint32_t length)
-{
-
-}
-
-uint8_t PCSpeaker_SoundPlaying(void)
 {
     return 0;
 }
