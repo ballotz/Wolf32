@@ -37,5 +37,6 @@
     <ClInclude Include="WOLFSRC\ID_IN.H" />
     <ClInclude Include="WOLFSRC\WL_MENU.H" />
     <ClInclude Include="WOLFSRC\bridge.h" />
+    <ClInclude Include="WOLFSRC\VERSION.H" />
   </ItemGroup>
 </Project>

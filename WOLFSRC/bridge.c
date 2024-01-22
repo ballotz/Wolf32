@@ -17,8 +17,15 @@ Uint64 time_count;
 
 SDL_AudioDeviceID audio_device;
 SDL_AudioSpec audio_format;
-SDL_AudioStream *pc_sd_stream;
-uint8_t pc_sd_playing;
+SDL_AudioStream *pc_sd_stream, *sb_stream;
+uint8_t pc_sd_playing, sb_playing;
+float sb_level[2];
+typedef struct
+{
+    float coeff[5];
+    float state[4];
+} lpfilter2_t;
+lpfilter2_t sb_filter[2];
 
 void InitKeyMap(void)
 {
@@ -91,6 +98,35 @@ void InitKeyMap(void)
     keyboard_map[SDL_SCANCODE_PAUSE] = "\xE1\x1D\x45\xE1\x9D\xC5";
 }
 
+void CalcLP(lpfilter2_t* filter, float f0, float q, float sr)
+{
+    float w0 = 2.f * 3.1416f * f0 / sr;
+    float sinw0 = sinf(w0);
+    float cosw0 = cosf(w0);
+    float a = sinw0 / (2.f * q);
+    float a0 = 1.f + a;
+    float a0inv = 1.f / a0;
+    filter->coeff[0] = (1 - cosw0) * 0.5f * a0inv;
+    filter->coeff[1] = (1 - cosw0) * a0inv;
+    filter->coeff[2] = (1 - cosw0) * 0.5f * a0inv;
+    filter->coeff[3] = -2.f * cosw0 * a0inv;
+    filter->coeff[4] = (1.f - a) * a0inv;
+}
+
+float ProcessLP(lpfilter2_t* filter, float input)
+{
+    float output = input * filter->coeff[0] +
+        filter->state[0] * filter->coeff[1] +
+        filter->state[1] * filter->coeff[2] -
+        filter->state[2] * filter->coeff[3] -
+        filter->state[3] * filter->coeff[4];
+    filter->state[3] = filter->state[2];
+    filter->state[2] = output;
+    filter->state[1] = filter->state[1];
+    filter->state[0] = input;
+    return output;
+}
+
 #define PC_SD_RATE          140
 #define PC_SQUARE_V         0.1f    // -20dB
 #define PC_SQUARE_CUTOFF    3500.f
@@ -117,7 +153,7 @@ void SynthPCSpeakerSound(float* out_data, int out_samples)
     for (i = 0, j = 0; i < out_samples; ++i, j += 2)
     {
         // do we need one more sample from input sound?
-        if (in_count > in_trigger)
+        if (in_count >= in_trigger)
         {
             in_count = 0;
             sqr_trigger = 0;
@@ -125,8 +161,11 @@ void SynthPCSpeakerSound(float* out_data, int out_samples)
             in_read = SDL_AudioStreamGet(pc_sd_stream, &in_data, 1);
             if (in_read == 0)
             {
-                PCSpeaker_SoundFinished();
-                pc_sd_playing = 0;
+                if (pc_sd_playing)
+                {
+                    pc_sd_playing = 0;
+                    PCSpeaker_SoundFinished();
+                }
             }
             else if (in_data != 0)
             {
@@ -167,6 +206,65 @@ void SynthPCSpeakerSound(float* out_data, int out_samples)
     }
 }
 
+#define SB_RATE     7000
+
+void SynthSoundBlaster(float* out_data, int out_samples)
+{
+    int             i, j;
+    int             in_read;
+    uint8_t         in_data;
+    float           out_sample;
+    int             in_trigger;
+    static int      in_count = 0;
+    static float    interp[2] = { 0.f, 0.f };
+    float           frac;
+
+    in_trigger = audio_format.freq / SB_RATE;
+
+    CalcLP(&sb_filter[0], SB_RATE * 0.5f, 1.306563f, (float)audio_format.freq);
+    CalcLP(&sb_filter[1], SB_RATE * 0.5f, 0.541196f, (float)audio_format.freq);
+
+    for (i = 0, j = 0; i < out_samples; ++i, j += 2)
+    {
+        // do we need one more sample from input?
+        if (in_count >= in_trigger)
+        {
+            in_count = 0;
+            in_data = 0x80;
+            in_read = SDL_AudioStreamGet(sb_stream, &in_data, 1);
+            if (in_read == 0)
+            {
+                if (sb_playing)
+                {
+                    SoundBlaster_SoundFinished();
+                    // check if there is a new chunk
+                    in_read = SDL_AudioStreamGet(sb_stream, &in_data, 1);
+                    if (in_read == 0)
+                    {
+                        // no, end of stream
+                        sb_playing = 0;
+                    }
+                }
+            }
+            // push new sample to interpolation
+            interp[0] = interp[1];
+            interp[1] = (in_data - 0x80) / (float)0x80;
+        }
+
+        // interpolate output
+        frac = in_count / (float)in_trigger;
+        out_sample = interp[0] * (1.f - frac) + interp[1] * frac;
+        out_sample = ProcessLP(&sb_filter[0], out_sample);
+        out_sample = ProcessLP(&sb_filter[1], out_sample);
+
+        // add to output buffer
+        out_data[j + 0] += out_sample * sb_level[0];
+        out_data[j + 1] += out_sample * sb_level[1];
+
+        in_count++;
+    }
+}
+
 void AudioCallback(void* userdata, Uint8* stream, int len)
 {
     float   *buffer = (float*)stream;
@@ -176,6 +274,9 @@ void AudioCallback(void* userdata, Uint8* stream, int len)
 
     if (pc_sd_stream)
         SynthPCSpeakerSound(buffer, samples);
+
+    if (sb_stream)
+        SynthSoundBlaster(buffer, samples);
 }
 
 void Initialize(void)
@@ -259,8 +360,11 @@ void Initialize(void)
         // keep the same input and output format
         // using AudioStream as a threadsafe data queue
         pc_sd_stream = SDL_NewAudioStream(
-            AUDIO_S8, 1, PC_SD_RATE,
-            AUDIO_S8, 1, PC_SD_RATE);
+            AUDIO_U8, 1, PC_SD_RATE,
+            AUDIO_U8, 1, PC_SD_RATE);
+        sb_stream = SDL_NewAudioStream(
+            AUDIO_U8, 1, SB_RATE,
+            AUDIO_U8, 1, SB_RATE);
     }
 }
 
@@ -277,6 +381,8 @@ void Deinitialize(void)
         SDL_CloseAudioDevice(audio_device);
     if (pc_sd_stream)
         SDL_FreeAudioStream(pc_sd_stream);
+    if (sb_stream)
+        SDL_FreeAudioStream(sb_stream);
 
     SDL_Quit();
 }
@@ -622,7 +728,7 @@ void AdLib_MusicOff(void)
 
 uint8_t AdLib_Detect(void)
 {
-    return 0;
+    return 1;
 }
 
 void AdLib_Clean(void)
@@ -680,21 +786,22 @@ void SoundSource_StopSample(void)
 
 uint8_t SoundBlaster_Detect(void)
 {
-    return 0;
+    return (sb_stream != 0);
 }
 
 void SoundBlaster_Level(int16_t left, int16_t right)
 {
-
+    sb_level[0] = left / 15.f;
+    sb_level[1] = right / 15.f;
 }
 
 void SoundBlaster_PlaySample(uint8_t* data, uint32_t length)
 {
-
+    sb_playing = 1;
+    SDL_AudioStreamPut(sb_stream, data, length);
 }
 
 void SoundBlaster_StopSample(void)
 {
-
+    SDL_AudioStreamClear(sb_stream);
 }
-

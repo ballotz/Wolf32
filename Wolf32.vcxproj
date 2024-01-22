@@ -193,6 +193,7 @@
     <ClInclude Include="WOLFSRC\ID_US.H" />
     <ClInclude Include="WOLFSRC\ID_VH.H" />
     <ClInclude Include="WOLFSRC\ID_VL.H" />
+    <ClInclude Include="WOLFSRC\VERSION.H" />
     <ClInclude Include="WOLFSRC\WL_DEF.H" />
     <ClInclude Include="WOLFSRC\WL_MENU.H" />
   </ItemGroup>
