@@ -24,8 +24,8 @@ typedef struct
 {
     float coeff[5];
     float state[4];
-} lpfilter2_t;
-lpfilter2_t sb_filter[2];
+} filter2_t;
+filter2_t sb_filter[2];
 
 void InitKeyMap(void)
 {
@@ -98,8 +98,9 @@ void InitKeyMap(void)
     keyboard_map[SDL_SCANCODE_PAUSE] = "\xE1\x1D\x45\xE1\x9D\xC5";
 }
 
-void CalcLP(lpfilter2_t* filter, float f0, float q, float sr)
+void FilterCalcLP(filter2_t* filter, float f0, float q, float sr)
 {
+    // RBJ cookbook lowpass
     float w0 = 2.f * 3.1416f * f0 / sr;
     float sinw0 = sinf(w0);
     float cosw0 = cosf(w0);
@@ -113,7 +114,7 @@ void CalcLP(lpfilter2_t* filter, float f0, float q, float sr)
     filter->coeff[4] = (1.f - a) * a0inv;
 }
 
-float ProcessLP(lpfilter2_t* filter, float input)
+float FilterProcess(filter2_t* filter, float input)
 {
     float output = input * filter->coeff[0] +
         filter->state[0] * filter->coeff[1] +
@@ -128,7 +129,9 @@ float ProcessLP(lpfilter2_t* filter, float input)
 }
 
 #define PC_SD_RATE          140
-#define PC_SQUARE_V         0.1f    // -20dB
+#define PC_SD_SHIFT         12
+#define PC_SD_FRAC          (1 << PC_SD_SHIFT)
+#define PC_SQUARE_V         0.0631f // ~ -24dB
 #define PC_SQUARE_CUTOFF    3500.f
 
 void SynthPCSpeakerSound(float* out_data, int out_samples)
@@ -145,8 +148,9 @@ void SynthPCSpeakerSound(float* out_data, int out_samples)
     static float    lp_state[2] = { 0.f, 0.f };
     float           lp_coeff, coswc;
 
-    in_trigger = audio_format.freq / PC_SD_RATE;
+    in_trigger = PC_SD_FRAC * audio_format.freq / PC_SD_RATE;
 
+    // EMA filter -3dB cutoff
     coswc = cosf(2.f * 3.1416f * (PC_SQUARE_CUTOFF / audio_format.freq));
     lp_coeff = 1.f - (coswc - 1.f + sqrtf((coswc - 1.f) * (coswc - 3.f)));
 
@@ -155,7 +159,7 @@ void SynthPCSpeakerSound(float* out_data, int out_samples)
         // do we need one more sample from input sound?
         if (in_count >= in_trigger)
         {
-            in_count = 0;
+            in_count -= in_trigger;
             sqr_trigger = 0;
 
             in_read = SDL_AudioStreamGet(pc_sd_stream, &in_data, 1);
@@ -183,7 +187,7 @@ void SynthPCSpeakerSound(float* out_data, int out_samples)
         else
         {
             // on
-            if (sqr_count > sqr_trigger)
+            if (sqr_count >= sqr_trigger)
             {
                 sqr_count = 0;
                 sqr_val = (sqr_val > 0.f) ? -PC_SQUARE_V : +PC_SQUARE_V;
@@ -201,12 +205,14 @@ void SynthPCSpeakerSound(float* out_data, int out_samples)
         out_data[j + 0] += out_sample;
         out_data[j + 1] += out_sample;
 
-        in_count++;
+        in_count += PC_SD_FRAC;
         sqr_count++;
     }
 }
 
 #define SB_RATE     7000
+#define SB_SHIFT    12
+#define SB_FRAC     (1 << SB_SHIFT)
 
 void SynthSoundBlaster(float* out_data, int out_samples)
 {
@@ -219,17 +225,18 @@ void SynthSoundBlaster(float* out_data, int out_samples)
     static float    interp[2] = { 0.f, 0.f };
     float           frac;
 
-    in_trigger = audio_format.freq / SB_RATE;
+    in_trigger = SB_FRAC * audio_format.freq / SB_RATE;
 
-    CalcLP(&sb_filter[0], SB_RATE * 0.5f, 1.306563f, (float)audio_format.freq);
-    CalcLP(&sb_filter[1], SB_RATE * 0.5f, 0.541196f, (float)audio_format.freq);
+    // 4th order Butterworth LP
+    FilterCalcLP(&sb_filter[0], SB_RATE * 0.5f, 1.306563f, (float)audio_format.freq);
+    FilterCalcLP(&sb_filter[1], SB_RATE * 0.5f, 0.541196f, (float)audio_format.freq);
 
     for (i = 0, j = 0; i < out_samples; ++i, j += 2)
     {
         // do we need one more sample from input?
         if (in_count >= in_trigger)
         {
-            in_count = 0;
+            in_count -= in_trigger;
             in_data = 0x80;
             in_read = SDL_AudioStreamGet(sb_stream, &in_data, 1);
             if (in_read == 0)
@@ -254,14 +261,14 @@ void SynthSoundBlaster(float* out_data, int out_samples)
         // interpolate output
         frac = in_count / (float)in_trigger;
         out_sample = interp[0] * (1.f - frac) + interp[1] * frac;
-        out_sample = ProcessLP(&sb_filter[0], out_sample);
-        out_sample = ProcessLP(&sb_filter[1], out_sample);
+        out_sample = FilterProcess(&sb_filter[0], out_sample);
+        out_sample = FilterProcess(&sb_filter[1], out_sample);
 
         // add to output buffer
         out_data[j + 0] += out_sample * sb_level[0];
         out_data[j + 1] += out_sample * sb_level[1];
 
-        in_count++;
+        in_count += SB_FRAC;
     }
 }
 
