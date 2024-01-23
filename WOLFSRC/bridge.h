@@ -139,20 +139,17 @@ extern void PCSpeaker_SoundFinished(void);
 // AdLib
 //------------------------------------------------------------------------------
 
-// starts playing the music pointed to
-void AdLib_StartMusic(uint16_t* values, uint16_t length);
-
-// turns off the sequencer and any playing notes
-void AdLib_MusicOff(void);
-
 // Determines if there's an AdLib
 uint8_t AdLib_Detect(void);
 
 // Totally shuts down the AdLib card
 void AdLib_Clean(void);
 
-// Shuts down the AdLib card for sound effects
-void AdLib_Shut(void);
+// starts playing the music pointed to
+void AdLib_StartMusic(uint16_t* values, uint16_t length);
+
+// turns off the sequencer and any playing notes
+void AdLib_MusicOff(void);
 
 #pragma pack(push, 2)
 typedef	struct
@@ -191,6 +188,9 @@ void AdLib_PlaySound(BridgeAdLibSound* sound);
 
 // Turns off any sound effects playing through the AdLib card
 void AdLib_StopSound(void);
+
+// Shuts down the AdLib card for sound effects
+void AdLib_Shut(void);
 
 // Determines if an AdLib sound is playing
 uint8_t AdLib_SoundPlaying(void);
