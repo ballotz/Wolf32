@@ -1469,7 +1469,8 @@ SD_SetSoundMode(SDMode mode)
         SDL_ShutDevice();
         SoundMode = mode;
 #ifndef	_MUSE_
-        SoundTable = (memptr*)(&audiosegs[tableoffset]);
+        if (mode != sdm_Off)
+            SoundTable = (memptr*)(&audiosegs[tableoffset]);
 #endif
         SDL_StartDevice();
     }
