@@ -50,7 +50,7 @@ fixed       mindist = MINDIST;
 //
 int16_t     pixelangle[MAXVIEWWIDTH];
 int32_t     finetangent[FINEANGLES / 4];
-fixed       sintable[ANGLES + ANGLES / 4],
+fixed       sintable[ANGLES + ANGLES / 4 + 1],
             *costable = sintable + (ANGLES / 4);
 
 //
