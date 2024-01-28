@@ -23,6 +23,9 @@
     <ClCompile Include="WOLFSRC\GAMEPAL.C" />
     <ClCompile Include="WOLFSRC\SIGNON.C" />
     <ClCompile Include="WOLFSRC\WL_TEXT.C" />
+    <ClCompile Include="emu8950\emu8950.c" />
+    <ClCompile Include="emu8950\emuadpcm.c" />
+    <ClCompile Include="spscring\spscring.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WOLFSRC\WL_DEF.H" />
@@ -38,5 +41,8 @@
     <ClInclude Include="WOLFSRC\WL_MENU.H" />
     <ClInclude Include="WOLFSRC\bridge.h" />
     <ClInclude Include="WOLFSRC\VERSION.H" />
+    <ClInclude Include="emu8950\emu8950.h" />
+    <ClInclude Include="emu8950\emuadpcm.h" />
+    <ClInclude Include="spscring\spscring.h" />
   </ItemGroup>
 </Project>

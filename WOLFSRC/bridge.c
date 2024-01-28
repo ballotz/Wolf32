@@ -1,33 +1,178 @@
 #include "bridge.h"
 #include <SDL.h>
 #include <stdio.h>
-#include "../emu8950/emu8950.h"
+#include "../spscring/spscring.h"
 
 SDL_Window* window;
 SDL_Renderer* renderer;
 SDL_Texture* frame_texture;
 
-int src_width = 320;
-int src_height = 200;
+#define src_width   320
+#define src_height  200
+// windowed
 int dst_width = 800;
 int dst_height = 600;
+// fullscreen
+//int dst_width = 0;
+//int dst_height = 0;
+int port_width;
+int port_height;
 
 uint8_t* keyboard_map[SDL_NUM_SCANCODES];
 
 Uint64 time_count;
 
-SDL_AudioDeviceID audio_device;
-SDL_AudioSpec audio_format;
-SDL_AudioStream *pc_sd_stream, *sb_stream, *music_stream;
-uint8_t pc_sd_playing, sb_playing, music_playing;
-float sb_level[2];
+// adlib emulation library
+#define ADLIB_emu8950
+//#define ADLIB_woody_opl
+
+#ifdef ADLIB_emu8950
+#include "../emu8950/emu8950.h"
+OPL* ym3812;
+#define alInit(sr)                  \
+    ym3812 = OPL_new(3579545, sr);  \
+    OPL_setChipType(ym3812, 2);
+#define alDeinit()                  \
+    OPL_delete(ym3812);
+#define alOut(a, v)                 \
+    OPL_writeReg(ym3812, a, v);
+//#define alStatus()                  \
+//    OPL_status(ym3812);
+#define alSample(v)                 \
+    v = OPL_calc(ym3812);
+#define alVolAdjust 2.f
+#endif
+#ifdef ADLIB_woody_opl
+#include "../woody-opl/opl.h"
+#define alInit(sr)                  \
+    adlib_init(sr);
+#define alDeinit()
+#define alOut(a, v)                 \
+    adlib_write(a, v);
+//#define alStatus()                  \
+//    adlib_reg_read(0);
+#define alSample(v)                 \
+    adlib_getsample(&v, 1);
+#define alVolAdjust 1.f
+#endif
+
+//	Register addresses
+// Operator stuff
+#define	alChar      0x20
+#define	alScale     0x40
+#define	alAttack    0x60
+#define	alSus       0x80
+#define	alWave      0xe0
+// Channel stuff
+#define	alFreqL		0xa0
+#define	alFreqH		0xb0
+#define	alFeedCon	0xc0
+// Global stuff
+#define	alEffects   0xbd
+//
+//	Sequencing stuff
+//
+#define	sqMaxTracks 10
+
+typedef struct
+{
+    uint8_t addr;
+    uint8_t data;
+}
+alcmd_t;
+#define alMakeCmd(p, a, v)  \
+    p.addr = a;             \
+    p.data = v;
+typedef struct
+{
+    uint8_t addr;
+    uint8_t data;
+    uint16_t wait;
+}
+alpacket_t;
+
+typedef struct
+{
+    float coeff[3];
+    float state[2];
+} filter1_t;
+
+void filter1_expma(filter1_t* filter, float f0, float sr)
+{
+    float coswc = cosf(2.f * 3.1416f * (f0 / sr));
+    float coeff = 1.f - (coswc - 1.f + sqrtf((coswc - 1.f) * (coswc - 3.f)));
+    filter->coeff[0] = 1.f - coeff;
+    filter->coeff[1] = 0.f;
+    filter->coeff[2] = -coeff;
+}
+
+float filter1_process(filter1_t* filter, float input)
+{
+    float output = input * filter->coeff[0] +
+        filter->state[0] * filter->coeff[1] -
+        filter->state[1] * filter->coeff[2];
+    filter->state[1] = output;
+    filter->state[0] = input;
+    return output;
+}
+
 typedef struct
 {
     float coeff[5];
     float state[4];
 } filter2_t;
+
+void filter2_rbj_lp(filter2_t* filter, float f0, float q, float sr)
+{
+    float w0 = 2.f * 3.1416f * f0 / sr;
+    float sinw0 = sinf(w0);
+    float cosw0 = cosf(w0);
+    float a = sinw0 / (2.f * q);
+    float a0 = 1.f + a;
+    float a0inv = 1.f / a0;
+    filter->coeff[0] = (1 - cosw0) * 0.5f * a0inv;
+    filter->coeff[1] = (1 - cosw0) * a0inv;
+    filter->coeff[2] = (1 - cosw0) * 0.5f * a0inv;
+    filter->coeff[3] = -2.f * cosw0 * a0inv;
+    filter->coeff[4] = (1.f - a) * a0inv;
+}
+
+float filter2_process(filter2_t* filter, float input)
+{
+    float output = input * filter->coeff[0] +
+        filter->state[0] * filter->coeff[1] +
+        filter->state[1] * filter->coeff[2] -
+        filter->state[2] * filter->coeff[3] -
+        filter->state[3] * filter->coeff[4];
+    filter->state[3] = filter->state[2];
+    filter->state[2] = output;
+    filter->state[1] = filter->state[1];
+    filter->state[0] = input;
+    return output;
+}
+
+SDL_AudioDeviceID audio_device;
+SDL_AudioSpec audio_format;
+
+spscring_t al_cmd_stream;
+
+uint8_t* pc_sd_data;
+uint16_t pc_sd_size;
+filter1_t pc_sd_filter[2];
+
+uint8_t *al_music_data, *al_sequencer_data;
+uint16_t al_music_size, al_sequencer_size;
+uint8_t al_music_active;
+filter2_t al_filter;
+
+uint8_t *al_sd_data;
+uint16_t al_sd_size;
+uint8_t al_sd_block;
+
+uint8_t* sb_data;
+uint16_t sb_size;
 filter2_t sb_filter[2];
-OPL* ym3812;
+float sb_level[2];
 
 void InitKeyMap(void)
 {
@@ -100,61 +245,24 @@ void InitKeyMap(void)
     keyboard_map[SDL_SCANCODE_PAUSE] = "\xE1\x1D\x45\xE1\x9D\xC5";
 }
 
-void FilterCalcLP(filter2_t* filter, float f0, float q, float sr)
-{
-    // RBJ cookbook lowpass
-    float w0 = 2.f * 3.1416f * f0 / sr;
-    float sinw0 = sinf(w0);
-    float cosw0 = cosf(w0);
-    float a = sinw0 / (2.f * q);
-    float a0 = 1.f + a;
-    float a0inv = 1.f / a0;
-    filter->coeff[0] = (1 - cosw0) * 0.5f * a0inv;
-    filter->coeff[1] = (1 - cosw0) * a0inv;
-    filter->coeff[2] = (1 - cosw0) * 0.5f * a0inv;
-    filter->coeff[3] = -2.f * cosw0 * a0inv;
-    filter->coeff[4] = (1.f - a) * a0inv;
-}
-
-float FilterProcess(filter2_t* filter, float input)
-{
-    float output = input * filter->coeff[0] +
-        filter->state[0] * filter->coeff[1] +
-        filter->state[1] * filter->coeff[2] -
-        filter->state[2] * filter->coeff[3] -
-        filter->state[3] * filter->coeff[4];
-    filter->state[3] = filter->state[2];
-    filter->state[2] = output;
-    filter->state[1] = filter->state[1];
-    filter->state[0] = input;
-    return output;
-}
-
 #define PC_SD_RATE          140
 #define PC_SD_SHIFT         12
 #define PC_SD_FRAC          (1 << PC_SD_SHIFT)
-#define PC_SQUARE_VOL       0.03f // ~ -30dB
+#define PC_SQUARE_VOL       0.05f
 #define PC_SQUARE_CUTOFF    3500.f
 
 void SynthPCSpeakerSound(float* out_data, int out_samples)
 {
     int             i, j;
-    int             in_read;
-    uint8_t         in_data;
+    uint8_t         data;
     float           out_sample;
     int             in_trigger;
     static int      in_count = 0;
     static int      sqr_trigger = 0;
     static int      sqr_count = 0;
     static float    sqr_val = 0.f;
-    static float    lp_state[2] = { 0.f, 0.f };
-    float           lp_coeff, coswc;
 
     in_trigger = PC_SD_FRAC * audio_format.freq / PC_SD_RATE;
-
-    // EMA filter -3dB cutoff
-    coswc = cosf(2.f * 3.1416f * (PC_SQUARE_CUTOFF / audio_format.freq));
-    lp_coeff = 1.f - (coswc - 1.f + sqrtf((coswc - 1.f) * (coswc - 3.f)));
 
     for (i = 0, j = 0; i < out_samples; ++i, j += 2)
     {
@@ -163,20 +271,24 @@ void SynthPCSpeakerSound(float* out_data, int out_samples)
         {
             in_count -= in_trigger;
             sqr_trigger = 0;
-
-            in_read = SDL_AudioStreamGet(pc_sd_stream, &in_data, 1);
-            if (in_read == 0)
+            if (pc_sd_data)
             {
-                if (pc_sd_playing)
+                if (pc_sd_size)
                 {
-                    pc_sd_playing = 0;
+                    data = *pc_sd_data;
+                    if (data)
+                    {
+                        // start (or continue) oscillator, use half period
+                        sqr_trigger = (int)(data * (60.f / 1193181.f) * audio_format.freq) >> 1;
+                    }
+                    pc_sd_size--;
+                    pc_sd_data++;
+                }
+                else
+                {
+                    pc_sd_data = 0;
                     PCSpeaker_SoundFinished();
                 }
-            }
-            else if (in_data != 0)
-            {
-                // start (or continue) oscillator, use half period
-                sqr_trigger = (int)(in_data * (60.f / 1193181.f) * audio_format.freq) >> 1;
             }
         }
 
@@ -198,10 +310,8 @@ void SynthPCSpeakerSound(float* out_data, int out_samples)
         }
 
         // low pass
-        out_sample += lp_coeff * (lp_state[0] - out_sample);
-        lp_state[0] = out_sample;
-        out_sample += lp_coeff * (lp_state[1] - out_sample);
-        lp_state[1] = out_sample;
+        out_sample = filter1_process(&pc_sd_filter[0], out_sample);
+        out_sample = filter1_process(&pc_sd_filter[1], out_sample);
 
         // add to output buffer
         out_data[j + 0] += out_sample;
@@ -212,16 +322,120 @@ void SynthPCSpeakerSound(float* out_data, int out_samples)
     }
 }
 
+#define ADLIB_RATE      700
+#define ADLIB_SD_SHIFT  12
+#define ADLIB_SD_FRAC   (1 << ADLIB_SD_SHIFT)
+#define ADLIB_VOL       1.f
+#define ADLIB_CUTOFF    3500.f
+
+void SynthAdLib(float* out_data, int out_samples)
+{
+    int             i, j;
+    int             read;
+    alcmd_t         cmd;
+    alpacket_t      pak;
+    uint8_t         snd;
+    int16_t         out_sample_i;
+    float           out_sample_f;
+    static int      music_in_trigger = 0;
+    int             sound_in_trigger;
+    static int      music_in_count = 0;
+    static int      sound_in_count = 0;
+
+    // process commands
+    for (;;)
+    {
+        read = spscring_read(&al_cmd_stream, &cmd, sizeof(alcmd_t));
+        if (read == sizeof(alcmd_t))
+            alOut(cmd.addr, cmd.data)
+        else
+            break;
+    }
+
+    sound_in_trigger = ADLIB_SD_FRAC * 5 * audio_format.freq / ADLIB_RATE;
+
+    for (i = 0, j = 0; i < out_samples; ++i, j += 2)
+    {
+        // do we need more data from music input?
+        if (music_in_count >= music_in_trigger)
+        {
+            music_in_count -= music_in_trigger;
+            if (al_music_active)
+            {
+                music_in_trigger = 0;
+                while (music_in_trigger == 0)
+                {
+                    if (al_sequencer_size)
+                    {
+                        pak = *(alpacket_t*)al_sequencer_data;
+                        alOut(pak.addr, pak.data);
+                        music_in_trigger = pak.wait * audio_format.freq / ADLIB_RATE;
+                        al_sequencer_size -= sizeof(alpacket_t);
+                        al_sequencer_data += sizeof(alpacket_t);
+                    }
+                    if (!al_sequencer_size)
+                    {
+                        // start over
+                        al_sequencer_data = al_music_data;
+                        al_sequencer_size = al_music_size;
+                    }
+                }
+            }
+        }
+
+        // do we need more data from sound input?
+        if (sound_in_count >= sound_in_trigger)
+        {
+            sound_in_count -= sound_in_trigger;
+            if (al_sd_data)
+            {
+                if (al_sd_size)
+                {
+                    snd = *al_sd_data;
+                    if (!snd)
+                        alOut(alFreqH, 0)
+                    else
+                    {
+                        alOut(alFreqL, snd);
+                        alOut(alFreqH, al_sd_block);
+                    }
+                    al_sd_size--;
+                    al_sd_data++;
+                }
+                else
+                {
+                    alOut(alFreqH, 0);
+                    al_sd_data = 0;
+                    AdLib_SoundFinished();
+                }
+            }
+        }
+
+        // get audio
+        alSample(out_sample_i);
+        out_sample_f = out_sample_i / (float)0x8000;
+
+        // filter
+        out_sample_f = filter2_process(&al_filter, out_sample_f);
+
+        // add to output buffer
+        out_data[j + 0] += out_sample_f * (alVolAdjust * ADLIB_VOL);
+        out_data[j + 1] += out_sample_f * (alVolAdjust * ADLIB_VOL);
+
+        music_in_count += 1;
+        sound_in_count += ADLIB_SD_FRAC;
+    }
+}
+
 #define SB_RATE     7000
-#define SB_VOL      0.5f; // -6dB
 #define SB_SHIFT    12
 #define SB_FRAC     (1 << SB_SHIFT)
+#define SB_VOL      0.5f
 
 void SynthSoundBlaster(float* out_data, int out_samples)
 {
     int             i, j;
-    int             in_read;
-    uint8_t         in_data;
+    uint8_t         data;
     float           out_sample;
     int             in_trigger;
     static int      in_count = 0;
@@ -230,42 +444,43 @@ void SynthSoundBlaster(float* out_data, int out_samples)
 
     in_trigger = SB_FRAC * audio_format.freq / SB_RATE;
 
-    // 4th order Butterworth LP
-    FilterCalcLP(&sb_filter[0], SB_RATE * 0.5f, 1.306563f, (float)audio_format.freq);
-    FilterCalcLP(&sb_filter[1], SB_RATE * 0.5f, 0.541196f, (float)audio_format.freq);
-
     for (i = 0, j = 0; i < out_samples; ++i, j += 2)
     {
         // do we need one more sample from input?
         if (in_count >= in_trigger)
         {
             in_count -= in_trigger;
-            in_data = 0x80;
-            in_read = SDL_AudioStreamGet(sb_stream, &in_data, 1);
-            if (in_read == 0)
+            data = 0x80;
+            if (sb_data)
             {
-                if (sb_playing)
+                if (sb_size)
+                {
+                    data = *sb_data;
+                    sb_size--;
+                    sb_data++;
+                }
+                else
                 {
                     SoundBlaster_SoundFinished();
                     // check if there is a new chunk
-                    in_read = SDL_AudioStreamGet(sb_stream, &in_data, 1);
-                    if (in_read == 0)
+                    if (sb_size)
                     {
-                        // no, end of stream
-                        sb_playing = 0;
+                        data = *sb_data;
+                        sb_size--;
+                        sb_data++;
                     }
                 }
             }
             // push new sample to interpolation
             interp[0] = interp[1];
-            interp[1] = (in_data - 0x80) / (float)0x80;
+            interp[1] = (data - 0x80) / (float)0x80;
         }
 
         // interpolate output
         frac = in_count / (float)in_trigger;
         out_sample = interp[0] * (1.f - frac) + interp[1] * frac;
-        out_sample = FilterProcess(&sb_filter[0], out_sample);
-        out_sample = FilterProcess(&sb_filter[1], out_sample);
+        out_sample = filter2_process(&sb_filter[0], out_sample);
+        out_sample = filter2_process(&sb_filter[1], out_sample);
 
         // add to output buffer
         out_data[j + 0] += out_sample * sb_level[0] * SB_VOL;
@@ -275,98 +490,15 @@ void SynthSoundBlaster(float* out_data, int out_samples)
     }
 }
 
-#define MUSIC_RATE      700
-#define MUSIC_VOL       2.f; // +6dB
-#define MUSIC_CUTOFF    3500.f
-
-typedef struct
-{
-    uint8_t reg;
-    uint8_t data;
-    uint16_t wait;
-}
-musicpaket_t;
-
-void SynthMusic(float* out_data, int out_samples)
-{
-    int             i, j;
-    int             in_read;
-    musicpaket_t    in_data;
-    int32_t         out_sample_i[2];
-    float           out_sample_f[2];
-    static int      in_trigger = 0;
-    static int      in_count = 0;
-    static float    lp_state[2] = { 0.f, 0.f };
-    float           lp_coeff, coswc;
-
-    // EMA filter -3dB cutoff
-    coswc = cosf(2.f * 3.1416f * (MUSIC_CUTOFF / audio_format.freq));
-    lp_coeff = 1.f - (coswc - 1.f + sqrtf((coswc - 1.f) * (coswc - 3.f)));
-
-    for (i = 0, j = 0; i < out_samples; ++i, j += 2)
-    {
-        // do we need more data from input?
-        while (in_count >= in_trigger)
-        {
-            in_count = 0;
-            in_trigger = 0;
-            in_read = SDL_AudioStreamGet(music_stream, &in_data, sizeof(musicpaket_t));
-            if (in_read == sizeof(musicpaket_t))
-            {
-                OPL_writeReg(ym3812, in_data.reg, in_data.data);
-                if (in_data.wait)
-                    in_trigger = in_data.wait * (audio_format.freq / MUSIC_RATE);
-            }
-            else
-            {
-                if (music_playing)
-                    music_playing = 0;
-                break;
-            }
-        }
-
-        if (music_playing)
-        {
-            // get audio
-            OPL_calcStereo(ym3812, out_sample_i);
-            out_sample_f[0] = out_sample_i[0] / (float)0x8000;
-            out_sample_f[1] = out_sample_i[1] / (float)0x8000;
-        }
-        else
-        {
-            out_sample_f[0] = 0.f;
-            out_sample_f[1] = 0.f;
-        }
-
-        // filter
-        out_sample_f[0] += lp_coeff * (lp_state[0] - out_sample_f[0]);
-        out_sample_f[1] += lp_coeff * (lp_state[1] - out_sample_f[1]);
-        lp_state[0] = out_sample_f[0];
-        lp_state[1] = out_sample_f[1];
-
-        // add to output buffer
-        out_data[j + 0] += out_sample_f[0] * MUSIC_VOL;
-        out_data[j + 1] += out_sample_f[1] * MUSIC_VOL;
-
-        in_count++;
-    }
-}
-
 void AudioCallback(void* userdata, Uint8* stream, int len)
 {
     float   *buffer = (float*)stream;
     int     samples = len / (sizeof(float) * 2);
 
     SDL_memset(stream, 0, len);
-
-    if (pc_sd_stream)
-        SynthPCSpeakerSound(buffer, samples);
-
-    if (sb_stream)
-        SynthSoundBlaster(buffer, samples);
-
-    if (music_stream)
-        SynthMusic(buffer, samples);
+    SynthPCSpeakerSound(buffer, samples);
+    SynthAdLib(buffer, samples);
+    SynthSoundBlaster(buffer, samples);
 }
 
 void Initialize(void)
@@ -380,12 +512,27 @@ void Initialize(void)
         exit(1);
 
     // init the window
+    Uint32 window_flags = 0;
+    if (!dst_width || !dst_height)
+    {
+        window_flags = SDL_WINDOW_FULLSCREEN_DESKTOP;
+        dst_width = mode.h / 3 * 4;
+        dst_height = mode.h;
+        port_width = mode.w;
+        port_height = mode.h;
+    }
+    else
+    {
+        port_width = dst_width;
+        port_height = dst_height;
+    }
     window = SDL_CreateWindow("Wolf3D",
         SDL_WINDOWPOS_CENTERED,
         SDL_WINDOWPOS_CENTERED,
         dst_width,
         dst_height,
-        SDL_WINDOW_SHOWN
+        SDL_WINDOW_SHOWN |
+        window_flags        
         //SDL_WINDOW_FULLSCREEN_DESKTOP
         //SDL_WINDOW_FULLSCREEN
     );
@@ -445,20 +592,18 @@ void Initialize(void)
 
     if (audio_device)
     {
-        // keep the same input and output format
-        // using AudioStream as a threadsafe data queue
-        pc_sd_stream = SDL_NewAudioStream(
-            AUDIO_U8, 1, 1,
-            AUDIO_U8, 1, 1);
-        sb_stream = SDL_NewAudioStream(
-            AUDIO_U8, 1, 1,
-            AUDIO_U8, 1, 1);
-        music_stream = SDL_NewAudioStream(
-            AUDIO_U16, 1, 1,
-            AUDIO_U16, 1, 1);
+        static uint8_t al_cmd_buffer[512];
+        spscring_init(&al_cmd_stream, al_cmd_buffer, sizeof(al_cmd_buffer));
 
-        ym3812 = OPL_new(3579545, audio_format.freq);
-        OPL_setChipType(ym3812, 2);
+        alInit(audio_format.freq);
+
+        filter1_expma(&pc_sd_filter[0], PC_SQUARE_CUTOFF, (float)audio_format.freq);
+        filter1_expma(&pc_sd_filter[1], PC_SQUARE_CUTOFF, (float)audio_format.freq);
+
+        filter2_rbj_lp(&al_filter, ADLIB_CUTOFF, 0.7071f, (float)audio_format.freq);
+
+        filter2_rbj_lp(&sb_filter[0], SB_RATE * 0.5f, 1.306563f, (float)audio_format.freq);
+        filter2_rbj_lp(&sb_filter[1], SB_RATE * 0.5f, 0.541196f, (float)audio_format.freq);
 
         // start audio
         SDL_PauseAudioDevice(audio_device, 0);
@@ -474,19 +619,12 @@ void Deinitialize(void)
     SDL_DestroyWindow(window);
     SDL_DestroyRenderer(renderer);
 
-    // stop audio
-    SDL_PauseAudioDevice(audio_device, 1);
-
     if (audio_device)
+    {
         SDL_CloseAudioDevice(audio_device);
-    if (pc_sd_stream)
-        SDL_FreeAudioStream(pc_sd_stream);
-    if (sb_stream)
-        SDL_FreeAudioStream(sb_stream);
-    if (music_stream)
-        SDL_FreeAudioStream(music_stream);
 
-    OPL_delete(ym3812);
+        alDeinit();
+    }
 
     SDL_Quit();
 }
@@ -638,7 +776,12 @@ void VGA_Update(
 
     SDL_UnlockTexture(frame_texture);
 
-    SDL_RenderCopy(renderer, frame_texture, NULL, NULL);
+    SDL_Rect dest_rect =
+    {
+        (port_width - dst_width) / 2, 0,
+        dst_width, dst_height
+    };
+    SDL_RenderCopy(renderer, frame_texture, NULL, &dest_rect);
     SDL_RenderPresent(renderer); // draw to the screen
 }
 
@@ -690,14 +833,14 @@ void Mouse_GetDelta(int16_t* dx, int16_t* dy)
 {
     int mx, my;
     SDL_GetMouseState(&mx, &my);
-    SDL_WarpMouseInWindow(window, dst_width / 2, dst_height / 2);
-    *dx = mx - dst_width / 2;
-    *dy = my - dst_height / 2;
+    SDL_WarpMouseInWindow(window, port_width / 2, port_height / 2);
+    *dx = mx - port_width / 2;
+    *dy = my - port_height / 2;
 }
 
 void Mouse_ResetDelta(void)
 {
-    SDL_WarpMouseInWindow(window, dst_width / 2, dst_height / 2);
+    SDL_WarpMouseInWindow(window, port_width / 2, port_height / 2);
 }
 
 uint16_t Mouse_GetButtons(void)
@@ -719,16 +862,16 @@ void Mouse_SetPos(int16_t x, int16_t y)
 {
     SDL_WarpMouseInWindow(
         window,
-        (int)((float)x / 240 * dst_width),
-        (int)((float)y / 240 * dst_height));
+        (int)((float)x / 240 * port_width),
+        (int)((float)y / 240 * port_height));
 }
 
 void Mouse_GetPos(int16_t* x, int16_t* y)
 {
     int mx, my;
     SDL_GetMouseState(&mx, &my);
-    *x = (int16_t)((float)mx / dst_width * 240);
-    *y = (int16_t)((float)my / dst_height * 240);
+    *x = (int16_t)((float)mx / port_width * 240);
+    *y = (int16_t)((float)my / port_height * 240);
 }
 
 //------------------------------------------------------------------------------
@@ -783,27 +926,24 @@ void TimeCount_Set(uint32_t value)
 
 void PCSpeaker_Shut(void)
 {
-    SDL_AudioStreamClear(pc_sd_stream);
+    pc_sd_data = 0;
 }
 
 void PCSpeaker_PlaySound(uint8_t* data, uint32_t length)
 {
-    if (pc_sd_stream)
-    {
-        SDL_AudioStreamClear(pc_sd_stream);
-        pc_sd_playing = 1;
-        SDL_AudioStreamPut(pc_sd_stream, data, length);
-    }
+    SDL_assert(sb_data == 0); // make sure audio thread is not reading
+    pc_sd_size = length;
+    pc_sd_data = data;
 }
 
 void PCSpeaker_StopSound(void)
 {
-    SDL_AudioStreamClear(pc_sd_stream);
+    pc_sd_data = 0;
 }
 
 uint8_t PCSpeaker_SoundPlaying(void)
 {
-    return pc_sd_playing;
+    return pc_sd_data != 0;
 }
 
 void PCSpeaker_PlaySample(uint8_t* data, uint32_t length)
@@ -820,49 +960,168 @@ void PCSpeaker_StopSample(void)
 // AdLib
 //------------------------------------------------------------------------------
 
+BridgeAdLibInstrument alZeroInst;
+
+void AdLib_SetInstrument(BridgeAdLibInstrument* inst)
+{
+    alcmd_t p[11];
+    uint8_t m, c;
+
+    m = 0;
+    c = 3;
+    alMakeCmd(p[0], m + alChar,   inst->mChar  );
+    alMakeCmd(p[1], m + alScale,  inst->mScale );
+    alMakeCmd(p[2], m + alAttack, inst->mAttack);
+    alMakeCmd(p[3], m + alSus,    inst->mSus   );
+    alMakeCmd(p[4], m + alWave,   inst->mWave  );
+    alMakeCmd(p[5], c + alChar,   inst->cChar  );
+    alMakeCmd(p[6], c + alScale,  inst->cScale );
+    alMakeCmd(p[7], c + alAttack, inst->cAttack);
+    alMakeCmd(p[8], c + alSus,    inst->cSus   );
+    alMakeCmd(p[9], c + alWave,   inst->cWave  );
+    // Note: Switch commenting on these lines for old MUSE compatibility
+    //alMakeCmd(p[10], alFeedCon,   inst->nConn  );
+    alMakeCmd(p[10], alFeedCon,   0            );
+
+    if (spscring_write(&al_cmd_stream, p, sizeof(p)) != sizeof(p))
+        SDL_assert(0);
+}
+
 uint8_t AdLib_Detect(void)
 {
-    return (music_stream != 0);
+    int     i;
+    alcmd_t p;
+
+    for (i = 1; i <= 0xf5; i++) // Zero all the registers
+    {
+        alMakeCmd(p, i, 0);
+        if (spscring_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
+            SDL_assert(0);
+    }
+    alMakeCmd(p, 1, 0x20);      // Set WSE=1
+    if (spscring_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
+        SDL_assert(0);
+    alMakeCmd(p, 8, 0);         // Set CSM=0 & SEL=0
+    if (spscring_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
+        SDL_assert(0);
+
+    while (spscring_avail(&al_cmd_stream) != 0) {}
+
+    return 1;
+}
+
+void AdLib_Start(void)
+{
+    alcmd_t p;
+
+    alMakeCmd(p, alEffects, 0);
+    if (spscring_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
+        SDL_assert(0);
+    AdLib_SetInstrument(&alZeroInst);
+
+    while (spscring_avail(&al_cmd_stream) != 0) {}
 }
 
 void AdLib_Clean(void)
 {
-    SDL_AudioStreamClear(music_stream);
-    while (music_playing) {}
-    OPL_reset(ym3812);
+    int     i;
+    alcmd_t p;
+
+    alMakeCmd(p, alEffects, 0);
+    if (spscring_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
+        SDL_assert(0);
+    for (i = 1; i < 0xf5; i++)
+    {
+        alMakeCmd(p, i, 0);
+        if (spscring_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
+            SDL_assert(0);
+    }
+
+    while (spscring_avail(&al_cmd_stream) != 0) {}
 }
 
 void AdLib_StartMusic(uint16_t* values, uint16_t length)
 {
-    music_playing = 1;
-    SDL_AudioStreamPut(music_stream, values, length);
+    SDL_assert(al_music_active == 0); // make sure audio thread is not reading
+    al_music_data = (uint8_t*)values;
+    al_music_size = length;
+    al_sequencer_data = al_music_data;
+    al_sequencer_size = al_music_size;
+}
+
+void AdLib_MusicOn(void)
+{
+    al_music_active = 1;
 }
 
 void AdLib_MusicOff(void)
 {
-    SDL_AudioStreamClear(music_stream);
-    while (music_playing) {}
-    OPL_reset(ym3812);
+    int     i;
+    alcmd_t p;
+
+    al_music_active = 0;
+
+    alMakeCmd(p, alEffects, 0);
+    if (spscring_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
+        SDL_assert(0);
+    for (i = 0; i < sqMaxTracks; i++)
+    {
+        alMakeCmd(p, alFreqH + i + 1, 0);
+        if (spscring_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
+            SDL_assert(0);
+    }
+
+    while (spscring_avail(&al_cmd_stream) != 0) {}
 }
 
 void AdLib_PlaySound(BridgeAdLibSound* sound)
 {
+    SDL_assert(al_sd_data == 0); // make sure audio thread is not reading
 
+    // send instrument
+    AdLib_SetInstrument(&alZeroInst); // DEBUG
+    AdLib_SetInstrument(&sound->inst);
+
+    while (spscring_avail(&al_cmd_stream) != 0) {}
+
+    al_sd_size = sound->common.length;
+    al_sd_block = ((sound->block & 7) << 2) | 0x20;
+    al_sd_data = sound->data;
 }
 
 void AdLib_StopSound(void)
 {
+    alcmd_t p;
 
+    al_sd_data = 0;
+    
+    alMakeCmd(p, alFreqH, 0);
+    if (spscring_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
+        SDL_assert(0);
+
+    while (spscring_avail(&al_cmd_stream) != 0) {}
 }
 
 void AdLib_Shut(void)
 {
+    alcmd_t p;
 
+    al_sd_data = 0;
+
+    alMakeCmd(p, alEffects, 0);
+    if (spscring_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
+        SDL_assert(0);
+    alMakeCmd(p, alFreqH, 0);
+    if (spscring_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
+        SDL_assert(0);
+    AdLib_SetInstrument(&alZeroInst);
+
+    while (spscring_avail(&al_cmd_stream) != 0) {}
 }
 
 uint8_t AdLib_SoundPlaying(void)
 {
-    return 0;
+    return al_sd_data != 0;
 }
 
 //------------------------------------------------------------------------------
@@ -895,7 +1154,7 @@ void SoundSource_StopSample(void)
 
 uint8_t SoundBlaster_Detect(void)
 {
-    return (sb_stream != 0);
+    return 1;
 }
 
 void SoundBlaster_Level(int16_t left, int16_t right)
@@ -906,11 +1165,12 @@ void SoundBlaster_Level(int16_t left, int16_t right)
 
 void SoundBlaster_PlaySample(uint8_t* data, uint32_t length)
 {
-    sb_playing = 1;
-    SDL_AudioStreamPut(sb_stream, data, length);
+    SDL_assert(sb_data == 0); // make sure audio thread is not reading
+    sb_size = length;
+    sb_data = data;
 }
 
 void SoundBlaster_StopSample(void)
 {
-    SDL_AudioStreamClear(sb_stream);
+    sb_data = 0;
 }

@@ -1418,6 +1418,12 @@ SDL_CleanDevice(void)
 static void
 SDL_StartDevice(void)
 {
+    switch (SoundMode)
+    {
+    case sdm_AdLib:
+        AdLib_Start();
+        break;
+    }
     SoundNumber = SoundPriority = 0;
 }
 
@@ -1847,7 +1853,7 @@ SD_WaitSoundDone(void)
 void
 SD_MusicOn(void)
 {
-    sqActive = true;
+    AdLib_MusicOn();
 }
 
 ///////////////////////////////////////////////////////////////////////////

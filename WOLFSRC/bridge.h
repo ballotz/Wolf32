@@ -142,11 +142,17 @@ extern void PCSpeaker_SoundFinished(void);
 // Determines if there's an AdLib
 uint8_t AdLib_Detect(void);
 
+// Starts up the AdLib card for sound effects
+void AdLib_Start(void);
+
 // Totally shuts down the AdLib card
 void AdLib_Clean(void);
 
-// starts playing the music pointed to
+// starts playing the music pointed to (loop mode)
 void AdLib_StartMusic(uint16_t* values, uint16_t length);
+
+// turns on the sequencer
+void AdLib_MusicOn(void);
 
 // turns off the sequencer and any playing notes
 void AdLib_MusicOff(void);
