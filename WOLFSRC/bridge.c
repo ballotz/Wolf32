@@ -359,7 +359,7 @@ void SynthAdLib(float* out_data, int out_samples)
         // do we need more data from music input?
         if (music_in_count >= music_in_trigger)
         {
-            music_in_count -= music_in_trigger;
+            music_in_count = 0;
             if (al_music_active)
             {
                 music_in_trigger = 0;
