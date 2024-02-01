@@ -43,7 +43,7 @@ int spscring_read(spscring_t* r, void* data, int size)
     return 0;
 }
 
-int spscring_write(spscring_t* r, void* data, int size)
+int spscring_write(spscring_t* r, const void* data, int size)
 {
     char* rbuffer = r->buffer;
     int rsize = r->size;
@@ -75,10 +75,10 @@ int spscring_write(spscring_t* r, void* data, int size)
     }
 }
 
-void spscring_clear(spscring_t* r)
-{
-    r->windex = r->rindex;
-}
+//void spscring_clear(spscring_t* r)
+//{
+//    r->rindex = r->windex;
+//}
 
 int spscring_avail(spscring_t* r)
 {

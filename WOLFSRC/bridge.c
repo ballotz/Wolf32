@@ -156,19 +156,23 @@ SDL_AudioSpec audio_format;
 
 spscring_t al_cmd_stream;
 
+SDL_mutex *pc_sd_mutex;
 uint8_t* pc_sd_data;
 uint16_t pc_sd_size;
 filter1_t pc_sd_filter[2];
 
+SDL_mutex *al_music_mutex;
 uint8_t *al_music_data, *al_sequencer_data;
 uint16_t al_music_size, al_sequencer_size;
 uint8_t al_music_active;
 filter2_t al_filter;
 
+SDL_mutex *al_sd_mutex;
 uint8_t *al_sd_data;
 uint16_t al_sd_size;
 uint8_t al_sd_block;
 
+SDL_mutex *sb_mutex;
 uint8_t* sb_data;
 uint16_t sb_size;
 filter2_t sb_filter[2];
@@ -261,6 +265,9 @@ void SynthPCSpeakerSound(float* out_data, int out_samples)
     static int      sqr_trigger = 0;
     static int      sqr_count = 0;
     static float    sqr_val = 0.f;
+    int             lock;
+
+    lock = SDL_TryLockMutex(pc_sd_mutex);
 
     in_trigger = PC_SD_FRAC * audio_format.freq / PC_SD_RATE;
 
@@ -270,24 +277,27 @@ void SynthPCSpeakerSound(float* out_data, int out_samples)
         if (in_count >= in_trigger)
         {
             in_count -= in_trigger;
-            sqr_trigger = 0;
-            if (pc_sd_data)
+            if (lock == 0)
             {
-                if (pc_sd_size)
+                sqr_trigger = 0;
+                if (pc_sd_data)
                 {
-                    data = *pc_sd_data;
-                    if (data)
+                    if (pc_sd_size)
                     {
-                        // start (or continue) oscillator, use half period
-                        sqr_trigger = (int)(data * (60.f / 1193181.f) * audio_format.freq) >> 1;
+                        data = *pc_sd_data;
+                        if (data)
+                        {
+                            // start (or continue) oscillator, use half period
+                            sqr_trigger = (int)(data * (60.f / 1193181.f) * audio_format.freq) >> 1;
+                        }
+                        pc_sd_size--;
+                        pc_sd_data++;
                     }
-                    pc_sd_size--;
-                    pc_sd_data++;
-                }
-                else
-                {
-                    pc_sd_data = 0;
-                    PCSpeaker_SoundFinished();
+                    else
+                    {
+                        pc_sd_data = 0;
+                        PCSpeaker_SoundFinished();
+                    }
                 }
             }
         }
@@ -320,6 +330,9 @@ void SynthPCSpeakerSound(float* out_data, int out_samples)
         in_count += PC_SD_FRAC;
         sqr_count++;
     }
+
+    if (lock == 0)
+        SDL_UnlockMutex(pc_sd_mutex);
 }
 
 #define ADLIB_RATE      700
@@ -341,6 +354,7 @@ void SynthAdLib(float* out_data, int out_samples)
     int             sound_in_trigger;
     static int      music_in_count = 0;
     static int      sound_in_count = 0;
+    int             music_lock, sound_lock;
 
     // process commands
     for (;;)
@@ -352,6 +366,9 @@ void SynthAdLib(float* out_data, int out_samples)
             break;
     }
 
+    music_lock = SDL_TryLockMutex(al_music_mutex);
+    sound_lock = SDL_TryLockMutex(al_sd_mutex);
+
     sound_in_trigger = ADLIB_SD_FRAC * 5 * audio_format.freq / ADLIB_RATE;
 
     for (i = 0, j = 0; i < out_samples; ++i, j += 2)
@@ -362,22 +379,25 @@ void SynthAdLib(float* out_data, int out_samples)
             music_in_count = 0;
             if (al_music_active)
             {
-                music_in_trigger = 0;
-                while (music_in_trigger == 0)
+                if (music_lock == 0)
                 {
-                    if (al_sequencer_size)
+                    music_in_trigger = 0;
+                    while (music_in_trigger == 0)
                     {
-                        pak = *(alpacket_t*)al_sequencer_data;
-                        alOut(pak.addr, pak.data);
-                        music_in_trigger = pak.wait * audio_format.freq / ADLIB_RATE;
-                        al_sequencer_size -= sizeof(alpacket_t);
-                        al_sequencer_data += sizeof(alpacket_t);
-                    }
-                    if (!al_sequencer_size)
-                    {
-                        // start over
-                        al_sequencer_data = al_music_data;
-                        al_sequencer_size = al_music_size;
+                        if (al_sequencer_size)
+                        {
+                            pak = *(alpacket_t*)al_sequencer_data;
+                            alOut(pak.addr, pak.data);
+                            music_in_trigger = pak.wait * audio_format.freq / ADLIB_RATE;
+                            al_sequencer_size -= sizeof(alpacket_t);
+                            al_sequencer_data += sizeof(alpacket_t);
+                        }
+                        if (!al_sequencer_size)
+                        {
+                            // start over
+                            al_sequencer_data = al_music_data;
+                            al_sequencer_size = al_music_size;
+                        }
                     }
                 }
             }
@@ -387,26 +407,29 @@ void SynthAdLib(float* out_data, int out_samples)
         if (sound_in_count >= sound_in_trigger)
         {
             sound_in_count -= sound_in_trigger;
-            if (al_sd_data)
+            if (sound_lock == 0)
             {
-                if (al_sd_size)
+                if (al_sd_data)
                 {
-                    snd = *al_sd_data;
-                    if (!snd)
-                        alOut(alFreqH, 0)
+                    if (al_sd_size)
+                    {
+                        snd = *al_sd_data;
+                        if (!snd)
+                            alOut(alFreqH, 0)
+                        else
+                        {
+                            alOut(alFreqL, snd);
+                            alOut(alFreqH, al_sd_block);
+                        }
+                        al_sd_size--;
+                        al_sd_data++;
+                    }
                     else
                     {
-                        alOut(alFreqL, snd);
-                        alOut(alFreqH, al_sd_block);
+                        alOut(alFreqH, 0);
+                        al_sd_data = 0;
+                        AdLib_SoundFinished();
                     }
-                    al_sd_size--;
-                    al_sd_data++;
-                }
-                else
-                {
-                    alOut(alFreqH, 0);
-                    al_sd_data = 0;
-                    AdLib_SoundFinished();
                 }
             }
         }
@@ -425,6 +448,11 @@ void SynthAdLib(float* out_data, int out_samples)
         music_in_count += 1;
         sound_in_count += ADLIB_SD_FRAC;
     }
+
+    if (music_lock == 0)
+        SDL_UnlockMutex(al_music_mutex);
+    if (sound_lock == 0)
+        SDL_UnlockMutex(al_sd_mutex);
 }
 
 #define SB_RATE     7000
@@ -441,6 +469,9 @@ void SynthSoundBlaster(float* out_data, int out_samples)
     static int      in_count = 0;
     static float    interp[2] = { 0.f, 0.f };
     float           frac;
+    int             lock;
+
+    lock = SDL_TryLockMutex(sb_mutex);
 
     in_trigger = SB_FRAC * audio_format.freq / SB_RATE;
 
@@ -451,23 +482,26 @@ void SynthSoundBlaster(float* out_data, int out_samples)
         {
             in_count -= in_trigger;
             data = 0x80;
-            if (sb_data)
+            if (lock == 0)
             {
-                if (sb_size)
+                if (sb_data)
                 {
-                    data = *sb_data;
-                    sb_size--;
-                    sb_data++;
-                }
-                else
-                {
-                    SoundBlaster_SoundFinished();
-                    // check if there is a new chunk
                     if (sb_size)
                     {
                         data = *sb_data;
                         sb_size--;
                         sb_data++;
+                    }
+                    else
+                    {
+                        SoundBlaster_SoundFinished();
+                        // check if there is a new chunk
+                        if (sb_size)
+                        {
+                            data = *sb_data;
+                            sb_size--;
+                            sb_data++;
+                        }
                     }
                 }
             }
@@ -488,6 +522,9 @@ void SynthSoundBlaster(float* out_data, int out_samples)
 
         in_count += SB_FRAC;
     }
+
+    if (lock == 0)
+        SDL_UnlockMutex(sb_mutex);
 }
 
 void AudioCallback(void* userdata, Uint8* stream, int len)
@@ -595,6 +632,11 @@ void Initialize(void)
         static uint8_t al_cmd_buffer[512];
         spscring_init(&al_cmd_stream, al_cmd_buffer, sizeof(al_cmd_buffer));
 
+        pc_sd_mutex = SDL_CreateMutex();
+        al_music_mutex = SDL_CreateMutex();
+        al_sd_mutex = SDL_CreateMutex();
+        sb_mutex = SDL_CreateMutex();
+
         alInit(audio_format.freq);
 
         filter1_expma(&pc_sd_filter[0], PC_SQUARE_CUTOFF, (float)audio_format.freq);
@@ -624,6 +666,11 @@ void Deinitialize(void)
         SDL_CloseAudioDevice(audio_device);
 
         alDeinit();
+
+        SDL_DestroyMutex(pc_sd_mutex);
+        SDL_DestroyMutex(al_music_mutex);
+        SDL_DestroyMutex(al_sd_mutex);
+        SDL_DestroyMutex(sb_mutex);
     }
 
     SDL_Quit();
@@ -926,19 +973,24 @@ void TimeCount_Set(uint32_t value)
 
 void PCSpeaker_Shut(void)
 {
+    SDL_LockMutex(pc_sd_mutex);
     pc_sd_data = 0;
+    SDL_UnlockMutex(pc_sd_mutex);
 }
 
 void PCSpeaker_PlaySound(uint8_t* data, uint32_t length)
 {
-    SDL_assert(sb_data == 0); // make sure audio thread is not reading
+    SDL_LockMutex(pc_sd_mutex);
     pc_sd_size = length;
     pc_sd_data = data;
+    SDL_UnlockMutex(pc_sd_mutex);
 }
 
 void PCSpeaker_StopSound(void)
 {
+    SDL_LockMutex(pc_sd_mutex);
     pc_sd_data = 0;
+    SDL_UnlockMutex(pc_sd_mutex);
 }
 
 uint8_t PCSpeaker_SoundPlaying(void)
@@ -1005,7 +1057,7 @@ uint8_t AdLib_Detect(void)
     if (spscring_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
         SDL_assert(0);
 
-    while (spscring_avail(&al_cmd_stream) != 0) {}
+    while (spscring_avail(&al_cmd_stream) != 0) { SDL_Delay(1); }
 
     return 1;
 }
@@ -1019,7 +1071,7 @@ void AdLib_Start(void)
         SDL_assert(0);
     AdLib_SetInstrument(&alZeroInst);
 
-    while (spscring_avail(&al_cmd_stream) != 0) {}
+    while (spscring_avail(&al_cmd_stream) != 0) { SDL_Delay(1); }
 }
 
 void AdLib_Clean(void)
@@ -1037,16 +1089,17 @@ void AdLib_Clean(void)
             SDL_assert(0);
     }
 
-    while (spscring_avail(&al_cmd_stream) != 0) {}
+    while (spscring_avail(&al_cmd_stream) != 0) { SDL_Delay(1); }
 }
 
 void AdLib_StartMusic(uint16_t* values, uint16_t length)
 {
-    SDL_assert(al_music_active == 0); // make sure audio thread is not reading
+    SDL_LockMutex(al_music_mutex);
     al_music_data = (uint8_t*)values;
     al_music_size = length;
     al_sequencer_data = al_music_data;
     al_sequencer_size = al_music_size;
+    SDL_UnlockMutex(al_music_mutex);
 }
 
 void AdLib_MusicOn(void)
@@ -1071,42 +1124,46 @@ void AdLib_MusicOff(void)
             SDL_assert(0);
     }
 
-    while (spscring_avail(&al_cmd_stream) != 0) {}
+    while (spscring_avail(&al_cmd_stream) != 0) { SDL_Delay(1); }
 }
 
 void AdLib_PlaySound(BridgeAdLibSound* sound)
 {
-    SDL_assert(al_sd_data == 0); // make sure audio thread is not reading
-
     // send instrument
     AdLib_SetInstrument(&alZeroInst); // DEBUG
     AdLib_SetInstrument(&sound->inst);
 
-    while (spscring_avail(&al_cmd_stream) != 0) {}
+    while (spscring_avail(&al_cmd_stream) != 0) { SDL_Delay(1); }
 
+    SDL_LockMutex(al_sd_mutex);
     al_sd_size = sound->common.length;
     al_sd_block = ((sound->block & 7) << 2) | 0x20;
     al_sd_data = sound->data;
+    SDL_UnlockMutex(al_sd_mutex);
 }
 
 void AdLib_StopSound(void)
 {
     alcmd_t p;
 
+    SDL_LockMutex(al_sd_mutex);
     al_sd_data = 0;
-    
+    SDL_UnlockMutex(al_sd_mutex);
+
     alMakeCmd(p, alFreqH, 0);
     if (spscring_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
         SDL_assert(0);
 
-    while (spscring_avail(&al_cmd_stream) != 0) {}
+    while (spscring_avail(&al_cmd_stream) != 0) { SDL_Delay(1); }
 }
 
 void AdLib_Shut(void)
 {
     alcmd_t p;
 
+    SDL_LockMutex(al_sd_mutex);
     al_sd_data = 0;
+    SDL_UnlockMutex(al_sd_mutex);
 
     alMakeCmd(p, alEffects, 0);
     if (spscring_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
@@ -1116,7 +1173,7 @@ void AdLib_Shut(void)
         SDL_assert(0);
     AdLib_SetInstrument(&alZeroInst);
 
-    while (spscring_avail(&al_cmd_stream) != 0) {}
+    while (spscring_avail(&al_cmd_stream) != 0) { SDL_Delay(1); }
 }
 
 uint8_t AdLib_SoundPlaying(void)
@@ -1165,12 +1222,15 @@ void SoundBlaster_Level(int16_t left, int16_t right)
 
 void SoundBlaster_PlaySample(uint8_t* data, uint32_t length)
 {
-    SDL_assert(sb_data == 0); // make sure audio thread is not reading
+    SDL_LockMutex(sb_mutex);
     sb_size = length;
     sb_data = data;
+    SDL_UnlockMutex(sb_mutex);
 }
 
 void SoundBlaster_StopSample(void)
 {
+    SDL_LockMutex(sb_mutex);
     sb_data = 0;
+    SDL_UnlockMutex(sb_mutex);
 }
