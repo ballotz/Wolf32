@@ -8,7 +8,6 @@
     <ClCompile Include="WOLFSRC\ID_VL.C" />
     <ClCompile Include="WOLFSRC\ID_VH.C" />
     <ClCompile Include="WOLFSRC\ID_IN.C" />
-    <ClCompile Include="WOLFSRC\bridge.c" />
     <ClCompile Include="WOLFSRC\ID_SD.C" />
     <ClCompile Include="WOLFSRC\ID_US_1.C" />
     <ClCompile Include="WOLFSRC\WL_MENU.C" />
@@ -23,9 +22,18 @@
     <ClCompile Include="WOLFSRC\GAMEPAL.C" />
     <ClCompile Include="WOLFSRC\SIGNON.C" />
     <ClCompile Include="WOLFSRC\WL_TEXT.C" />
-    <ClCompile Include="emu8950\emu8950.c" />
-    <ClCompile Include="emu8950\emuadpcm.c" />
-    <ClCompile Include="spscring\spscring.c" />
+    <ClCompile Include="target\bridge_sdl2.c">
+      <Filter>sdl2</Filter>
+    </ClCompile>
+    <ClCompile Include="emu8950\emu8950.c">
+      <Filter>emu8950</Filter>
+    </ClCompile>
+    <ClCompile Include="emu8950\emuadpcm.c">
+      <Filter>emu8950</Filter>
+    </ClCompile>
+    <ClCompile Include="spscbuffer\spscbuffer.c">
+      <Filter>spscbuffer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WOLFSRC\WL_DEF.H" />
@@ -41,8 +49,25 @@
     <ClInclude Include="WOLFSRC\WL_MENU.H" />
     <ClInclude Include="WOLFSRC\bridge.h" />
     <ClInclude Include="WOLFSRC\VERSION.H" />
-    <ClInclude Include="emu8950\emu8950.h" />
-    <ClInclude Include="emu8950\emuadpcm.h" />
-    <ClInclude Include="spscring\spscring.h" />
+    <ClInclude Include="emu8950\emu8950.h">
+      <Filter>emu8950</Filter>
+    </ClInclude>
+    <ClInclude Include="emu8950\emuadpcm.h">
+      <Filter>emu8950</Filter>
+    </ClInclude>
+    <ClInclude Include="spscbuffer\spscbuffer.h">
+      <Filter>spscbuffer</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="sdl2">
+      <UniqueIdentifier>{827312d0-fdea-4c29-838c-29003e516d88}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="emu8950">
+      <UniqueIdentifier>{80a818e7-a9b0-4e7f-ac96-d3bb8d332631}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="spscbuffer">
+      <UniqueIdentifier>{416a2f58-10ce-48a8-9e40-274ba4c07392}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
 </Project>

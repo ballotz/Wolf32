@@ -161,8 +161,8 @@
   <ItemGroup>
     <ClCompile Include="emu8950\emu8950.c" />
     <ClCompile Include="emu8950\emuadpcm.c" />
-    <ClCompile Include="spscring\spscring.c" />
-    <ClCompile Include="WOLFSRC\bridge.c" />
+    <ClCompile Include="spscbuffer\spscbuffer.c" />
+    <ClCompile Include="target\bridge_sdl2.c" />
     <ClCompile Include="WOLFSRC\GAMEPAL.C" />
     <ClCompile Include="WOLFSRC\ID_CA.C" />
     <ClCompile Include="WOLFSRC\ID_IN.C" />
@@ -188,7 +188,7 @@
   <ItemGroup>
     <ClInclude Include="emu8950\emu8950.h" />
     <ClInclude Include="emu8950\emuadpcm.h" />
-    <ClInclude Include="spscring\spscring.h" />
+    <ClInclude Include="spscbuffer\spscbuffer.h" />
     <ClInclude Include="WOLFSRC\bridge.h" />
     <ClInclude Include="WOLFSRC\ID_CA.H" />
     <ClInclude Include="WOLFSRC\ID_HEADS.H" />

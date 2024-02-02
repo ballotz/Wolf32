@@ -1,7 +1,7 @@
-#include "bridge.h"
+#include "../WOLFSRC/bridge.h"
+#include "../spscbuffer/spscbuffer.h"
 #include <SDL.h>
 #include <stdio.h>
-#include "../spscring/spscring.h"
 
 SDL_Window* window;
 SDL_Renderer* renderer;
@@ -154,7 +154,7 @@ float filter2_process(filter2_t* filter, float input)
 SDL_AudioDeviceID audio_device;
 SDL_AudioSpec audio_format;
 
-spscring_t al_cmd_stream;
+spscbuffer_t al_cmd_stream;
 
 SDL_mutex *pc_sd_mutex;
 uint8_t* pc_sd_data;
@@ -359,7 +359,7 @@ void SynthAdLib(float* out_data, int out_samples)
     // process commands
     for (;;)
     {
-        read = spscring_read(&al_cmd_stream, &cmd, sizeof(alcmd_t));
+        read = spscbuffer_read(&al_cmd_stream, &cmd, sizeof(alcmd_t));
         if (read == sizeof(alcmd_t))
             alOut(cmd.addr, cmd.data)
         else
@@ -630,7 +630,7 @@ void Initialize(void)
     if (audio_device)
     {
         static uint8_t al_cmd_buffer[512];
-        spscring_init(&al_cmd_stream, al_cmd_buffer, sizeof(al_cmd_buffer));
+        spscbuffer_init(&al_cmd_stream, al_cmd_buffer, sizeof(al_cmd_buffer));
 
         pc_sd_mutex = SDL_CreateMutex();
         al_music_mutex = SDL_CreateMutex();
@@ -1035,7 +1035,7 @@ void AdLib_SetInstrument(BridgeAdLibInstrument* inst)
     //alMakeCmd(p[10], alFeedCon,   inst->nConn  );
     alMakeCmd(p[10], alFeedCon,   0            );
 
-    if (spscring_write(&al_cmd_stream, p, sizeof(p)) != sizeof(p))
+    if (spscbuffer_write(&al_cmd_stream, p, sizeof(p)) != sizeof(p))
         SDL_assert(0);
 }
 
@@ -1047,17 +1047,17 @@ uint8_t AdLib_Detect(void)
     for (i = 1; i <= 0xf5; i++) // Zero all the registers
     {
         alMakeCmd(p, i, 0);
-        if (spscring_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
+        if (spscbuffer_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
             SDL_assert(0);
     }
     alMakeCmd(p, 1, 0x20);      // Set WSE=1
-    if (spscring_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
+    if (spscbuffer_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
         SDL_assert(0);
     alMakeCmd(p, 8, 0);         // Set CSM=0 & SEL=0
-    if (spscring_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
+    if (spscbuffer_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
         SDL_assert(0);
 
-    while (spscring_avail(&al_cmd_stream) != 0) { SDL_Delay(1); }
+    while (spscbuffer_avail(&al_cmd_stream) != 0) { SDL_Delay(1); }
 
     return 1;
 }
@@ -1067,11 +1067,11 @@ void AdLib_Start(void)
     alcmd_t p;
 
     alMakeCmd(p, alEffects, 0);
-    if (spscring_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
+    if (spscbuffer_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
         SDL_assert(0);
     AdLib_SetInstrument(&alZeroInst);
 
-    while (spscring_avail(&al_cmd_stream) != 0) { SDL_Delay(1); }
+    while (spscbuffer_avail(&al_cmd_stream) != 0) { SDL_Delay(1); }
 }
 
 void AdLib_Clean(void)
@@ -1080,16 +1080,16 @@ void AdLib_Clean(void)
     alcmd_t p;
 
     alMakeCmd(p, alEffects, 0);
-    if (spscring_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
+    if (spscbuffer_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
         SDL_assert(0);
     for (i = 1; i < 0xf5; i++)
     {
         alMakeCmd(p, i, 0);
-        if (spscring_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
+        if (spscbuffer_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
             SDL_assert(0);
     }
 
-    while (spscring_avail(&al_cmd_stream) != 0) { SDL_Delay(1); }
+    while (spscbuffer_avail(&al_cmd_stream) != 0) { SDL_Delay(1); }
 }
 
 void AdLib_StartMusic(uint16_t* values, uint16_t length)
@@ -1115,16 +1115,16 @@ void AdLib_MusicOff(void)
     al_music_active = 0;
 
     alMakeCmd(p, alEffects, 0);
-    if (spscring_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
+    if (spscbuffer_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
         SDL_assert(0);
     for (i = 0; i < sqMaxTracks; i++)
     {
         alMakeCmd(p, alFreqH + i + 1, 0);
-        if (spscring_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
+        if (spscbuffer_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
             SDL_assert(0);
     }
 
-    while (spscring_avail(&al_cmd_stream) != 0) { SDL_Delay(1); }
+    while (spscbuffer_avail(&al_cmd_stream) != 0) { SDL_Delay(1); }
 }
 
 void AdLib_PlaySound(BridgeAdLibSound* sound)
@@ -1133,7 +1133,7 @@ void AdLib_PlaySound(BridgeAdLibSound* sound)
     AdLib_SetInstrument(&alZeroInst); // DEBUG
     AdLib_SetInstrument(&sound->inst);
 
-    while (spscring_avail(&al_cmd_stream) != 0) { SDL_Delay(1); }
+    while (spscbuffer_avail(&al_cmd_stream) != 0) { SDL_Delay(1); }
 
     SDL_LockMutex(al_sd_mutex);
     al_sd_size = sound->common.length;
@@ -1151,10 +1151,10 @@ void AdLib_StopSound(void)
     SDL_UnlockMutex(al_sd_mutex);
 
     alMakeCmd(p, alFreqH, 0);
-    if (spscring_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
+    if (spscbuffer_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
         SDL_assert(0);
 
-    while (spscring_avail(&al_cmd_stream) != 0) { SDL_Delay(1); }
+    while (spscbuffer_avail(&al_cmd_stream) != 0) { SDL_Delay(1); }
 }
 
 void AdLib_Shut(void)
@@ -1166,14 +1166,14 @@ void AdLib_Shut(void)
     SDL_UnlockMutex(al_sd_mutex);
 
     alMakeCmd(p, alEffects, 0);
-    if (spscring_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
+    if (spscbuffer_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
         SDL_assert(0);
     alMakeCmd(p, alFreqH, 0);
-    if (spscring_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
+    if (spscbuffer_write(&al_cmd_stream, &p, sizeof(p)) != sizeof(p))
         SDL_assert(0);
     AdLib_SetInstrument(&alZeroInst);
 
-    while (spscring_avail(&al_cmd_stream) != 0) { SDL_Delay(1); }
+    while (spscbuffer_avail(&al_cmd_stream) != 0) { SDL_Delay(1); }
 }
 
 uint8_t AdLib_SoundPlaying(void)

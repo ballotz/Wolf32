@@ -1,7 +1,7 @@
-#include "spscring.h"
+#include "spscbuffer.h"
 #include <string.h>
 
-void spscring_init(spscring_t* r, void* buffer, int size)
+void spscbuffer_init(spscbuffer_t* r, void* buffer, int size)
 {
     r->buffer = buffer;
     r->size = size;
@@ -9,7 +9,7 @@ void spscring_init(spscring_t* r, void* buffer, int size)
     r->windex = 0;
 }
 
-int spscring_read(spscring_t* r, void* data, int size)
+int spscbuffer_read(spscbuffer_t* r, void* data, int size)
 {
     char* rbuffer = r->buffer;
     int rsize = r->size;
@@ -43,7 +43,7 @@ int spscring_read(spscring_t* r, void* data, int size)
     return 0;
 }
 
-int spscring_write(spscring_t* r, const void* data, int size)
+int spscbuffer_write(spscbuffer_t* r, const void* data, int size)
 {
     char* rbuffer = r->buffer;
     int rsize = r->size;
@@ -75,12 +75,12 @@ int spscring_write(spscring_t* r, const void* data, int size)
     }
 }
 
-//void spscring_clear(spscring_t* r)
+//void spscbuffer_clear(spscbuffer_t* r)
 //{
 //    r->rindex = r->windex;
 //}
 
-int spscring_avail(spscring_t* r)
+int spscbuffer_avail(spscbuffer_t* r)
 {
     int rsize = r->size;
     int rrindex = r->rindex;
