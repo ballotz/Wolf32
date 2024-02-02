@@ -757,10 +757,12 @@ boolean MS_CheckParm(char* check)
             if (!*parm++)
                 break;                          // hit end of string without an alphanum
 
-#ifndef __APPLE__
-        if (!stricmp(check, parm))
-#else
+#if defined(__APPLE__)
         if (!strcasecmp(check, parm))
+#elif defined(_MSC_VER) && defined(_M_X64)
+        if (!_stricmp(check, parm))
+#else
+        if (!stricmp(check, parm))
 #endif
             return true;
     }
