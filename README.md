@@ -2,13 +2,16 @@
 
 The aim is to make the game build and run on as many compilers/platforms as possible
 
-Files bridge.h and bridge.c contains the system depended part of the game, and should be the only part that must be re-implemented to support a new platform
+Files bridge.h is used by the game and gives the interface that should be implemented for the porting to a new platform.
 
 Once the original game will be fully functional, some features could be added, e.g. modern control system, hi res rendering, etc
 
 ## Platforms
 
-At the moment Windows and MacOS are supported with SDL2
+### SDL2
+
+- Windows
+- MacOS
 
 ## Compiling
 
@@ -18,9 +21,7 @@ Open the provided Visual Studio 2019 solution, should build out of the box
 
 The SDL2 dll is needed for the executable to run, a post build step will copy it in the build folder
 
-#### Known Issues
-
-The x64 build in not working yet, use x86
+To support Windows versions back to Windows XP the Platform Toolset can be changed (v141_xp)
 
 ### MacOS
 
