@@ -607,8 +607,8 @@ void Initialize(void)
     renderer = SDL_CreateRenderer(
         window,
         -1,
-        0
-        //SDL_RENDERER_PRESENTVSYNC
+        //0
+        SDL_RENDERER_PRESENTVSYNC
         //SDL_RENDERER_ACCELERATED
     );
     if (renderer == 0)
