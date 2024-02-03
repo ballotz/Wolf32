@@ -602,11 +602,11 @@ typedef enum {
 
 typedef struct	statestruct
 {
-    boolean	rotate;
-    int16_t	shapenum;			// a shapenum of -1 means get from ob->temp1
-    int16_t	tictime;
-    void	(*think) (memptr), (*action) (memptr);
-    struct	statestruct *next;
+    boolean		rotate;
+    int16_t		shapenum;			// a shapenum of -1 means get from ob->temp1
+    int16_t		tictime;
+    void		(*think) (memptr), (*action) (memptr);
+    uint16_t	next;
 } statetype;
 
 
@@ -651,9 +651,9 @@ typedef struct doorstruct
 typedef struct objstruct
 {
     activetype	active;
-    int16_t			ticcount;
+    int16_t		ticcount;
     classtype	obclass;
-    statetype* state;
+    uint16_t    state;
 
     byte		flags;				//	FL_SHOOTABLE, etc
 
@@ -664,16 +664,16 @@ typedef struct objstruct
     uint16_t	tilex, tiley;
     byte		areanumber;
 
-    int16_t	 		viewx;
+    int16_t	 	viewx;
     uint16_t	viewheight;
     fixed		transx, transy;		// in global coord
 
-    int16_t 		angle;
-    int16_t			hitpoints;
+    int16_t 	angle;
+    int16_t		hitpoints;
     int32_t		speed;
 
-    int16_t			temp1, temp2, temp3;
-    struct		objstruct* next, * prev;
+    int16_t		temp1, temp2, temp3;
+    struct		objstruct *next, *prev;
 } objtype;
 
 
@@ -1038,10 +1038,26 @@ void        FarScalePost(void);
 extern	dirtype opposite[9];
 extern	dirtype diagonal[9][9];
 
+extern  statetype states[];
+
+#define NULLSTATE 0xFFFF
+
+#define MAKESTATE(state, r, s, t, tnk, act, nxt) \
+    states[state].rotate = r;       \
+    states[state].shapenum = s;     \
+    states[state].tictime = t;      \
+    states[state].think = tnk;      \
+    states[state].action = act;     \
+    states[state].next = nxt;
+
+#define GETSTATE(state) \
+    states[state]
+
+void    MakeStates(void);
 
 void	InitHitRect(objtype* ob, uint16_t radius);
-void	SpawnNewObj(uint16_t tilex, uint16_t tiley, statetype* state);
-void	NewState(objtype* ob, statetype* state);
+void	SpawnNewObj(uint16_t tilex, uint16_t tiley, uint16_t state);
+void	NewState(objtype* ob, uint16_t state);
 
 boolean TryWalk(objtype* ob);
 void 	SelectChaseDir(objtype* ob);
@@ -1109,6 +1125,16 @@ extern	byte		mapmasks3[4][8];
 
 =============================================================================
 */
+
+enum
+{
+    s_agent_first = 0,
+
+    s_player = s_agent_first,
+    s_attack,
+
+    s_agent_last = s_attack
+};
 
 //
 // player state info
@@ -1183,69 +1209,6 @@ void InitAreas(void);
 =============================================================================
 */
 
-#define s_nakedbody s_static10
-
-extern	statetype s_grddie1;
-extern	statetype s_dogdie1;
-extern	statetype s_ofcdie1;
-extern	statetype s_mutdie1;
-extern	statetype s_ssdie1;
-extern	statetype s_bossdie1;
-extern	statetype s_schabbdie1;
-extern	statetype s_fakedie1;
-extern	statetype s_mechadie1;
-extern	statetype s_hitlerdie1;
-extern	statetype s_greteldie1;
-extern	statetype s_giftdie1;
-extern	statetype s_fatdie1;
-
-extern	statetype s_spectredie1;
-extern	statetype s_angeldie1;
-extern	statetype s_transdie0;
-extern	statetype s_uberdie0;
-extern	statetype s_willdie1;
-extern	statetype s_deathdie1;
-
-
-extern	statetype s_grdchase1;
-extern	statetype s_dogchase1;
-extern	statetype s_ofcchase1;
-extern	statetype s_sschase1;
-extern	statetype s_mutchase1;
-extern	statetype s_bosschase1;
-extern	statetype s_schabbchase1;
-extern	statetype s_fakechase1;
-extern	statetype s_mechachase1;
-extern	statetype s_gretelchase1;
-extern	statetype s_giftchase1;
-extern	statetype s_fatchase1;
-
-extern	statetype s_spectrechase1;
-extern	statetype s_angelchase1;
-extern	statetype s_transchase1;
-extern	statetype s_uberchase1;
-extern	statetype s_willchase1;
-extern	statetype s_deathchase1;
-
-extern	statetype s_blinkychase1;
-extern	statetype s_hitlerchase1;
-
-extern	statetype s_grdpain;
-extern	statetype s_grdpain1;
-extern	statetype s_ofcpain;
-extern	statetype s_ofcpain1;
-extern	statetype s_sspain;
-extern	statetype s_sspain1;
-extern	statetype s_mutpain;
-extern	statetype s_mutpain1;
-
-extern	statetype s_deathcam;
-
-extern	statetype s_schabbdeathcam2;
-extern	statetype s_hitlerdeathcam2;
-extern	statetype s_giftdeathcam2;
-extern	statetype s_fatdeathcam2;
-
 void SpawnStand(enemy_t which, int16_t tilex, int16_t tiley, int16_t dir);
 void SpawnPatrol(enemy_t which, int16_t tilex, int16_t tiley, int16_t dir);
 void KillActor(objtype* ob);
@@ -1270,6 +1233,409 @@ void SpawnHitler(int16_t tilex, int16_t tiley);
 void SpawnBJVictory(void);
 
 void A_DeathScream(objtype* ob);
+
+enum
+{
+    s_act2_first = s_agent_last + 1,
+
+    s_rocket = s_act2_first,
+    s_smoke1,
+    s_smoke2,
+    s_smoke3,
+    s_smoke4,
+    s_boom1,
+    s_boom2,
+    s_boom3,
+
+#ifdef SPEAR
+    s_hrocket,
+    s_hsmoke1,
+    s_hsmoke2,
+    s_hsmoke3,
+    s_hsmoke4,
+    s_hboom1,
+    s_hboom2,
+    s_hboom3,
+#endif
+
+    s_grdstand,
+    s_grdpath1,
+    s_grdpath1s,
+    s_grdpath2,
+    s_grdpath3,
+    s_grdpath3s,
+    s_grdpath4,
+
+    s_grdpain,
+    s_grdpain1,
+
+    s_grdshoot1,
+    s_grdshoot2,
+    s_grdshoot3,
+
+    s_grdchase1,
+    s_grdchase1s,
+    s_grdchase2,
+    s_grdchase3,
+    s_grdchase3s,
+    s_grdchase4,
+
+    s_grddie1,
+    s_grddie2,
+    s_grddie3,
+    s_grddie4,
+
+#ifndef SPEAR
+    s_blinkychase1,
+    s_blinkychase2,
+
+    s_inkychase1,
+    s_inkychase2,
+
+    s_pinkychase1,
+    s_pinkychase2,
+
+    s_clydechase1,
+    s_clydechase2,
+#endif
+
+    s_dogpath1,
+    s_dogpath1s,
+    s_dogpath2,
+    s_dogpath3,
+    s_dogpath3s,
+    s_dogpath4,
+
+    s_dogjump1,
+    s_dogjump2,
+    s_dogjump3,
+    s_dogjump4,
+    s_dogjump5,
+
+    s_dogchase1,
+    s_dogchase1s,
+    s_dogchase2,
+    s_dogchase3,
+    s_dogchase3s,
+    s_dogchase4,
+
+    s_dogdie1,
+    s_dogdie2,
+    s_dogdie3,
+    s_dogdead,
+
+    s_ofcstand,
+
+    s_ofcpath1,
+    s_ofcpath1s,
+    s_ofcpath2,
+    s_ofcpath3,
+    s_ofcpath3s,
+    s_ofcpath4,
+
+    s_ofcpain,
+    s_ofcpain1,
+
+    s_ofcshoot1,
+    s_ofcshoot2,
+    s_ofcshoot3,
+
+    s_ofcchase1,
+    s_ofcchase1s,
+    s_ofcchase2,
+    s_ofcchase3,
+    s_ofcchase3s,
+    s_ofcchase4,
+
+    s_ofcdie1,
+    s_ofcdie2,
+    s_ofcdie3,
+    s_ofcdie4,
+    s_ofcdie5,
+
+    s_mutstand,
+
+    s_mutpath1,
+    s_mutpath1s,
+    s_mutpath2,
+    s_mutpath3,
+    s_mutpath3s,
+    s_mutpath4,
+
+    s_mutpain,
+    s_mutpain1,
+
+    s_mutshoot1,
+    s_mutshoot2,
+    s_mutshoot3,
+    s_mutshoot4,
+    
+    s_mutchase1,
+    s_mutchase1s,
+    s_mutchase2,
+    s_mutchase3,
+    s_mutchase3s,
+    s_mutchase4,
+
+    s_mutdie1,
+    s_mutdie2,
+    s_mutdie3,
+    s_mutdie4,
+    s_mutdie5,
+
+    s_ssstand,
+
+    s_sspath1,
+    s_sspath1s,
+    s_sspath2,
+    s_sspath3,
+    s_sspath3s,
+    s_sspath4,
+
+    s_sspain,
+    s_sspain1,
+
+    s_ssshoot1,
+    s_ssshoot2,
+    s_ssshoot3,
+    s_ssshoot4,
+    s_ssshoot5,
+    s_ssshoot6,
+    s_ssshoot7,
+    s_ssshoot8,
+    s_ssshoot9,
+
+    s_sschase1,
+    s_sschase1s,
+    s_sschase2,
+    s_sschase3,
+    s_sschase3s,
+    s_sschase4,
+
+    s_ssdie1,
+    s_ssdie2,
+    s_ssdie3,
+    s_ssdie4,
+
+#ifndef SPEAR
+    s_bossstand,
+    
+    s_bosschase1,
+    s_bosschase1s,
+    s_bosschase2,
+    s_bosschase3,
+    s_bosschase3s,
+    s_bosschase4,
+    
+    s_bossdie1,
+    s_bossdie2,
+    s_bossdie3,
+    s_bossdie4,
+    
+    s_bossshoot1,
+    s_bossshoot2,
+    s_bossshoot3,
+    s_bossshoot4,
+    s_bossshoot5,
+    s_bossshoot6,
+    s_bossshoot7,
+    s_bossshoot8,
+
+    s_gretelstand,
+
+    s_gretelchase1,
+    s_gretelchase1s,
+    s_gretelchase2,
+    s_gretelchase3,
+    s_gretelchase3s,
+    s_gretelchase4,
+
+    s_greteldie1,
+    s_greteldie2,
+    s_greteldie3,
+    s_greteldie4,
+
+    s_gretelshoot1,
+    s_gretelshoot2,
+    s_gretelshoot3,
+    s_gretelshoot4,
+    s_gretelshoot5,
+    s_gretelshoot6,
+    s_gretelshoot7,
+    s_gretelshoot8,
+#endif
+
+#ifndef SPEAR
+    s_schabbstand,
+    
+    s_schabbchase1, 
+    s_schabbchase1s,
+    s_schabbchase2,
+    s_schabbchase3,
+    s_schabbchase3s,
+    s_schabbchase4,
+    
+    s_schabbdeathcam,
+    
+    s_schabbdie1, 
+    s_schabbdie2, 
+    s_schabbdie3, 
+    s_schabbdie4, 
+    s_schabbdie5, 
+    s_schabbdie6, 
+    
+    s_schabbshoot1, 
+    s_schabbshoot2, 
+    
+    s_needle1,
+    s_needle2,
+    s_needle3,
+    s_needle4,
+
+    s_giftstand,
+    
+    s_giftchase1, 
+    s_giftchase1s,
+    s_giftchase2,
+    s_giftchase3,
+    s_giftchase3s,
+    s_giftchase4,
+    
+    s_giftdeathcam,
+    
+    s_giftdie1,
+    s_giftdie2,
+    s_giftdie3,
+    s_giftdie4,
+    s_giftdie5,
+    s_giftdie6,
+    
+    s_giftshoot1,
+    s_giftshoot2,
+
+    s_fatstand,
+    
+    s_fatchase1,
+    s_fatchase1s,
+    s_fatchase2,
+    s_fatchase3,
+    s_fatchase3s,
+    s_fatchase4,
+    
+    s_fatdeathcam,
+    
+    s_fatdie1,
+    s_fatdie2,
+    s_fatdie3,
+    s_fatdie4,
+    s_fatdie5,
+    s_fatdie6,
+    
+    s_fatshoot1,
+    s_fatshoot2,
+    s_fatshoot3,
+    s_fatshoot4,
+    s_fatshoot5,
+    s_fatshoot6,
+
+    s_fakestand,
+    
+    s_fakechase1,
+    s_fakechase1s,
+    s_fakechase2,
+    s_fakechase3,
+    s_fakechase3s,
+    s_fakechase4,
+    
+    s_fakedie1,
+    s_fakedie2,
+    s_fakedie3,
+    s_fakedie4,
+    s_fakedie5,
+    s_fakedie6,
+    
+    s_fakeshoot1,
+    s_fakeshoot2,
+    s_fakeshoot3,
+    s_fakeshoot4,
+    s_fakeshoot5,
+    s_fakeshoot6,
+    s_fakeshoot7,
+    s_fakeshoot8,
+    s_fakeshoot9,
+    
+    s_fire1, 
+    s_fire2,
+
+    s_mechastand,
+    
+    s_mechachase1,
+    s_mechachase1s,
+    s_mechachase2,
+    s_mechachase3,
+    s_mechachase3s,
+    s_mechachase4,
+    
+    s_mechadie1,
+    s_mechadie2,
+    s_mechadie3,
+    s_mechadie4,
+    
+    s_mechashoot1,
+    s_mechashoot2,
+    s_mechashoot3,
+    s_mechashoot4,
+    s_mechashoot5,
+    s_mechashoot6,
+    
+    s_hitlerchase1,
+    s_hitlerchase1s,
+    s_hitlerchase2,
+    s_hitlerchase3,
+    s_hitlerchase3s,
+    s_hitlerchase4,
+    
+    s_hitlerdeathcam,
+    
+    s_hitlerdie1,
+    s_hitlerdie2,
+    s_hitlerdie3,
+    s_hitlerdie4,
+    s_hitlerdie5,
+    s_hitlerdie6,
+    s_hitlerdie7,
+    s_hitlerdie8,
+    s_hitlerdie9,
+    s_hitlerdie10,
+    
+    s_hitlershoot1,
+    s_hitlershoot2,
+    s_hitlershoot3,
+    s_hitlershoot4,
+    s_hitlershoot5,
+    s_hitlershoot6,
+#endif
+
+#ifndef SPEAR
+    s_bjrun1,
+    s_bjrun1s,
+    s_bjrun2,
+    s_bjrun3,
+    s_bjrun3s,
+    s_bjrun4,
+    
+    s_bjjump1,
+    s_bjjump2,
+    s_bjjump3,
+    s_bjjump4,
+    
+    s_deathcam,
+#endif
+
+    state_act2_end = s_deathcam,
+
+    state_countof
+};
 
 /*
 =============================================================================

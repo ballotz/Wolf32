@@ -37,10 +37,10 @@ dirtype diagonal[9][9] =
 			{nodir,nodir,nodir,nodir,nodir,nodir,nodir,nodir,nodir}
 };
 
+statetype states[state_countof];
 
-
-void	SpawnNewObj (uint16_t tilex, uint16_t tiley, statetype *state);
-void	NewState (objtype *ob, statetype *state);
+void	SpawnNewObj (uint16_t tilex, uint16_t tiley, uint16_t state);
+void	NewState (objtype *ob, uint16_t state);
 
 boolean TryWalk (objtype *ob);
 void	MoveObj (objtype *ob, int32_t move);
@@ -78,14 +78,14 @@ boolean	CheckSight (objtype *ob);
 ===================
 */
 
-void SpawnNewObj (uint16_t tilex, uint16_t tiley, statetype *state)
+void SpawnNewObj (uint16_t tilex, uint16_t tiley, uint16_t state)
 {
     int16_t actorindex;
 
 	GetNewActor ();
 	new->state = state;
-	if (state->tictime)
-		new->ticcount = US_RndT () % state->tictime;
+	if (GETSTATE(state).tictime)
+		new->ticcount = US_RndT () % GETSTATE(state).tictime;
 	else
 		new->ticcount = 0;
 
@@ -116,10 +116,10 @@ void SpawnNewObj (uint16_t tilex, uint16_t tiley, statetype *state)
 ===================
 */
 
-void NewState (objtype *ob, statetype *state)
+void NewState (objtype *ob, uint16_t state)
 {
 	ob->state = state;
-	ob->ticcount = state->tictime;
+	ob->ticcount = GETSTATE(state).tictime;
 }
 
 
@@ -829,25 +829,25 @@ void KillActor (objtype *ob)
 	{
 	case guardobj:
 		GivePoints (100);
-		NewState (ob,&s_grddie1);
+		NewState (ob,s_grddie1);
 		PlaceItemType (bo_clip2,tilex,tiley);
 		break;
 
 	case officerobj:
 		GivePoints (400);
-		NewState (ob,&s_ofcdie1);
+		NewState (ob,s_ofcdie1);
 		PlaceItemType (bo_clip2,tilex,tiley);
 		break;
 
 	case mutantobj:
 		GivePoints (700);
-		NewState (ob,&s_mutdie1);
+		NewState (ob,s_mutdie1);
 		PlaceItemType (bo_clip2,tilex,tiley);
 		break;
 
 	case ssobj:
 		GivePoints (500);
-		NewState (ob,&s_ssdie1);
+		NewState (ob,s_ssdie1);
 		if (gamestate.bestweapon < wp_machinegun)
 			PlaceItemType (bo_machinegun,tilex,tiley);
 		else
@@ -856,19 +856,19 @@ void KillActor (objtype *ob)
 
 	case dogobj:
 		GivePoints (200);
-		NewState (ob,&s_dogdie1);
+		NewState (ob,s_dogdie1);
 		break;
 
 #ifndef SPEAR
 	case bossobj:
 		GivePoints (5000);
-		NewState (ob,&s_bossdie1);
+		NewState (ob,s_bossdie1);
 		PlaceItemType (bo_key1,tilex,tiley);
 		break;
 
 	case gretelobj:
 		GivePoints (5000);
-		NewState (ob,&s_greteldie1);
+		NewState (ob,s_greteldie1);
 		PlaceItemType (bo_key1,tilex,tiley);
 		break;
 
@@ -876,71 +876,71 @@ void KillActor (objtype *ob)
 		GivePoints (5000);
 		gamestate.killx = player->x;
 		gamestate.killy = player->y;
-		NewState (ob,&s_giftdie1);
+		NewState (ob,s_giftdie1);
 		break;
 
 	case fatobj:
 		GivePoints (5000);
 		gamestate.killx = player->x;
 		gamestate.killy = player->y;
-		NewState (ob,&s_fatdie1);
+		NewState (ob,s_fatdie1);
 		break;
 
 	case schabbobj:
 		GivePoints (5000);
 		gamestate.killx = player->x;
 		gamestate.killy = player->y;
-		NewState (ob,&s_schabbdie1);
+		NewState (ob,s_schabbdie1);
 		A_DeathScream(ob);
 		break;
 	case fakeobj:
 		GivePoints (2000);
-		NewState (ob,&s_fakedie1);
+		NewState (ob,s_fakedie1);
 		break;
 
 	case mechahitlerobj:
 		GivePoints (5000);
-		NewState (ob,&s_mechadie1);
+		NewState (ob,s_mechadie1);
 		break;
 	case realhitlerobj:
 		GivePoints (5000);
 		gamestate.killx = player->x;
 		gamestate.killy = player->y;
-		NewState (ob,&s_hitlerdie1);
+		NewState (ob,s_hitlerdie1);
 		A_DeathScream(ob);
 		break;
 #else
 	case spectreobj:
 		GivePoints (200);
-		NewState (ob,&s_spectredie1);
+		NewState (ob,s_spectredie1);
 		break;
 
 	case angelobj:
 		GivePoints (5000);
-		NewState (ob,&s_angeldie1);
+		NewState (ob,s_angeldie1);
 		break;
 
 	case transobj:
 		GivePoints (5000);
-		NewState (ob,&s_transdie0);
+		NewState (ob,s_transdie0);
 		PlaceItemType (bo_key1,tilex,tiley);
 		break;
 
 	case uberobj:
 		GivePoints (5000);
-		NewState (ob,&s_uberdie0);
+		NewState (ob,s_uberdie0);
 		PlaceItemType (bo_key1,tilex,tiley);
 		break;
 
 	case willobj:
 		GivePoints (5000);
-		NewState (ob,&s_willdie1);
+		NewState (ob,s_willdie1);
 		PlaceItemType (bo_key1,tilex,tiley);
 		break;
 
 	case deathobj:
 		GivePoints (5000);
-		NewState (ob,&s_deathdie1);
+		NewState (ob,s_deathdie1);
 		PlaceItemType (bo_key1,tilex,tiley);
 		break;
 #endif
@@ -990,30 +990,30 @@ void DamageActor (objtype *ob, uint16_t damage)
 		{
 		case guardobj:
 			if (ob->hitpoints&1)
-				NewState (ob,&s_grdpain);
+				NewState (ob,s_grdpain);
 			else
-				NewState (ob,&s_grdpain1);
+				NewState (ob,s_grdpain1);
 			break;
 
 		case officerobj:
 			if (ob->hitpoints&1)
-				NewState (ob,&s_ofcpain);
+				NewState (ob,s_ofcpain);
 			else
-				NewState (ob,&s_ofcpain1);
+				NewState (ob,s_ofcpain1);
 			break;
 
 		case mutantobj:
 			if (ob->hitpoints&1)
-				NewState (ob,&s_mutpain);
+				NewState (ob,s_mutpain);
 			else
-				NewState (ob,&s_mutpain1);
+				NewState (ob,s_mutpain1);
 			break;
 
 		case ssobj:
 			if (ob->hitpoints&1)
-				NewState (ob,&s_sspain);
+				NewState (ob,s_sspain);
 			else
-				NewState (ob,&s_sspain1);
+				NewState (ob,s_sspain1);
 
 			break;
 
@@ -1264,120 +1264,120 @@ void FirstSighting (objtype *ob)
 	{
 	case guardobj:
 		PlaySoundLocActor(HALTSND,ob);
-		NewState (ob,&s_grdchase1);
+		NewState (ob,s_grdchase1);
 		ob->speed *= 3;			// go faster when chasing player
 		break;
 
 	case officerobj:
 		PlaySoundLocActor(SPIONSND,ob);
-		NewState (ob,&s_ofcchase1);
+		NewState (ob,s_ofcchase1);
 		ob->speed *= 5;			// go faster when chasing player
 		break;
 
 	case mutantobj:
-		NewState (ob,&s_mutchase1);
+		NewState (ob,s_mutchase1);
 		ob->speed *= 3;			// go faster when chasing player
 		break;
 
 	case ssobj:
 		PlaySoundLocActor(SCHUTZADSND,ob);
-		NewState (ob,&s_sschase1);
+		NewState (ob,s_sschase1);
 		ob->speed *= 4;			// go faster when chasing player
 		break;
 
 	case dogobj:
 		PlaySoundLocActor(DOGBARKSND,ob);
-		NewState (ob,&s_dogchase1);
+		NewState (ob,s_dogchase1);
 		ob->speed *= 2;			// go faster when chasing player
 		break;
 
 #ifndef SPEAR
 	case bossobj:
 		SD_PlaySound(GUTENTAGSND);
-		NewState (ob,&s_bosschase1);
+		NewState (ob,s_bosschase1);
 		ob->speed = SPDPATROL*3;	// go faster when chasing player
 		break;
 
 	case gretelobj:
 		SD_PlaySound(KEINSND);
-		NewState (ob,&s_gretelchase1);
+		NewState (ob,s_gretelchase1);
 		ob->speed *= 3;			// go faster when chasing player
 		break;
 
 	case giftobj:
 		SD_PlaySound(EINESND);
-		NewState (ob,&s_giftchase1);
+		NewState (ob,s_giftchase1);
 		ob->speed *= 3;			// go faster when chasing player
 		break;
 
 	case fatobj:
 		SD_PlaySound(ERLAUBENSND);
-		NewState (ob,&s_fatchase1);
+		NewState (ob,s_fatchase1);
 		ob->speed *= 3;			// go faster when chasing player
 		break;
 
 	case schabbobj:
 		SD_PlaySound(SCHABBSHASND);
-		NewState (ob,&s_schabbchase1);
+		NewState (ob,s_schabbchase1);
 		ob->speed *= 3;			// go faster when chasing player
 		break;
 
 	case fakeobj:
 		SD_PlaySound(TOT_HUNDSND);
-		NewState (ob,&s_fakechase1);
+		NewState (ob,s_fakechase1);
 		ob->speed *= 3;			// go faster when chasing player
 		break;
 
 	case mechahitlerobj:
 		SD_PlaySound(DIESND);
-		NewState (ob,&s_mechachase1);
+		NewState (ob,s_mechachase1);
 		ob->speed *= 3;			// go faster when chasing player
 		break;
 
 	case realhitlerobj:
 		SD_PlaySound(DIESND);
-		NewState (ob,&s_hitlerchase1);
+		NewState (ob,s_hitlerchase1);
 		ob->speed *= 5;			// go faster when chasing player
 		break;
 
 	case ghostobj:
-		NewState (ob,&s_blinkychase1);
+		NewState (ob,s_blinkychase1);
 		ob->speed *= 2;			// go faster when chasing player
 		break;
 #else
 
 	case spectreobj:
 		SD_PlaySound(GHOSTSIGHTSND);
-		NewState (ob,&s_spectrechase1);
+		NewState (ob,s_spectrechase1);
 		ob->speed = 800;			// go faster when chasing player
 		break;
 
 	case angelobj:
 		SD_PlaySound(ANGELSIGHTSND);
-		NewState (ob,&s_angelchase1);
+		NewState (ob,s_angelchase1);
 		ob->speed = 1536;			// go faster when chasing player
 		break;
 
 	case transobj:
 		SD_PlaySound(TRANSSIGHTSND);
-		NewState (ob,&s_transchase1);
+		NewState (ob,s_transchase1);
 		ob->speed = 1536;			// go faster when chasing player
 		break;
 
 	case uberobj:
-		NewState (ob,&s_uberchase1);
+		NewState (ob,s_uberchase1);
 		ob->speed = 3000;			// go faster when chasing player
 		break;
 
 	case willobj:
 		SD_PlaySound(WILHELMSIGHTSND);
-		NewState (ob,&s_willchase1);
+		NewState (ob,s_willchase1);
 		ob->speed = 2048;			// go faster when chasing player
 		break;
 
 	case deathobj:
 		SD_PlaySound(KNIGHTSIGHTSND);
-		NewState (ob,&s_deathchase1);
+		NewState (ob,s_deathchase1);
 		ob->speed = 2048;			// go faster when chasing player
 		break;
 
@@ -1482,4 +1482,55 @@ boolean SightPlayer (objtype *ob)
 	return true;
 }
 
+extern void AgentMakeStates(void);
+extern void Act2MakeStates(void);
+extern void Act2GuardsMakeStates(void);
+#ifndef SPEAR
+extern void Act2GhostsMakeStates(void);
+#endif
+extern void Act2DogsMakeStates(void);
+extern void Act2OfficersMakeStates(void);
+extern void Act2MutantMakeStates(void);
+extern void Act2SSMakeStates(void);
+#ifndef SPEAR
+extern void Act2HansMakeStates(void);
+extern void Act2GretelMakeStates(void);
+#endif
+#ifndef SPEAR
+extern void Act2SchabbMakeStates(void);
+extern void Act2GiftMakeStates(void);
+extern void Act2FatMakeStates(void);
+extern void Act2FakeMakeStates(void);
+extern void Act2HitlerMakeStates(void);
+#endif
+#ifndef SPEAR
+extern void Act2BJVictoryMakeStates(void);
+#endif
 
+void MakeStates(void)
+{
+    AgentMakeStates();
+    Act2MakeStates();
+    Act2GuardsMakeStates();
+#ifndef SPEAR
+    Act2GhostsMakeStates();
+#endif
+    Act2DogsMakeStates();
+    Act2OfficersMakeStates();
+    Act2MutantMakeStates();
+    Act2SSMakeStates();
+#ifndef SPEAR
+    Act2HansMakeStates();
+    Act2GretelMakeStates();
+#endif
+#ifndef SPEAR
+    Act2SchabbMakeStates();
+    Act2GiftMakeStates();
+    Act2FatMakeStates();
+    Act2FakeMakeStates();
+    Act2HitlerMakeStates();
+#endif
+#ifndef SPEAR
+    Act2BJVictoryMakeStates();
+#endif
+}

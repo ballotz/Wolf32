@@ -1212,7 +1212,7 @@ int16_t	CalcRotate(objtype* ob)
     while (angle < 0)
         angle += ANGLES;
 
-    if (ob->state->rotate == 2)             // 2 rotation pain frame
+    if (GETSTATE(ob->state).rotate == 2)             // 2 rotation pain frame
         return 4 * (angle / (ANGLES / 2));        // seperated by 3 (art layout...)
 
     return angle / (ANGLES / 8);
@@ -1468,7 +1468,7 @@ void DrawScaleds(void)
     //
     for (obj = player->next; obj; obj = obj->next)
     {
-        if (!(visptr->shapenum = obj->state->shapenum))
+        if (!(visptr->shapenum = GETSTATE(obj->state).shapenum))
             continue;						// no shape
 
         spotloc = (obj->tilex << 6) + obj->tiley;	// optimize: keep in struct?
@@ -1498,7 +1498,7 @@ void DrawScaleds(void)
             if (visptr->shapenum == -1)
                 visptr->shapenum = obj->temp1;	// special shape
 
-            if (obj->state->rotate)
+            if (GETSTATE(obj->state).rotate)
                 visptr->shapenum += CalcRotate(obj);
 
             if (visptr < &vislist[MAXVISABLE - 1])	// don't let it overflow
@@ -1561,7 +1561,7 @@ void DrawPlayerWeapon(void)
 #ifndef SPEAR
     if (gamestate.victoryflag)
     {
-        if (player->state == &s_deathcam && (TimeCount_Get() & 32))
+        if (player->state == s_deathcam && (TimeCount_Get() & 32))
             SimpleScaleShape(viewwidth / 2, SPR_DEATHCAM, viewheight + 1);
         return;
     }
