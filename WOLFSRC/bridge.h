@@ -142,9 +142,6 @@ extern void PCSpeaker_SoundFinished(void);
 // Determines if there's an AdLib
 uint8_t AdLib_Detect(void);
 
-// Starts up the AdLib card for sound effects
-void AdLib_Start(void);
-
 // Totally shuts down the AdLib card
 void AdLib_Clean(void);
 
@@ -187,6 +184,9 @@ typedef	struct
     BridgeAdLibInstrument   inst;
     uint8_t                 block, data[1];
 } BridgeAdLibSound;
+
+// Starts up the AdLib card for sound effects
+void AdLib_Start(void);
 
 // Plays the specified sound on the AdLib card
 // When finished must call AdLib_SoundFinished()
