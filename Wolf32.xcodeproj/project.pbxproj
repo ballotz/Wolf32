@@ -23,12 +23,15 @@
 		6E0220E32B51DA63007B31AA /* ID_IN.C in Sources */ = {isa = PBXBuildFile; fileRef = 6E0220C82B51DA61007B31AA /* ID_IN.C */; };
 		6E0220E42B51DA63007B31AA /* ID_SD.C in Sources */ = {isa = PBXBuildFile; fileRef = 6E0220C92B51DA61007B31AA /* ID_SD.C */; };
 		6E0220E52B51DA63007B31AA /* SIGNON.C in Sources */ = {isa = PBXBuildFile; fileRef = 6E0220CA2B51DA61007B31AA /* SIGNON.C */; };
-		6E0220E62B51DA63007B31AA /* bridge.c in Sources */ = {isa = PBXBuildFile; fileRef = 6E0220CC2B51DA62007B31AA /* bridge.c */; };
 		6E0220E72B51DA63007B31AA /* WL_STATE.C in Sources */ = {isa = PBXBuildFile; fileRef = 6E0220CE2B51DA62007B31AA /* WL_STATE.C */; };
 		6E0220E82B51DA63007B31AA /* ID_VL.C in Sources */ = {isa = PBXBuildFile; fileRef = 6E0220CF2B51DA62007B31AA /* ID_VL.C */; };
 		6E0220E92B51DA63007B31AA /* ID_US_1.C in Sources */ = {isa = PBXBuildFile; fileRef = 6E0220D02B51DA62007B31AA /* ID_US_1.C */; };
 		6E0220EA2B51DA63007B31AA /* WL_MENU.C in Sources */ = {isa = PBXBuildFile; fileRef = 6E0220D22B51DA62007B31AA /* WL_MENU.C */; };
 		6E0220EB2B51DA63007B31AA /* WL_MAIN.C in Sources */ = {isa = PBXBuildFile; fileRef = 6E0220D52B51DA62007B31AA /* WL_MAIN.C */; };
+		6ED1F3112B6D9058006FA2BA /* spscbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 6ED1F3102B6D9058006FA2BA /* spscbuffer.c */; };
+		6ED1F31C2B6D9066006FA2BA /* emu8950.c in Sources */ = {isa = PBXBuildFile; fileRef = 6ED1F3132B6D9066006FA2BA /* emu8950.c */; };
+		6ED1F31E2B6D9066006FA2BA /* emuadpcm.c in Sources */ = {isa = PBXBuildFile; fileRef = 6ED1F3152B6D9066006FA2BA /* emuadpcm.c */; };
+		6ED1F3252B6D90AB006FA2BA /* bridge_sdl2.c in Sources */ = {isa = PBXBuildFile; fileRef = 6ED1F3242B6D90AB006FA2BA /* bridge_sdl2.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -60,7 +63,6 @@
 		6E0220C92B51DA61007B31AA /* ID_SD.C */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ID_SD.C; path = WOLFSRC/ID_SD.C; sourceTree = "<group>"; };
 		6E0220CA2B51DA61007B31AA /* SIGNON.C */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = SIGNON.C; path = WOLFSRC/SIGNON.C; sourceTree = "<group>"; };
 		6E0220CB2B51DA62007B31AA /* ID_VH.H */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = ID_VH.H; path = WOLFSRC/ID_VH.H; sourceTree = "<group>"; };
-		6E0220CC2B51DA62007B31AA /* bridge.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = bridge.c; path = WOLFSRC/bridge.c; sourceTree = "<group>"; };
 		6E0220CD2B51DA62007B31AA /* ID_CA.H */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = ID_CA.H; path = WOLFSRC/ID_CA.H; sourceTree = "<group>"; };
 		6E0220CE2B51DA62007B31AA /* WL_STATE.C */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = WL_STATE.C; path = WOLFSRC/WL_STATE.C; sourceTree = "<group>"; };
 		6E0220CF2B51DA62007B31AA /* ID_VL.C */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ID_VL.C; path = WOLFSRC/ID_VL.C; sourceTree = "<group>"; };
@@ -70,6 +72,13 @@
 		6E0220D32B51DA62007B31AA /* ID_IN.H */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = ID_IN.H; path = WOLFSRC/ID_IN.H; sourceTree = "<group>"; };
 		6E0220D42B51DA62007B31AA /* bridge.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = bridge.h; path = WOLFSRC/bridge.h; sourceTree = "<group>"; };
 		6E0220D52B51DA62007B31AA /* WL_MAIN.C */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = WL_MAIN.C; path = WOLFSRC/WL_MAIN.C; sourceTree = "<group>"; };
+		6ED1F30F2B6D9058006FA2BA /* spscbuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = spscbuffer.h; sourceTree = "<group>"; };
+		6ED1F3102B6D9058006FA2BA /* spscbuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = spscbuffer.c; sourceTree = "<group>"; };
+		6ED1F3132B6D9066006FA2BA /* emu8950.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = emu8950.c; sourceTree = "<group>"; };
+		6ED1F3152B6D9066006FA2BA /* emuadpcm.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = emuadpcm.c; sourceTree = "<group>"; };
+		6ED1F3182B6D9066006FA2BA /* emu8950.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = emu8950.h; sourceTree = "<group>"; };
+		6ED1F31B2B6D9066006FA2BA /* emuadpcm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = emuadpcm.h; sourceTree = "<group>"; };
+		6ED1F3242B6D90AB006FA2BA /* bridge_sdl2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = bridge_sdl2.c; path = target/bridge_sdl2.c; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -87,7 +96,9 @@
 			isa = PBXGroup;
 			children = (
 				6E0220B12B51DA1A007B31AA /* Wolf32.entitlements */,
-				6E0220CC2B51DA62007B31AA /* bridge.c */,
+				6ED1F30E2B6D9058006FA2BA /* spscbuffer */,
+				6ED1F3122B6D9066006FA2BA /* emu8950 */,
+				6ED1F3232B6D908F006FA2BA /* sdl2 */,
 				6E0220D42B51DA62007B31AA /* bridge.h */,
 				6E0220C42B51DA61007B31AA /* GAMEPAL.C */,
 				6E0220C22B51DA61007B31AA /* ID_CA.C */,
@@ -133,6 +144,34 @@
 				6E02200F2B51CD15007B31AA /* Wolf32.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		6ED1F30E2B6D9058006FA2BA /* spscbuffer */ = {
+			isa = PBXGroup;
+			children = (
+				6ED1F30F2B6D9058006FA2BA /* spscbuffer.h */,
+				6ED1F3102B6D9058006FA2BA /* spscbuffer.c */,
+			);
+			path = spscbuffer;
+			sourceTree = "<group>";
+		};
+		6ED1F3122B6D9066006FA2BA /* emu8950 */ = {
+			isa = PBXGroup;
+			children = (
+				6ED1F3132B6D9066006FA2BA /* emu8950.c */,
+				6ED1F3152B6D9066006FA2BA /* emuadpcm.c */,
+				6ED1F3182B6D9066006FA2BA /* emu8950.h */,
+				6ED1F31B2B6D9066006FA2BA /* emuadpcm.h */,
+			);
+			path = emu8950;
+			sourceTree = SOURCE_ROOT;
+		};
+		6ED1F3232B6D908F006FA2BA /* sdl2 */ = {
+			isa = PBXGroup;
+			children = (
+				6ED1F3242B6D90AB006FA2BA /* bridge_sdl2.c */,
+			);
+			path = sdl2;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -204,6 +243,8 @@
 			files = (
 				6E0220DE2B51DA63007B31AA /* WL_GAME.C in Sources */,
 				6E0220DB2B51DA62007B31AA /* ID_VH.C in Sources */,
+				6ED1F3252B6D90AB006FA2BA /* bridge_sdl2.c in Sources */,
+				6ED1F3112B6D9058006FA2BA /* spscbuffer.c in Sources */,
 				6E0220DF2B51DA63007B31AA /* ID_CA.C in Sources */,
 				6E0220EA2B51DA63007B31AA /* WL_MENU.C in Sources */,
 				6E0220D72B51DA62007B31AA /* WL_ACT2.C in Sources */,
@@ -211,10 +252,12 @@
 				6E0220E02B51DA63007B31AA /* ID_PM.C in Sources */,
 				6E0220E92B51DA63007B31AA /* ID_US_1.C in Sources */,
 				6E0220D62B51DA62007B31AA /* WL_INTER.C in Sources */,
+				6ED1F31C2B6D9066006FA2BA /* emu8950.c in Sources */,
 				6E0220E52B51DA63007B31AA /* SIGNON.C in Sources */,
 				6E0220DC2B51DA62007B31AA /* ID_MM.C in Sources */,
 				6E0220D92B51DA62007B31AA /* WL_DRAW.C in Sources */,
 				6E0220E72B51DA63007B31AA /* WL_STATE.C in Sources */,
+				6ED1F31E2B6D9066006FA2BA /* emuadpcm.c in Sources */,
 				6E0220EB2B51DA63007B31AA /* WL_MAIN.C in Sources */,
 				6E0220E22B51DA63007B31AA /* WL_TEXT.C in Sources */,
 				6E0220E12B51DA63007B31AA /* GAMEPAL.C in Sources */,
@@ -222,7 +265,6 @@
 				6E0220E42B51DA63007B31AA /* ID_SD.C in Sources */,
 				6E0220E82B51DA63007B31AA /* ID_VL.C in Sources */,
 				6E0220DA2B51DA62007B31AA /* WL_ACT1.C in Sources */,
-				6E0220E62B51DA63007B31AA /* bridge.c in Sources */,
 				6E0220E32B51DA63007B31AA /* ID_IN.C in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
