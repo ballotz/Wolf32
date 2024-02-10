@@ -619,8 +619,8 @@ typedef struct	statestruct
 typedef struct statstruct
 {
     byte	tilex, tiley;
-    byte* visspot;
-    int16_t		shapenum;			// if shapenum == -1 the obj has been removed
+    byte	*visspot;
+    int16_t	shapenum;			// if shapenum == -1 the obj has been removed
     byte	flags;
     byte	itemnumber;
 } statobj_t;
@@ -638,7 +638,7 @@ typedef struct doorstruct
     boolean	vertical;
     byte	lock;
     enum { dr_open, dr_closed, dr_opening, dr_closing }	action;
-    int16_t		ticcount;
+    int16_t	ticcount;
 } doorobj_t;
 
 
@@ -651,9 +651,9 @@ typedef struct doorstruct
 typedef struct objstruct
 {
     activetype	active;
-    int16_t			ticcount;
+    int16_t		ticcount;
     classtype	obclass;
-    statetype* state;
+    statetype	*state;
 
     byte		flags;				//	FL_SHOOTABLE, etc
 
@@ -664,16 +664,16 @@ typedef struct objstruct
     uint16_t	tilex, tiley;
     byte		areanumber;
 
-    int16_t	 		viewx;
+    int16_t	 	viewx;
     uint16_t	viewheight;
     fixed		transx, transy;		// in global coord
 
-    int16_t 		angle;
-    int16_t			hitpoints;
+    int16_t 	angle;
+    int16_t		hitpoints;
     int32_t		speed;
 
-    int16_t			temp1, temp2, temp3;
-    struct		objstruct* next, * prev;
+    int16_t		temp1, temp2, temp3;
+    struct		objstruct *next, *prev;
 } objtype;
 
 
