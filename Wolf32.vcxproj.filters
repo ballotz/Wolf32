@@ -34,6 +34,7 @@
     <ClCompile Include="spscbuffer\spscbuffer.c">
       <Filter>spscbuffer</Filter>
     </ClCompile>
+    <ClCompile Include="WOLFSRC\statelist.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WOLFSRC\WL_DEF.H" />

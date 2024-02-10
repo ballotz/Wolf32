@@ -40,11 +40,11 @@
 */
 
 char            str[80], str2[20];
-int16_t				tedlevelnum;
+int16_t			tedlevelnum;
 boolean         tedlevel;
 boolean         nospr;
 boolean         IsA386;
-int16_t                     dirangle[9] = { 0,ANGLES / 8,2 * ANGLES / 8,3 * ANGLES / 8,4 * ANGLES / 8,
+int16_t         dirangle[9] = { 0,ANGLES / 8,2 * ANGLES / 8,3 * ANGLES / 8,4 * ANGLES / 8,
     5 * ANGLES / 8,6 * ANGLES / 8,7 * ANGLES / 8,ANGLES };
 
 //
@@ -52,22 +52,24 @@ int16_t                     dirangle[9] = { 0,ANGLES / 8,2 * ANGLES / 8,3 * ANGL
 //
 fixed           focallength;
 uint16_t        screenofs;
-int16_t             viewwidth;
-int16_t             viewheight;
-int16_t             centerx;
-int16_t             shootdelta;                     // pixels away from centerx a target can be
+int16_t         viewwidth;
+int16_t         viewheight;
+int16_t         centerx;
+int16_t         shootdelta;                     // pixels away from centerx a target can be
 fixed           scale, maxslope;
-int32_t            heightnumerator;
-int16_t                     minheightdiv;
+int32_t         heightnumerator;
+int16_t         minheightdiv;
 
 
 void            Quit(char* error);
 
 boolean         startgame, loadedgame, virtualreality;
-int16_t             mouseadjustment;
+int16_t         mouseadjustment;
 
 char	configname[13] = "CONFIG.";
 
+extern statetype    *statelist[];
+extern int          statelistsize;
 
 /*
 =============================================================================
@@ -253,6 +255,140 @@ void NewGame(int16_t difficulty, int16_t episode)
 
 //===========================================================================
 
+uint16_t StateToID(statetype* s)
+{
+    uint16_t index;
+
+    for (index = 0; index < statelistsize; ++index)
+        if (statelist[index] == s)
+            break;
+
+    if (index == statelistsize)
+        Quit("StateToID: state not found in list");
+    
+    return index;
+}
+
+statetype* StateFromID(uint16_t s)
+{
+    if (s >= statelistsize)
+        Quit("StateFromID: invalid index");
+
+    return statelist[s];
+}
+
+typedef struct portableobjtype
+{
+    activetype	active;
+    int16_t		ticcount;
+    classtype	obclass;
+    uint16_t	stateid;
+
+    byte		flags;				//	FL_SHOOTABLE, etc
+
+    int32_t		distance;			// if negative, wait for that door to open
+    dirtype		dir;
+
+    fixed 		x, y;
+    uint16_t	tilex, tiley;
+    byte		areanumber;
+
+    int16_t	 	viewx;
+    uint16_t	viewheight;
+    fixed		transx, transy;		// in global coord
+
+    int16_t 	angle;
+    int16_t		hitpoints;
+    int32_t		speed;
+
+    int16_t		temp1, temp2, temp3;
+} portableobjtype;
+
+void ObjectToPortable(objtype* in, portableobjtype* out)
+{
+    out->active = in->active;
+    out->ticcount = in->ticcount;
+    out->obclass = in->obclass;
+    out->stateid = StateToID(in->state);
+    out->flags = in->flags;
+    out->distance = in->distance;
+    out->dir = in->dir;
+    out->x = in->x;
+    out->y = in->y;
+    out->tilex = in->tilex;
+    out->tiley = in->tiley;
+    out->areanumber = in->areanumber;
+    out->viewheight = in->viewheight;
+    out->transx = in->transx;
+    out->transy = in->transy;
+    out->angle = in->angle;
+    out->hitpoints = in->hitpoints;
+    out->speed = in->speed;
+    out->temp1 = in->temp1;
+    out->temp2 = in->temp2;
+    out->temp3 = in->temp3;
+}
+
+void ObjectFromPortable(portableobjtype* in, objtype* out)
+{
+    out->active = in->active;
+    out->ticcount = in->ticcount;
+    out->obclass = in->obclass;
+    out->state = StateFromID(in->stateid);
+    out->flags = in->flags;
+    out->distance = in->distance;
+    out->dir = in->dir;
+    out->x = in->x;
+    out->y = in->y;
+    out->tilex = in->tilex;
+    out->tiley = in->tiley;
+    out->areanumber = in->areanumber;
+    out->viewheight = in->viewheight;
+    out->transx = in->transx;
+    out->transy = in->transy;
+    out->angle = in->angle;
+    out->hitpoints = in->hitpoints;
+    out->speed = in->speed;
+    out->temp1 = in->temp1;
+    out->temp2 = in->temp2;
+    out->temp3 = in->temp3;
+}
+
+typedef struct portablestatstruct
+{
+    byte		tilex, tiley;
+    uint16_t	visspotindex;
+    int16_t		shapenum;			// if shapenum == -1 the obj has been removed
+    byte		flags;
+    byte		itemnumber;
+} portablestatobj_t;
+
+void StatObjToPortable(statobj_t* in, portablestatobj_t* out)
+{
+    out->tilex = in->tilex;
+    out->tiley = in->tiley;
+    if (in->visspot)
+        out->visspotindex = in->visspot - &spotvis[0][0];
+    else
+        out->visspotindex = -1;
+    out->shapenum = in->shapenum;
+    out->flags = in->flags;
+    out->itemnumber = in->itemnumber;
+}
+
+void StatObjFromPortable(portablestatobj_t* in, statobj_t* out)
+{
+    out->tilex = in->tilex;
+    out->tiley = in->tiley;
+    if (in->visspotindex != -1)
+        out->visspot = &spotvis[0][0] + in->visspotindex;
+    else
+        out->visspot = nil;
+    out->shapenum = in->shapenum;
+    out->flags = in->flags;
+    out->itemnumber = in->itemnumber;
+}
+
 void DiskFlopAnim(int16_t x, int16_t y)
 {
     static char which = 0;
@@ -286,7 +422,10 @@ int32_t DoChecksum(byte* source, uint16_t size, int32_t checksum)
 boolean SaveTheGame(FileSystemHandle file, int16_t x, int16_t y)
 {
     int32_t checksum;
-    objtype* ob, nullobj;
+    objtype *ob, nullobj;
+    portableobjtype portobj;
+    portablestatobj_t portstatobj;
+    uint16_t statobjindex, laststatobjindex;
     boolean success = true;
 
 
@@ -319,20 +458,28 @@ boolean SaveTheGame(FileSystemHandle file, int16_t x, int16_t y)
     for (ob = player; ob; ob = ob->next)
     {
         DiskFlopAnim(x, y);
-        success &= CA_FarWrite(file, (void*)ob, sizeof(*ob));
+        ObjectToPortable(ob, &portobj);
+        success &= CA_FarWrite(file, (void*)&portobj, sizeof(portobj));
     }
     nullobj.active = ac_badobject;          // end of file marker
+    nullobj.state = nil;                    // initialize to prevent ObjectToPortable() fail
     DiskFlopAnim(x, y);
-    success &= CA_FarWrite(file, (void*)&nullobj, sizeof(nullobj));
+    ObjectToPortable(&nullobj, &portobj);
+    success &= CA_FarWrite(file, (void*)&portobj, sizeof(portobj));
 
 
 
     DiskFlopAnim(x, y);
-    success &= CA_FarWrite(file, (void*)&laststatobj, sizeof(laststatobj));
-    checksum = DoChecksum((byte*)&laststatobj, sizeof(laststatobj), checksum);
+    laststatobjindex = laststatobj - &statobjlist[0];
+    success &= CA_FarWrite(file, (void*)&laststatobjindex, sizeof(laststatobjindex));
+    checksum = DoChecksum((byte*)&laststatobjindex, sizeof(laststatobjindex), checksum);
     DiskFlopAnim(x, y);
-    success &= CA_FarWrite(file, (void*)statobjlist, sizeof(statobjlist));
-    checksum = DoChecksum((byte*)statobjlist, sizeof(statobjlist), checksum);
+    for (statobjindex = 0; statobjindex < laststatobjindex; ++statobjindex)
+    {
+        StatObjToPortable(&statobjlist[statobjindex], &portstatobj);
+        success &= CA_FarWrite(file, (void*)&portstatobj, sizeof(portstatobj));
+        //checksum = DoChecksum((byte*)&portstatobj, sizeof(portstatobj), checksum);
+    }
 
     DiskFlopAnim(x, y);
     success &= CA_FarWrite(file, (void*)doorposition, sizeof(doorposition));
@@ -382,6 +529,9 @@ boolean LoadTheGame(FileSystemHandle file, int16_t x, int16_t y)
 {
     int32_t checksum, oldchecksum;
     objtype nullobj;
+    portableobjtype portobj;
+    portablestatobj_t portstatobj;
+    uint16_t statobjindex, laststatobjindex;
 
 
     checksum = 0;
@@ -416,27 +566,35 @@ boolean LoadTheGame(FileSystemHandle file, int16_t x, int16_t y)
 
     InitActorList();
     DiskFlopAnim(x, y);
-    CA_FarRead(file, (void*)player, sizeof(*player));
+    CA_FarRead(file, (void*)&portobj, sizeof(portobj));
+    ObjectFromPortable(&portobj, player);
 
     while (1)
     {
         DiskFlopAnim(x, y);
-        CA_FarRead(file, (void*)&nullobj, sizeof(nullobj));
+        CA_FarRead(file, (void*)&portobj, sizeof(portobj));
+        ObjectFromPortable(&portobj, &nullobj);
         if (nullobj.active == ac_badobject)
             break;
         GetNewActor();
         // don't copy over the links
-        memcpy(new, &nullobj, sizeof(nullobj) - 4);
+        memcpy(new, &nullobj, sizeof(nullobj) -
+            (sizeof(nullobj.next) + sizeof(nullobj.prev)));
     }
 
 
 
     DiskFlopAnim(x, y);
-    CA_FarRead(file, (void*)&laststatobj, sizeof(laststatobj));
-    checksum = DoChecksum((byte*)&laststatobj, sizeof(laststatobj), checksum);
+    CA_FarRead(file, (void*)&laststatobjindex, sizeof(laststatobjindex));
+    checksum = DoChecksum((byte*)&laststatobjindex, sizeof(laststatobjindex), checksum);
+    laststatobj = &statobjlist[0] + laststatobjindex;
     DiskFlopAnim(x, y);
-    CA_FarRead(file, (void*)statobjlist, sizeof(statobjlist));
-    checksum = DoChecksum((byte*)statobjlist, sizeof(statobjlist), checksum);
+    for (statobjindex = 0; statobjindex < laststatobjindex; ++statobjindex)
+    {
+        CA_FarRead(file, (void*)&portstatobj, sizeof(portstatobj));
+        //checksum = DoChecksum((byte*)&portstatobj, sizeof(portstatobj), checksum);
+        StatObjFromPortable(&portstatobj, &statobjlist[statobjindex]);
+    }
 
     DiskFlopAnim(x, y);
     CA_FarRead(file, (void*)doorposition, sizeof(doorposition));
