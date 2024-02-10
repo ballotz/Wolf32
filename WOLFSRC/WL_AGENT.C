@@ -54,11 +54,9 @@ objtype		*LastAttacker;
 void	T_Player (objtype *ob);
 void	T_Attack (objtype *ob);
 
-void AgentMakeStates()
-{
-    MAKESTATE(s_player,false,0,0,T_Player,NULL,NULLSTATE);
-    MAKESTATE(s_attack,false,0,0,T_Attack,NULL,NULLSTATE);
-}
+statetype s_player = {false,0,0,T_Player,NULL,NULL};
+statetype s_attack = {false,0,0,T_Attack,NULL,NULL};
+
 
 int32_t	playerxmove,playerymove;
 
@@ -986,7 +984,7 @@ void Cmd_Fire (void)
 
 	gamestate.weaponframe = 0;
 
-	player->state = s_attack;
+	player->state = &s_attack;
 
 	gamestate.attackframe = 0;
 	gamestate.attackcount =
@@ -1106,7 +1104,7 @@ void SpawnPlayer (int16_t tilex, int16_t tiley, int16_t dir)
 		*(mapsegs[0] + farmapylookup[player->tiley]+player->tilex);
 	player->x = ((int32_t)tilex<<TILESHIFT)+TILEGLOBAL/2;
 	player->y = ((int32_t)tiley<<TILESHIFT)+TILEGLOBAL/2;
-	player->state = s_player;
+	player->state = &s_player;
 	player->angle = (1-dir)*90;
 	if (player->angle<0)
 		player->angle += ANGLES;
@@ -1326,7 +1324,7 @@ void	T_Attack (objtype *ob)
 		switch (cur->attack)
 		{
 		case -1:
-			ob->state = s_player;
+			ob->state = &s_player;
 			if (!gamestate.ammo)
 			{
 				gamestate.weapon = wp_knife;

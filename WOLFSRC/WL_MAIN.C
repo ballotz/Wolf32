@@ -426,8 +426,7 @@ boolean LoadTheGame(FileSystemHandle file, int16_t x, int16_t y)
             break;
         GetNewActor();
         // don't copy over the links
-        memcpy(new, &nullobj, sizeof(nullobj) -
-            (sizeof(nullobj.next) + sizeof(nullobj.prev)));
+        memcpy(new, &nullobj, sizeof(nullobj) - 4);
     }
 
 
@@ -1526,8 +1525,6 @@ int Main(int argc, char* argv[])
         exit(1);
     }
 #endif
-
-    MakeStates();
 
     CheckForEpisodes();
 
