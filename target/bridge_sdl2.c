@@ -20,6 +20,9 @@ int port_height;
 
 uint8_t* keyboard_map[SDL_NUM_SCANCODES];
 
+int mouse_x;
+int mouse_y;
+
 Uint64 time_count;
 
 // adlib emulation library
@@ -629,10 +632,8 @@ void Initialize(void)
     SDL_LockTexture(frame_texture, 0, &pixels, &pitch);
     SDL_UnlockTexture(frame_texture);
 
-    //SDL_SetRelativeMouseMode(SDL_TRUE);
-    //SDL_GetRelativeMouseState(0, 0); // flush first
-
-    SDL_ShowCursor(SDL_DISABLE);
+    SDL_SetRelativeMouseMode(SDL_TRUE);
+    //SDL_ShowCursor(SDL_DISABLE);
 
     InitKeyMap();
 
@@ -910,22 +911,23 @@ void Keyboard_Update(void)
 
 void Mouse_GetDelta(int16_t* dx, int16_t* dy)
 {
-    int mx, my;
-    SDL_GetMouseState(&mx, &my);
-    SDL_WarpMouseInWindow(window, port_width / 2, port_height / 2);
-    *dx = mx - port_width / 2;
-    *dy = my - port_height / 2;
+    int mdx, mdy;
+    SDL_GetRelativeMouseState(&mdx, &mdy);
+    *dx = mdx;
+    *dy = mdy;
 }
 
 void Mouse_ResetDelta(void)
 {
-    SDL_WarpMouseInWindow(window, port_width / 2, port_height / 2);
+    SDL_GetRelativeMouseState(0, 0);
 }
 
 uint16_t Mouse_GetButtons(void)
 {
-    int mx, my;
-    Uint32 buttons = SDL_GetMouseState(&mx, &my);
+    Uint32 buttons;
+
+    // not using SDL_GetRelativeMouseState() (don't reset delta)
+    buttons = SDL_GetMouseState(0, 0);
 
     return
         ((1 << 0) & ~(((buttons & SDL_BUTTON_LMASK) != 0) - 1)) +
@@ -939,18 +941,26 @@ uint8_t Mouse_Detect(void)
 
 void Mouse_SetPos(int16_t x, int16_t y)
 {
-    SDL_WarpMouseInWindow(
-        window,
-        (int)((float)x / 240 * port_width),
-        (int)((float)y / 240 * port_height));
+    mouse_x = x;
+    mouse_y = y;
 }
 
 void Mouse_GetPos(int16_t* x, int16_t* y)
 {
-    int mx, my;
-    SDL_GetMouseState(&mx, &my);
-    *x = (int16_t)((float)mx / port_width * 240);
-    *y = (int16_t)((float)my / port_height * 240);
+    int dx, dy;
+    SDL_GetRelativeMouseState(&dx, &dy);
+    mouse_x += dx;
+    mouse_y += dy;
+    if (mouse_x < 0)
+        mouse_x = 0;
+    if (mouse_x > src_width - 1)
+        mouse_x = src_width - 1;
+    if (mouse_y < 0)
+        mouse_y = 0;
+    if (mouse_y > src_height - 1)
+        mouse_y = src_height - 1;
+    *x = mouse_x;
+    *y = mouse_y;
 }
 
 //------------------------------------------------------------------------------
