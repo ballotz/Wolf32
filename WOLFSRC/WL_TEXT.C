@@ -676,8 +676,8 @@ void ShowArticle (char *article)
 		}
 
 		LastScan = 0;
-		while (!LastScan)
-		;
+        while (!LastScan)
+            Keyboard_Update();
 
 		switch (LastScan)
 		{
