@@ -884,13 +884,15 @@ void SpawnStand (enemy_t which, int16_t tilex, int16_t tiley, int16_t dir)
 	{
 		tilemap[tilex][tiley] = 0;
 
+        tile = *map;
+        
 		if (*(map+1) >= AREATILE)
 			tile = *(map+1);
 		if (*(map-mapwidth) >= AREATILE)
 			tile = *(map-mapwidth);
 		if (*(map+mapwidth) >= AREATILE)
 			tile = *(map+mapwidth);
-		if ( *(map-1) >= AREATILE)
+		if (*(map-1) >= AREATILE)
 			tile = *(map-1);
 
 		*map = tile;
