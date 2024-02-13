@@ -877,7 +877,8 @@ void Keyboard_Update(void)
     uint8_t key;
 
     SDL_PumpEvents();
-    if (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_KEYDOWN, SDL_KEYUP))
+
+    while (SDL_PeepEvents(&event, 1, SDL_GETEVENT, SDL_KEYDOWN, SDL_KEYUP) > 0)
     {
         code = event.key.keysym.scancode;
 
@@ -903,6 +904,8 @@ void Keyboard_Update(void)
             }
         }
     }
+
+    SDL_FlushEvents(SDL_FIRSTEVENT, SDL_LASTEVENT);
 }
 
 //------------------------------------------------------------------------------
