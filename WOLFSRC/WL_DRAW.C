@@ -688,6 +688,9 @@ void ScalePost(void)		// VGA version
     dest = (postx >> 2) + bufferofs;
     maskindex = -1 + ((postx & 3) << 3) + postwidth;    // -1 because no widths of 0
 
+    if (height == 0)
+        return;
+
     //
     // scale a byte wide strip of wall
     //
