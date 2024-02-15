@@ -1248,8 +1248,6 @@ statetype s_transshoot8 	= {false,SPR_TRANS_SHOOT1,10,NULL,NULL,&s_transchase1};
 
 void SpawnTrans (int16_t tilex, int16_t tiley)
 {
-	uint16_t	far *map,tile;
-
 	if (SoundBlasterPresent && DigiMode != sds_Off)
 		s_transdie01.tictime = 105;
 
@@ -1329,8 +1327,6 @@ statetype s_ubershoot7 	= {false,SPR_UBER_SHOOT1,12,NULL,NULL,&s_uberchase1};
 
 void SpawnUber (int16_t tilex, int16_t tiley)
 {
-	uint16_t	far *map,tile;
-
 	if (SoundBlasterPresent && DigiMode != sds_Off)
 		s_uberdie01.tictime = 70;
 
@@ -1428,8 +1424,6 @@ statetype s_willshoot6 	= {false,SPR_WILL_SHOOT4,10,NULL,T_Shoot,&s_willchase1};
 
 void SpawnWill (int16_t tilex, int16_t tiley)
 {
-	uint16_t	far *map,tile;
-
 	if (SoundBlasterPresent && DigiMode != sds_Off)
 		s_willdie2.tictime = 70;
 
@@ -1603,8 +1597,6 @@ statetype s_deathshoot5 	= {false,SPR_DEATH_SHOOT4,10,NULL,T_Shoot,&s_deathchase
 
 void SpawnDeath (int16_t tilex, int16_t tiley)
 {
-	uint16_t	far *map,tile;
-
 	if (SoundBlasterPresent && DigiMode != sds_Off)
 		s_deathdie2.tictime = 105;
 
@@ -1774,13 +1766,11 @@ statetype s_spark3 	= {false,SPR_SPARK3,6,T_Projectile,NULL,&s_spark4};
 statetype s_spark4 	= {false,SPR_SPARK4,6,T_Projectile,NULL,&s_spark1};
 
 
-#pragma argsused
 void A_Slurpie (objtype *ob)
 {
  SD_PlaySound(SLURPIESND);
 }
 
-#pragma argsused
 void A_Breathing (objtype *ob)
 {
  SD_PlaySound(ANGELTIREDSND);
@@ -1796,9 +1786,6 @@ void A_Breathing (objtype *ob)
 
 void SpawnAngel (int16_t tilex, int16_t tiley)
 {
-	uint16_t	far *map,tile;
-
-
 	if (SoundBlasterPresent && DigiMode != sds_Off)
 		s_angeldie11.tictime = 105;
 
@@ -1819,7 +1806,6 @@ void SpawnAngel (int16_t tilex, int16_t tiley)
 =================
 */
 
-#pragma argsused
 void A_Victory (objtype *ob)
 {
 	playstate = ex_victorious;
@@ -1915,8 +1901,6 @@ statetype s_spectrewake	= {false,SPR_SPECTRE_F4,10,NULL,A_Dormant,&s_spectrewake
 
 void SpawnSpectre (int16_t tilex, int16_t tiley)
 {
-	uint16_t	far *map,tile;
-
 	SpawnNewObj (tilex,tiley,&s_spectrewait1);
 	new->obclass = spectreobj;
 	new->hitpoints = starthitpoints[gamestate.difficulty][en_spectre];

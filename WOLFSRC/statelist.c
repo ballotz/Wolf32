@@ -14,6 +14,17 @@ extern statetype s_boom1;
 extern statetype s_boom2;
 extern statetype s_boom3;
 
+#ifdef SPEAR
+extern statetype s_hrocket;
+extern statetype s_hsmoke1;
+extern statetype s_hsmoke2;
+extern statetype s_hsmoke3;
+extern statetype s_hsmoke4;
+extern statetype s_hboom1;
+extern statetype s_hboom2;
+extern statetype s_hboom3;
+#endif
+
 extern statetype s_grdstand;
 extern statetype s_grdpath1;
 extern statetype s_grdpath1s;
@@ -37,6 +48,7 @@ extern statetype s_grddie2;
 extern statetype s_grddie3;
 extern statetype s_grddie4;
 
+#ifndef SPEAR
 extern statetype s_blinkychase1;
 extern statetype s_blinkychase2;
 extern statetype s_inkychase1;
@@ -45,6 +57,7 @@ extern statetype s_pinkychase1;
 extern statetype s_pinkychase2;
 extern statetype s_clydechase1;
 extern statetype s_clydechase2;
+#endif
 
 extern statetype s_dogpath1;
 extern statetype s_dogpath1s;
@@ -146,6 +159,7 @@ extern statetype s_ssdie2;
 extern statetype s_ssdie3;
 extern statetype s_ssdie4;
 
+#ifndef SPEAR
 extern statetype s_bossstand;
 extern statetype s_bosschase1;
 extern statetype s_bosschase1s;
@@ -185,9 +199,145 @@ extern statetype s_gretelshoot5;
 extern statetype s_gretelshoot6;
 extern statetype s_gretelshoot7;
 extern statetype s_gretelshoot8;
+#endif
 
-//...
+#ifdef SPEAR
+extern statetype s_transstand;
+extern statetype s_transchase1;
+extern statetype s_transchase1s;
+extern statetype s_transchase2;
+extern statetype s_transchase3;
+extern statetype s_transchase3s;
+extern statetype s_transchase4;
+extern statetype s_transdie0;
+extern statetype s_transdie01;
+extern statetype s_transdie1;
+extern statetype s_transdie2;
+extern statetype s_transdie3;
+extern statetype s_transdie4;
+extern statetype s_transshoot1;
+extern statetype s_transshoot2;
+extern statetype s_transshoot3;
+extern statetype s_transshoot4;
+extern statetype s_transshoot5;
+extern statetype s_transshoot6;
+extern statetype s_transshoot7;
+extern statetype s_transshoot8;
 
+extern statetype s_uberstand;
+extern statetype s_uberchase1;
+extern statetype s_uberchase1s;
+extern statetype s_uberchase2;
+extern statetype s_uberchase3;
+extern statetype s_uberchase3s;
+extern statetype s_uberchase4;
+extern statetype s_uberdie0;
+extern statetype s_uberdie01;
+extern statetype s_uberdie1;
+extern statetype s_uberdie2;
+extern statetype s_uberdie3;
+extern statetype s_uberdie4;
+extern statetype s_uberdie5;
+extern statetype s_ubershoot1;
+extern statetype s_ubershoot2;
+extern statetype s_ubershoot3;
+extern statetype s_ubershoot4;
+extern statetype s_ubershoot5;
+extern statetype s_ubershoot6;
+extern statetype s_ubershoot7;
+
+extern statetype s_willstand;
+extern statetype s_willchase1;
+extern statetype s_willchase1s;
+extern statetype s_willchase2;
+extern statetype s_willchase3;
+extern statetype s_willchase3s;
+extern statetype s_willchase4;
+extern statetype s_willdeathcam;
+extern statetype s_willdie1;
+extern statetype s_willdie2;
+extern statetype s_willdie3;
+extern statetype s_willdie4;
+extern statetype s_willdie5;
+extern statetype s_willdie6;
+extern statetype s_willshoot1;
+extern statetype s_willshoot2;
+extern statetype s_willshoot3;
+extern statetype s_willshoot4;
+extern statetype s_willshoot5;
+extern statetype s_willshoot6;
+
+extern statetype s_deathstand;
+extern statetype s_deathchase1;
+extern statetype s_deathchase1s;
+extern statetype s_deathchase2;
+extern statetype s_deathchase3;
+extern statetype s_deathchase3s;
+extern statetype s_deathchase4;
+extern statetype s_deathdeathcam;
+extern statetype s_deathdie1;
+extern statetype s_deathdie2;
+extern statetype s_deathdie3;
+extern statetype s_deathdie4;
+extern statetype s_deathdie5;
+extern statetype s_deathdie6;
+extern statetype s_deathdie7;
+extern statetype s_deathdie8;
+extern statetype s_deathdie9;
+extern statetype s_deathshoot1;
+extern statetype s_deathshoot2;
+extern statetype s_deathshoot3;
+extern statetype s_deathshoot4;
+extern statetype s_deathshoot5;
+
+extern statetype s_angelstand;
+extern statetype s_angelchase1;
+extern statetype s_angelchase1;
+extern statetype s_angelchase2;
+extern statetype s_angelchase3;
+extern statetype s_angelchase3;
+extern statetype s_angelchase4;
+extern statetype s_angeldie1;
+extern statetype s_angeldie11;
+extern statetype s_angeldie2;
+extern statetype s_angeldie3;
+extern statetype s_angeldie4;
+extern statetype s_angeldie5;
+extern statetype s_angeldie6;
+extern statetype s_angeldie7;
+extern statetype s_angeldie8;
+extern statetype s_angeldie9;
+extern statetype s_angelshoot1;
+extern statetype s_angelshoot2;
+extern statetype s_angelshoot3;
+extern statetype s_angeltired;
+extern statetype s_angeltired2;
+extern statetype s_angeltired3;
+extern statetype s_angeltired4;
+extern statetype s_angeltired5;
+extern statetype s_angeltired6;
+extern statetype s_angeltired7;
+extern statetype s_spark1;
+extern statetype s_spark2;
+extern statetype s_spark3;
+extern statetype s_spark4;
+
+extern statetype s_spectrewait1;
+extern statetype s_spectrewait2;
+extern statetype s_spectrewait3;
+extern statetype s_spectrewait4;
+extern statetype s_spectrechase1;
+extern statetype s_spectrechase2;
+extern statetype s_spectrechase3;
+extern statetype s_spectrechase4;
+extern statetype s_spectredie1;
+extern statetype s_spectredie2;
+extern statetype s_spectredie3;
+extern statetype s_spectredie4;
+extern statetype s_spectrewake;
+#endif
+
+#ifndef SPEAR
 extern statetype s_schabbstand;
 extern statetype s_schabbchase1;
 extern statetype s_schabbchase1s;
@@ -312,7 +462,9 @@ extern statetype s_hitlershoot3;
 extern statetype s_hitlershoot4;
 extern statetype s_hitlershoot5;
 extern statetype s_hitlershoot6;
+#endif
 
+#ifndef SPEAR
 extern statetype s_bjrun1;
 extern statetype s_bjrun1s;
 extern statetype s_bjrun2;
@@ -324,7 +476,7 @@ extern statetype s_bjjump2;
 extern statetype s_bjjump3;
 extern statetype s_bjjump4;
 extern statetype s_deathcam;
-
+#endif
 
 statetype* statelist[] =
 {
@@ -341,6 +493,17 @@ statetype* statelist[] =
     &s_boom1,
     &s_boom2,
     &s_boom3,
+
+#ifdef SPEAR
+    &s_hrocket,
+    &s_hsmoke1,
+    &s_hsmoke2,
+    &s_hsmoke3,
+    &s_hsmoke4,
+    &s_hboom1,
+    &s_hboom2,
+    &s_hboom3,
+#endif
 
     &s_grdstand,
     &s_grdpath1,
@@ -365,6 +528,7 @@ statetype* statelist[] =
     &s_grddie3,
     &s_grddie4,
 
+#ifndef SPEAR
     &s_blinkychase1,
     &s_blinkychase2,
     &s_inkychase1,
@@ -373,6 +537,7 @@ statetype* statelist[] =
     &s_pinkychase2,
     &s_clydechase1,
     &s_clydechase2,
+#endif
 
     &s_dogpath1,
     &s_dogpath1s,
@@ -474,6 +639,7 @@ statetype* statelist[] =
     &s_ssdie3,
     &s_ssdie4,
 
+#ifndef SPEAR
     &s_bossstand,
     &s_bosschase1,
     &s_bosschase1s,
@@ -513,9 +679,145 @@ statetype* statelist[] =
     &s_gretelshoot6,
     &s_gretelshoot7,
     &s_gretelshoot8,
+#endif
 
-    //...
+#ifdef SPEAR
+    &s_transstand,
+    &s_transchase1,
+    &s_transchase1s,
+    &s_transchase2,
+    &s_transchase3,
+    &s_transchase3s,
+    &s_transchase4,
+    &s_transdie0,
+    &s_transdie01,
+    &s_transdie1,
+    &s_transdie2,
+    &s_transdie3,
+    &s_transdie4,
+    &s_transshoot1,
+    &s_transshoot2,
+    &s_transshoot3,
+    &s_transshoot4,
+    &s_transshoot5,
+    &s_transshoot6,
+    &s_transshoot7,
+    &s_transshoot8,
 
+    &s_uberstand,
+    &s_uberchase1,
+    &s_uberchase1,
+    &s_uberchase2,
+    &s_uberchase3,
+    &s_uberchase3,
+    &s_uberchase4,
+    &s_uberdie0,
+    &s_uberdie01,
+    &s_uberdie1,
+    &s_uberdie2,
+    &s_uberdie3,
+    &s_uberdie4,
+    &s_uberdie5,
+    &s_ubershoot1,
+    &s_ubershoot2,
+    &s_ubershoot3,
+    &s_ubershoot4,
+    &s_ubershoot5,
+    &s_ubershoot6,
+    &s_ubershoot7,
+
+    &s_willstand,
+    &s_willchase1,
+    &s_willchase1,
+    &s_willchase2,
+    &s_willchase3,
+    &s_willchase3,
+    &s_willchase4,
+    &s_willdeathcam,
+    &s_willdie1,
+    &s_willdie2,
+    &s_willdie3,
+    &s_willdie4,
+    &s_willdie5,
+    &s_willdie6,
+    &s_willshoot1,
+    &s_willshoot2,
+    &s_willshoot3,
+    &s_willshoot4,
+    &s_willshoot5,
+    &s_willshoot6,
+
+    &s_deathstand,
+    &s_deathchase1,
+    &s_deathchase1,
+    &s_deathchase2,
+    &s_deathchase3,
+    &s_deathchase3,
+    &s_deathchase4,
+    &s_deathdeathcam,
+    &s_deathdie1,
+    &s_deathdie2,
+    &s_deathdie3,
+    &s_deathdie4,
+    &s_deathdie5,
+    &s_deathdie6,
+    &s_deathdie7,
+    &s_deathdie8,
+    &s_deathdie9,
+    &s_deathshoot1,
+    &s_deathshoot2,
+    &s_deathshoot3,
+    &s_deathshoot4,
+    &s_deathshoot5,
+
+    &s_angelstand,
+    &s_angelchase1,
+    &s_angelchase1,
+    &s_angelchase2,
+    &s_angelchase3,
+    &s_angelchase3,
+    &s_angelchase4,
+    &s_angeldie1,
+    &s_angeldie11,
+    &s_angeldie2,
+    &s_angeldie3,
+    &s_angeldie4,
+    &s_angeldie5,
+    &s_angeldie6,
+    &s_angeldie7,
+    &s_angeldie8,
+    &s_angeldie9,
+    &s_angelshoot1,
+    &s_angelshoot2,
+    &s_angelshoot3,
+    &s_angeltired,
+    &s_angeltired2,
+    &s_angeltired3,
+    &s_angeltired4,
+    &s_angeltired5,
+    &s_angeltired6,
+    &s_angeltired7,
+    &s_spark1,
+    &s_spark2,
+    &s_spark3,
+    &s_spark4,
+
+    &s_spectrewait1,
+    &s_spectrewait2,
+    &s_spectrewait3,
+    &s_spectrewait4,
+    &s_spectrechase1,
+    &s_spectrechase2,
+    &s_spectrechase3,
+    &s_spectrechase4,
+    &s_spectredie1,
+    &s_spectredie2,
+    &s_spectredie3,
+    &s_spectredie4,
+    &s_spectrewake,
+#endif
+
+#ifndef SPEAR
     &s_schabbstand,
     &s_schabbchase1,
     &s_schabbchase1s,
@@ -640,7 +942,9 @@ statetype* statelist[] =
     &s_hitlershoot4,
     &s_hitlershoot5,
     &s_hitlershoot6,
+#endif
 
+#ifndef SPEAR
     &s_bjrun1,
     &s_bjrun1s,
     &s_bjrun2,
@@ -652,7 +956,8 @@ statetype* statelist[] =
     &s_bjjump3,
     &s_bjjump4,
     &s_deathcam,
-        
+#endif
+
     nil
 };
 
