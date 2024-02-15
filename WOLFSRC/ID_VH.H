@@ -84,7 +84,7 @@ void VWB_Vlin(int16_t y1, int16_t y2, int16_t x, int16_t color);
 //
 // wolfenstein EGA compatability stuff
 //
-extern byte gamepal;
+extern byte gamepal[];
 
 #define VW_Startup  VL_Startup
 #define VW_Shutdown  VL_Shutdown
@@ -96,7 +96,7 @@ extern byte gamepal;
 #define VW_SetLineWidth  VL_SetLineWidth
 //#define VW_ColorBorder VL_ColorBorder
 #define VW_WaitVBL  VL_WaitVBL
-#define VW_FadeIn()  VL_FadeIn(0,255,&gamepal,30);
+#define VW_FadeIn()  VL_FadeIn(0,255,gamepal,30);
 #define VW_FadeOut() VL_FadeOut(0,255,0,0,0,30);
 #define VW_ScreenToScreen VL_ScreenToScreen
 void VW_MeasurePropString(char* string, word* width, word* height);

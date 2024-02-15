@@ -1286,7 +1286,7 @@ restartgame:
         fizzlein = true;
         DrawLevel();
 
-    //startplayloop:
+    startplayloop:
         PlayLoop();
 
 #ifdef SPEAR
@@ -1296,9 +1296,9 @@ restartgame:
             SD_PlaySound(GETSPEARSND);
             if (DigiMode != sds_Off)
             {
-                int32_t lasttimecount = TimeCount;
+                int32_t lasttimecount = TimeCount_Get();
 
-                while (TimeCount < lasttimecount + 150)
+                while (TimeCount_Get() < lasttimecount + 150)
                     //while(DigiPlaying!=false)
                     SD_Poll();
             }

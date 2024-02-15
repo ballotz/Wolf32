@@ -20,9 +20,9 @@
 
 //--------------------------------------------------------------------------
 
-extern	char		signon;
+extern	uint8_t		signon[];
 
-#define	introscn	signon
+#define	introscn	*signon
 
 #ifdef JAPAN
 #ifdef JAPDEMO

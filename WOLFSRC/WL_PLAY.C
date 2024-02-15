@@ -1061,7 +1061,7 @@ byte    whiteshifts[NUMREDSHIFTS][768];
 int16_t damagecount, bonuscount;
 boolean palshifted;
 
-extern 	byte    gamepal;
+extern 	byte    gamepal[];
 
 /*
 =====================
@@ -1083,7 +1083,7 @@ void InitRedShifts(void)
     for (i = 1; i <= NUMREDSHIFTS; i++)
     {
         workptr = (byte*) & redshifts[i - 1][0];
-        baseptr = &gamepal;
+        baseptr = gamepal;
 
         for (j = 0; j <= 255; j++)
         {
@@ -1099,7 +1099,7 @@ void InitRedShifts(void)
     for (i = 1; i <= NUMWHITESHIFTS; i++)
     {
         workptr = (byte*) & whiteshifts[i - 1][0];
-        baseptr = &gamepal;
+        baseptr = gamepal;
 
         for (j = 0; j <= 255; j++)
         {
@@ -1209,7 +1209,7 @@ void UpdatePaletteShifts(void)
     else if (palshifted)
     {
         VW_WaitVBL(1);
-        VL_SetPalette(&gamepal);		// back to normal
+        VL_SetPalette(gamepal);		// back to normal
         palshifted = false;
     }
 }
@@ -1231,7 +1231,7 @@ void FinishPaletteShifts(void)
     {
         palshifted = 0;
         VW_WaitVBL(1);
-        VL_SetPalette(&gamepal);
+        VL_SetPalette(gamepal);
     }
 }
 
