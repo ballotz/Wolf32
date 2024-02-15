@@ -370,7 +370,7 @@ void StatObjToPortable(statobj_t* in, portablestatobj_t* out)
     if (in->visspot)
         out->visspotindex = in->visspot - &spotvis[0][0];
     else
-        out->visspotindex = -1;
+        out->visspotindex = (MAPSIZE*MAPSIZE);
     out->shapenum = in->shapenum;
     out->flags = in->flags;
     out->itemnumber = in->itemnumber;
@@ -380,7 +380,7 @@ void StatObjFromPortable(portablestatobj_t* in, statobj_t* out)
 {
     out->tilex = in->tilex;
     out->tiley = in->tiley;
-    if (in->visspotindex != -1)
+    if (in->visspotindex < (MAPSIZE*MAPSIZE))
         out->visspot = &spotvis[0][0] + in->visspotindex;
     else
         out->visspot = nil;
