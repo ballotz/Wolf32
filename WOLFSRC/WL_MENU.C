@@ -2889,30 +2889,34 @@ void IntroScreen(void)
 #endif
 #define FILLCOLOR	14
 
-    int32_t memory, emshere, xmshere;
+    int32_t memory, avail;
     int16_t i, ems[10] = { 100,200,300,400,500,600,700,800,900,1000 },
         xms[10] = { 100,200,300,400,500,600,700,800,900,1000 },
         main[10] = { 32,64,96,128,160,192,224,256,288,320 };
 
+    avail = mminfo.mainmem;
 
     //
     // DRAW MAIN MEMORY
     //
-    memory = 320;
+    memory = (1023 + avail) / 1024;
     for (i = 0; i < 10; i++)
         if (memory >= main[i])
             VWB_Bar(49, 163 - 8 * i, 6, 5, MAINCOLOR - i);
 
+    avail -= 1024*main[9];
 
     //
     // DRAW EMS MEMORY
     //
     if (1)
     {
-        emshere = 1000;
+        memory = (1023 + avail) / 1024;
         for (i = 0; i < 10; i++)
-            if (emshere >= ems[i])
+            if (memory >= ems[i])
                 VWB_Bar(89, 163 - 8 * i, 6, 5, EMSCOLOR - i);
+
+        avail -= 1024 * ems[9];
     }
 
     //
@@ -2920,10 +2924,12 @@ void IntroScreen(void)
     //
     if (1)
     {
-        xmshere = 1000;
+        memory = (1023 + avail) / 1024;
         for (i = 0; i < 10; i++)
-            if (xmshere >= xms[i])
+            if (memory >= xms[i])
                 VWB_Bar(129, 163 - 8 * i, 6, 5, XMSCOLOR - i);
+
+        avail -= 1024 * xms[9];
     }
 
     //

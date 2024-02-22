@@ -72,6 +72,7 @@ typedef struct mmblockstruct
 =============================================================================
 */
 
+mminfotype	mminfo;
 memptr		bufferseg;
 boolean		mmerror;
 
@@ -88,13 +89,9 @@ void		(*aftersort) (void);
 
 boolean     mmstarted;
 
-#if USEHEAP==1
-void* heap;
-#else
-uint32_t mmbuffer[(MAXMEM + sizeof(uint32_t) - 1) / sizeof(uint32_t)];
-#endif
+void        *heap;
 
-mmblocktype mmblocks[MAXBLOCKS], * mmhead, * mmfree, * mmrover, * mmnew;
+mmblocktype mmblocks[MAXBLOCKS], *mmhead, *mmfree, *mmrover, *mmnew;
 
 boolean		bombonerror;
 
@@ -207,7 +204,7 @@ void MML_ClearBlock(void)
 =
 = MM_Startup
 =
-= Grabs MAXMEM space
+= Grabs space
 = Allocates bufferseg misc buffer
 =
 ===================
@@ -245,14 +242,11 @@ void MM_Startup(void)
     mmrover = mmhead;
 
     //
-    // get MAXMEM memory
+    // get memory
     //
-    length = MAXMEM;
-#if USEHEAP==1
-    start = (uintptr_t)(heap = malloc(length));
-#else
-    start = (uintptr_t)mmbuffer;
-#endif
+    RAM_AcquireMemory(&heap, &mminfo.mainmem);
+    start = (uintptr_t)heap;
+    length = mminfo.mainmem;
     MML_UseSpace(start, length);
 
     //
@@ -280,9 +274,7 @@ void MM_Shutdown(void)
     if (!mmstarted)
         return;
 
-#if USEHEAP==1
-    free(heap);
-#endif
+    RAM_ReleaseMemory(heap);
 }
 
 //==========================================================================

@@ -55,8 +55,14 @@
 
 typedef void* memptr;
 
+typedef struct
+{
+    int32_t	mainmem;
+} mminfotype;
+
 //==========================================================================
 
+extern	mminfotype	mminfo;
 extern	memptr		bufferseg;
 extern	boolean		mmerror;
 
