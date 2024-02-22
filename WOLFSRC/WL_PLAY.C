@@ -1255,7 +1255,7 @@ void FinishPaletteShifts(void)
 
 void DoActor(objtype* ob)
 {
-    void (*think)(objtype*);
+    void (*think)();
     int16_t actorindex;
 
     if (!ob->active && !areabyplayer[ob->areanumber])

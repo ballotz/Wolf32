@@ -5,7 +5,6 @@
 
 #include "ID_HEADS.H"
 #include <math.h>
-//#include <VALUES.H>
 
 #include "WL_MENU.H"
 
@@ -73,8 +72,6 @@
 
 #define PLAYERSPEED		3000
 #define RUNSPEED   		6000
-
-//#define	SCREENSEG		0xa000
 
 #define SCREENBWIDE		80
 
@@ -605,7 +602,7 @@ typedef struct	statestruct
     boolean	rotate;
     int16_t	shapenum;			// a shapenum of -1 means get from ob->temp1
     int16_t	tictime;
-    void	(*think) (memptr), (*action) (memptr);
+    void	(*think)(), (*action)();
     struct	statestruct *next;
 } statetype;
 
@@ -784,7 +781,7 @@ extern	int16_t		mouseadjustment;
 //
 extern	int16_t		pixelangle[MAXVIEWWIDTH];
 extern	int32_t		finetangent[FINEANGLES / 4];
-extern	fixed 		sintable[], * costable;
+extern	fixed 		sintable[], *costable;
 
 //
 // derived constants
@@ -987,7 +984,7 @@ extern	fixed       mindist;
 //
 extern	int16_t		pixelangle[MAXVIEWWIDTH];
 extern	int32_t		finetangent[FINEANGLES / 4];
-extern	fixed 		sintable[], * costable;
+extern	fixed 		sintable[], *costable;
 
 //
 // derived constants
@@ -1002,7 +999,7 @@ extern	fixed	viewx, viewy;			// the focal point
 extern	int16_t	viewangle;
 extern	fixed	viewsin, viewcos;
 
-extern	byte*       postsourceaddress;
+extern	byte        *postsourceaddress;
 extern	uint16_t    postsourceoffset;
 extern	uint16_t    postx;
 extern	uint16_t    postwidth;
@@ -1083,25 +1080,6 @@ typedef struct
 }	t_compshape;
 
 
-//extern	t_compscale* scaledirectory[MAXSCALEHEIGHT + 1];
-//extern	int32_t		fullscalefarcall[MAXSCALEHEIGHT + 1];
-
-extern	byte		bitmasks1[8][8];
-extern	byte		bitmasks2[8][8];
-extern	uint16_t	wordmasks[8][8];
-
-extern	byte		mapmasks1[4][8];
-extern	byte		mapmasks2[4][8];
-extern	byte		mapmasks3[4][8];
-
-//extern	int16_t		maxscale, maxscaleshl2;
-
-//extern	boolean	insetupscaling;
-
-//void SetupScaling(int16_t maxscaleheight);
-//void ScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height);
-//void SimpleScaleShape(int16_t xcenter, int16_t shapenum, uint16_t height);
-
 /*
 =============================================================================
 
@@ -1148,7 +1126,7 @@ void	Thrust(int16_t angle, int32_t speed);
 =============================================================================
 */
 
-extern	doorobj_t	doorobjlist[MAXDOORS], * lastdoorobj;
+extern	doorobj_t	doorobjlist[MAXDOORS], *lastdoorobj;
 extern	int16_t		doornum;
 
 extern	uint16_t	doorposition[MAXDOORS], pwallstate;

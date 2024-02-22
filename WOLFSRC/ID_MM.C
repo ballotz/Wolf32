@@ -35,14 +35,6 @@ EMS / XMS unmanaged routines
 =============================================================================
 */
 
-#ifndef SPEAR
-#define MAXMEM          235000L
-#else
-#define MAXMEM          257000L
-#endif
-
-#define USEHEAP         0
-
 #define LOCKBIT         0x80        // if set in attributes, block cannot be moved
 #define PURGEBITS       3           // 0-3 level, 0= unpurgable, 3= purge first
 #define PURGEMASK       0xfffffffc

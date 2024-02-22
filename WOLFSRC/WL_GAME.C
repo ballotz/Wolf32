@@ -1059,7 +1059,7 @@ void PlayDemo(int16_t demonumber)
     demoname[4] = '0' + demonumber;
     CA_LoadFile(demoname, &demobuffer);
     MM_SetLock(&demobuffer, true);
-    demoptr = (char far*)demobuffer;
+    demoptr = (char*)demobuffer;
 #endif
 
     NewGame(1, 0);
