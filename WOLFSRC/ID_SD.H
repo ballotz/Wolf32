@@ -132,7 +132,6 @@ typedef	struct
 extern	boolean     AdLibPresent,
                     SoundSourcePresent,
                     SoundBlasterPresent,
-                    NeedsMusic,					// For Caching Mgr
                     SoundPositioned;
 extern	SDMode      SoundMode;
 extern	SDSMode     DigiMode;

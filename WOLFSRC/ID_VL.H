@@ -32,7 +32,6 @@ extern uint16_t linewidth;
 extern uint16_t ylookup[MAXSCANLINES];
 
 extern boolean  screenfaded;
-//extern uint16_t bordercolor;
 
 //===========================================================================
 
@@ -60,7 +59,6 @@ void VL_SetPalette(byte* palette); // trigger VL_Refresh()
 void VL_GetPalette(byte* palette);
 void VL_FadeOut(int16_t start, int16_t end, int16_t red, int16_t green, int16_t blue, int16_t steps);
 void VL_FadeIn(int16_t start, int16_t end, byte* palette, int16_t steps);
-//void VL_ColorBorder(int16_t color);
 
 void VL_Plot(int16_t x, int16_t y, int16_t color);
 void VL_Hlin(uint16_t x, uint16_t y, uint16_t width, uint16_t color);

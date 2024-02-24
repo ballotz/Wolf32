@@ -3,8 +3,6 @@
 #include "ID_HEADS.H"
 
 #define SCREENWIDTH     80
-//#define CHARWIDTH       2
-//#define TILEWIDTH       4
 #define GRPLANES        4
 #define BYTEPIXELS      4
 

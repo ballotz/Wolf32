@@ -681,10 +681,10 @@ const   float   radtoint = (float)FINEANGLES / 2 / (float)PI;
 
 void BuildTables(void)
 {
-    int16_t           i;
-    float         angle, anglestep;
-    double        tang;
-    fixed         value;
+    int16_t     i;
+    float       angle, anglestep;
+    double      tang;
+    fixed       value;
 
 
     //
@@ -736,14 +736,14 @@ void BuildTables(void)
 
 void CalcProjection(int32_t focal)
 {
-    int16_t             i;
-    int32_t            intang;
-    float   angle;
-    double  tang;
-    //double  planedist;
-    //double  globinhalf;
-    int16_t             halfview;
-    double  /*halfangle,*/ facedist;
+    int16_t     i;
+    int32_t     intang;
+    float       angle;
+    double      tang;
+    //double      planedist;
+    //double      globinhalf;
+    int16_t     halfview;
+    double      /*halfangle,*/ facedist;
 
 
     focallength = focal;
@@ -801,7 +801,7 @@ void CalcProjection(int32_t focal)
 
 void SetupWalls(void)
 {
-    int16_t     i;
+    int16_t i;
 
     for (i = 1; i < MAXWALLTILES; i++)
     {
@@ -904,8 +904,8 @@ void FinishSignon(void)
 
 boolean MS_CheckParm(char* check)
 {
-    int16_t             i;
-    char* parm;
+    int16_t i;
+    char    *parm;
 
     for (i = 1; i < _argc; i++)
     {
@@ -1053,7 +1053,7 @@ static  int16_t     wolfdigimap[] =
 
 void InitDigiMap(void)
 {
-    int16_t* map;
+    int16_t *map;
 
     for (map = wolfdigimap; *map != LASTSOUND; map += 2)
         DigiMap[map[0]] = map[1];
@@ -1294,11 +1294,11 @@ void InitGame(void)
         DoJukebox();
     else
 #endif
-        //
-        // draw intro screen stuff
-        //
-        if (!virtualreality)
-            IntroScreen();
+    //
+    // draw intro screen stuff
+    //
+    if (!virtualreality)
+        IntroScreen();
 
     //
     // load in and lock down some basic chunks
@@ -1386,7 +1386,7 @@ boolean SetViewSize(uint16_t width, uint16_t height)
 
 void ShowViewSize(int16_t width)
 {
-    int16_t     oldwidth, oldheight;
+    int16_t oldwidth, oldheight;
 
     oldwidth = viewwidth;
     oldheight = viewheight;
@@ -1489,10 +1489,10 @@ static  char* ParmStrings[] = { "baby","easy","normal","hard","" };
 
 void    DemoLoop(void)
 {
-    static int16_t LastDemo;
-    int16_t     i, level;
-    //int32_t nsize;
-    //memptr	nullblock;
+    static int16_t  LastDemo;
+    int16_t         i, level;
+    //int32_t         nsize;
+    //memptr          nullblock;
 
     //
     // check for launch from ted

@@ -26,7 +26,6 @@ uint16_t linewidth;
 uint16_t ylookup[MAXSCANLINES];
 
 boolean  screenfaded;
-//uint16_t bordercolor;
 
 byte    palette1[256][3], palette2[256][3];
 
@@ -367,21 +366,6 @@ void VL_FadeIn(int16_t start, int16_t end, byte* palette, int16_t steps)
     VL_SetPalette(palette);
     screenfaded = false;
 }
-
-
-
-///*
-//==================
-//=
-//= VL_ColorBorder
-//=
-//==================
-//*/
-//
-//void VL_ColorBorder(int16_t color)
-//{
-//    bordercolor = color;
-//}
 
 
 

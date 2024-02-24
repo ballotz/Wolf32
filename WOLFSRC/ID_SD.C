@@ -23,10 +23,6 @@
 //			DigiMode - What device is used for digitized sound effects
 //				(Use SM_SetDigiDevice() to set)
 //
-//		For Cache Mgr:
-//			NeedsDigitized - load digitized sounds?
-//			NeedsMusic - load music?
-//
 
 #pragma hdrstop		// Wierdo thing with MUSE
 
@@ -46,7 +42,6 @@ extern char** _argv;
 boolean     SoundSourcePresent,
             AdLibPresent,
             SoundBlasterPresent, SBProPresent,
-            NeedsDigitized, NeedsMusic,
             SoundPositioned;
 SDMode      SoundMode;
 SMMode      MusicMode;
@@ -99,9 +94,6 @@ boolean         ssNoCheck;
 
 //	AdLib variables
 boolean         alNoCheck;
-
-//	Sequencer variables
-boolean         sqActive;
 
 //	Internal routines
 void SDL_DigitizedDone(void);
@@ -1449,19 +1441,16 @@ SD_SetSoundMode(SDMode mode)
     switch (mode)
     {
     case sdm_Off:
-        NeedsDigitized = false;
         result = true;
         break;
     case sdm_PC:
         tableoffset = STARTPCSOUNDS;
-        NeedsDigitized = false;
         result = true;
         break;
     case sdm_AdLib:
         if (AdLibPresent)
         {
             tableoffset = STARTADLIBSOUNDS;
-            NeedsDigitized = false;
             result = true;
         }
         break;
@@ -1501,13 +1490,11 @@ SD_SetMusicMode(SMMode mode)
     switch (mode)
     {
     case smm_Off:
-        NeedsMusic = false;
         result = true;
         break;
     case smm_AdLib:
         if (AdLibPresent)
         {
-            NeedsMusic = true;
             result = true;
         }
         break;
@@ -1870,7 +1857,6 @@ SD_MusicOff(void)
         AdLib_MusicOff();
         break;
     }
-    sqActive = false;
 }
 
 ///////////////////////////////////////////////////////////////////////////

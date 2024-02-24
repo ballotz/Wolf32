@@ -83,7 +83,6 @@ boolean     buttonstate[NUMBUTTONS];
 
 
 void    CenterWindow(word w, word h);
-//void    InitObjList(void);
 void    RemoveObj(objtype* gone);
 void    PollControls(void);
 void    StopMusic(void);

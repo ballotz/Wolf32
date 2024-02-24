@@ -795,8 +795,6 @@ extern	char		configname[13];
 
 
 void		HelpScreens(void);
-void		OrderingInfo(void);
-void		TEDDeath(void);
 void		Quit(char* error);
 void 		CalcProjection(int32_t focal);
 boolean		SetViewSize(uint16_t width, uint16_t height);
@@ -832,9 +830,7 @@ extern	boolean		spearflag;
 void    DrawPlayBorder(void);
 void    ScanInfoPlane(void);
 void    SetupGameLevel(void);
-void    NormalScreen(void);
 void    DrawPlayScreen(void);
-void    FizzleOut(void);
 void    GameLoop(void);
 void    ClearMemory(void);
 void    PlayDemo(int16_t demonumber);
@@ -1036,7 +1032,6 @@ extern	dirtype opposite[9];
 extern	dirtype diagonal[9][9];
 
 
-void	InitHitRect(objtype* ob, uint16_t radius);
 void	SpawnNewObj(uint16_t tilex, uint16_t tiley, statetype* state);
 void	NewState(objtype* ob, statetype* state);
 
@@ -1116,6 +1111,7 @@ void	GiveAmmo(int16_t ammo);
 void	GiveKey(int16_t key);
 void	GetBonus(statobj_t* check);
 
+void	StatusDrawPic(uint16_t x, uint16_t y, uint16_t picnum);
 void	Thrust(int16_t angle, int32_t speed);
 
 /*

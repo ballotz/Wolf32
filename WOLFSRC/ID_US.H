@@ -59,7 +59,6 @@ typedef	enum
 //	Hack import for TED launch support
 extern	boolean     tedlevel;
 extern	int16_t     tedlevelnum;
-extern	void        TEDDeath(void);
 
 extern	boolean     ingame,		// Set by game code if a game is in progress
                     abortgame,	// Set if a game load failed
@@ -88,15 +87,8 @@ extern	HighScore   Scores[];
 #define	US_HomeWindow()	{PrintX = WindowX; PrintY = WindowY;}
 
 extern	void    US_Startup(void),
-                US_Setup(void),
                 US_Shutdown(void),
                 US_InitRndT(boolean randomize),
-                US_SetLoadSaveHooks(boolean(*load)(int16_t),
-                    boolean(*save)(int16_t),
-                    void (*reset)(void)),
-                US_TextScreen(void),
-                US_UpdateTextScreen(void),
-                US_FinishTextScreen(void),
                 US_DrawWindow(word x, word y, word w, word h),
                 US_CenterWindow(word, word),
                 US_SaveWindow(WindowRec* win),
@@ -109,17 +101,11 @@ extern	void    US_Startup(void),
                 US_CPrintLine(char* s),
                 US_Print(char* s),
                 US_PrintUnsigned(longword n),
-                US_PrintSigned(int32_t n),
-                US_StartCursor(void),
-                US_ShutCursor(void),
-                US_CheckHighScore(int32_t score, word other),
-                US_DisplayHighScores(int16_t which);
-extern	boolean US_UpdateCursor(void),
-                US_LineInput(int16_t x, int16_t y, char* buf, char* def, boolean escok,
+                US_PrintSigned(int32_t n);
+extern	boolean US_LineInput(int16_t x, int16_t y, char* buf, char* def, boolean escok,
                     int16_t maxchars, int16_t maxwidth);
 extern	int16_t US_CheckParm(char* parm, char** strings),
                 US_RndT(void);
 void            USL_PrintInCenter(char* s, Rect r);
-char*           USL_GiveSaveName(word game);
 
 #endif
