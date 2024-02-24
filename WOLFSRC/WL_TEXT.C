@@ -408,7 +408,7 @@ void HandleWord (void)
 =
 =====================
 */
-
+#ifndef SPEAR
 void PageLayout (boolean shownumber)
 {
 	int16_t	i,oldfontcolor;
@@ -502,6 +502,7 @@ void PageLayout (boolean shownumber)
 
 	fontcolor = (byte)oldfontcolor;
 }
+#endif
 
 //===========================================================================
 
@@ -540,6 +541,7 @@ void BackPage (void)
 =
 =====================
 */
+#ifndef SPEAR
 void CacheLayoutGraphics (void)
 {
 	char	*bombpoint, *textstart;
@@ -585,7 +587,7 @@ void CacheLayoutGraphics (void)
 	Quit ("CacheLayoutGraphics: No ^E to terminate file!");
 }
 #endif
-
+#endif
 
 /*
 =====================
@@ -594,7 +596,7 @@ void CacheLayoutGraphics (void)
 =
 =====================
 */
-
+#ifndef SPEAR
 #ifdef JAPAN
 void ShowArticle (int16_t which)
 #else
@@ -720,7 +722,7 @@ void ShowArticle (char *article)
 	IN_ClearKeysDown ();
 	fontnumber = oldfontnumber;
 }
-
+#endif
 
 //===========================================================================
 
@@ -796,6 +798,7 @@ void HelpScreens (void)
 //
 // END ARTICLES
 //
+#ifndef SPEAR
 void EndText (void)
 {
 	int16_t		artnum;
@@ -855,3 +858,4 @@ void EndText (void)
 	MM_SortMem ();
 #endif
 }
+#endif

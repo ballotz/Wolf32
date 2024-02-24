@@ -611,7 +611,7 @@ void CP_ReadThis(void)
 #endif
 #endif
 
-#ifndef SPEAR
+#ifdef SPEAR
 #ifndef GOODTIMES
 #else
 ////////////////////////////////////////////////////////////////////
