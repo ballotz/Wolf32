@@ -1948,7 +1948,7 @@ moveok:
 				continue;
 			if (tile<256)
 				return;
-			if (((objtype *)tile)->flags&FL_SHOOTABLE)
+			if (GETACTOR(tile).flags&FL_SHOOTABLE)
 				return;
 		}
 
