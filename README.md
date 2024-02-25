@@ -39,4 +39,3 @@ bridge.c can be easily modified to search files in any path
 
 ## TODO
 
-Fix load/save: now direct pointers to global variables of the program are stored in data structures
