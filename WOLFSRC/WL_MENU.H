@@ -97,7 +97,7 @@ typedef struct {
 typedef struct {
     int16_t active;
     char string[36];
-    void (*routine)(int16_t temp1);
+    void (*routine)();
 } CP_itemtype;
 
 typedef struct {
