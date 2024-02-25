@@ -611,9 +611,7 @@ void CP_ReadThis(void)
 #endif
 #endif
 
-#ifdef SPEAR
-#ifndef GOODTIMES
-#else
+#if defined(SPEAR) || defined(GOODTIMES)
 ////////////////////////////////////////////////////////////////////
 //
 // BOSS KEY
@@ -631,11 +629,9 @@ void BossKey(void)
 
     SD_MusicOn();
     VL_SetVGAPlaneMode();
-    //VL_TestPaletteSet();
     VL_SetPalette(gamepal);
     LoadLatchMem();
 }
-#endif
 #endif
 
 ////////////////////////////////////////////////////////////////////

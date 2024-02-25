@@ -237,7 +237,7 @@ US_SetPrintRoutines(void (*measure)(char*, word*, word*), void (*print)(char*))
 void
 US_Print(char* s)
 {
-    char	buffer[64];
+    char	buffer[128];
     char	c, *se;
     word	w, h;
 

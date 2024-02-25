@@ -726,6 +726,8 @@ void ShowArticle (char *article)
 
 //===========================================================================
 
+#ifndef SPEAR
+
 #ifndef JAPAN
 #ifdef ARTSEXTERN
 int16_t 	endextern = T_ENDART1;
@@ -744,7 +746,6 @@ char helpfilename[13] = "HELPART.",
 =
 =================
 */
-#ifndef SPEAR
 void HelpScreens (void)
 {
 	int16_t		artnum;
@@ -793,6 +794,7 @@ void HelpScreens (void)
 	MM_SortMem ();
 #endif
 }
+
 #endif
 
 //

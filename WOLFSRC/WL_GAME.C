@@ -1351,12 +1351,10 @@ restartgame:
 
                 CheckHighScore(gamestate.score, gamestate.mapon + 1);
 
-#pragma warn -sus
 #ifndef JAPAN
-                _fstrcpy(MainMenu[viewscores].string, STR_VS);
+                strcpy(MainMenu[viewscores].string, STR_VS);
 #endif
                 MainMenu[viewscores].routine = CP_ViewScores;
-#pragma warn +sus
 
                 return;
             }
@@ -1373,12 +1371,10 @@ restartgame:
 
                 CheckHighScore(gamestate.score, gamestate.mapon + 1);
 
-#pragma warn -sus
 #ifndef JAPAN
-                _fstrcpy(MainMenu[viewscores].string, STR_VS);
+                strcpy(MainMenu[viewscores].string, STR_VS);
 #endif
                 MainMenu[viewscores].routine = CP_ViewScores;
-#pragma warn +sus
 
                 return;
             }
