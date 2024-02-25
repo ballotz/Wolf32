@@ -633,7 +633,6 @@ void Initialize(void)
     SDL_UnlockTexture(frame_texture);
 
     SDL_SetRelativeMouseMode(SDL_TRUE);
-    //SDL_ShowCursor(SDL_DISABLE);
 
     InitKeyMap();
 
@@ -687,12 +686,11 @@ void Initialize(void)
 
 void Deinitialize(void)
 {
-    SDL_ShowCursor(SDL_ENABLE);
-
     // clean up SDL
 
-    SDL_DestroyWindow(window);
+    SDL_DestroyTexture(frame_texture);
     SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
 
     if (audio_device)
     {
@@ -872,12 +870,19 @@ void VGA_Update(
 
     SDL_UnlockTexture(frame_texture);
 
-    SDL_Rect dest_rect =
+    if (port_width != dst_width)
     {
-        (port_width - dst_width) / 2, 0,
-        dst_width, dst_height
-    };
-    SDL_RenderCopy(renderer, frame_texture, NULL, &dest_rect);
+        SDL_RenderClear(renderer);
+        SDL_Rect dest_rect =
+        {
+            (port_width - dst_width) / 2, 0,
+            dst_width, dst_height
+        };
+        SDL_RenderCopy(renderer, frame_texture, NULL, &dest_rect);
+    }
+    else
+        SDL_RenderCopy(renderer, frame_texture, NULL, NULL);
+
     SDL_RenderPresent(renderer); // draw to the screen
 }
 
